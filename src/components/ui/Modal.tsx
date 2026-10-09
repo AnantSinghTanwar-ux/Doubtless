@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, ReactNode } from "react";
+import { useEffect, useRef, ReactNode } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ModalProps {
@@ -12,35 +13,45 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const panel = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    close.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    panel.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
+    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKey);
     };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <div className="fade-in absolute inset-0 bg-ink/45 backdrop-blur-[2px]" onClick={onClose} />
       <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
         className={cn(
-          "relative bg-[#fffdf8] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200",
+          "animate-in relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-line bg-sheet shadow-lift outline-none sm:rounded-2xl",
           className
         )}
       >
         {title && (
           <div className="flex items-center justify-between p-6 pb-0">
-            <h2 className="text-xl font-semibold text-white">{title}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+            <button onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-faint transition-colors hover:bg-ink/[0.06] hover:text-ink">
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}

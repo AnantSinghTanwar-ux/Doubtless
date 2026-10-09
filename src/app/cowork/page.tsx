@@ -67,17 +67,17 @@ export default function CoWorkPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <button
           onClick={() => router.push("/dashboard")}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-8"
+          className="flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </button>
 
         <header className="mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-xs font-medium text-blue-300 mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-pen/10 border border-pen/20 px-3 py-1 text-xs font-medium text-pen mb-4">
             <Sparkles className="w-3.5 h-3.5" /> CoWork mode
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">Read with an AI study partner</h1>
-          <p className="text-slate-400 mt-3 max-w-2xl leading-relaxed">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink">Read with an AI study partner</h1>
+          <p className="text-muted mt-3 max-w-2xl leading-relaxed">
             Pick a textbook or notes PDF. Every page gets its own summary, key points, practice questions and PYQs —
             and the notes scroll along with the PDF as you read.
           </p>
@@ -85,16 +85,16 @@ export default function CoWorkPage() {
 
         {loading ? (
           <div className="flex justify-center py-24">
-            <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
+            <Loader2 className="w-7 h-7 text-pen animate-spin" />
           </div>
         ) : groups.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 py-20 text-center">
-            <FileText className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-300 font-medium">No textbooks or notes yet</p>
-            <p className="text-sm text-slate-500 mt-1">Upload a PDF in your Study Vault to start a CoWork session.</p>
+          <div className="rounded-card border border-dashed border-line py-20 text-center">
+            <FileText className="w-8 h-8 text-faint mx-auto mb-3" />
+            <p className="text-ink/80 font-medium">No textbooks or notes yet</p>
+            <p className="text-sm text-faint mt-1">Upload a PDF in your Study Vault to start a CoWork session.</p>
             <button
               onClick={() => router.push("/vault")}
-              className="mt-6 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-snow transition-colors"
+              className="mt-6 rounded-lg bg-pen hover:bg-pen px-4 py-2 text-sm font-medium text-snow transition-colors"
             >
               Go to Study Vault
             </button>
@@ -103,7 +103,7 @@ export default function CoWorkPage() {
           <div className="space-y-10">
             {groups.map((group) => (
               <section key={group.id}>
-                <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 mb-4">
+                <h2 className="flex items-center gap-2 text-xs font-semibold text-faint mb-4">
                   <Folder className="w-3.5 h-3.5" /> {group.name}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -111,17 +111,17 @@ export default function CoWorkPage() {
                     <button
                       key={vault.id}
                       onClick={() => setSelectedVault(vault)}
-                      className="group text-left rounded-xl border border-white/[0.07] bg-[#fffdf8] hover:border-blue-500/40 hover:bg-[#f3eee2] p-4 transition-all"
+                      className="group text-left rounded-xl border border-line bg-sheet hover:border-pen/40 hover:bg-sheet p-4 transition-all"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-12 shrink-0 rounded-md bg-gradient-to-br from-blue-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-blue-300" />
+                        <div className="w-10 h-12 shrink-0 rounded-md bg-pen/20 border border-line flex items-center justify-center">
+                          <FileText className="w-4 h-4 text-pen" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-sm font-medium text-white line-clamp-2 group-hover:text-blue-100">
+                          <h3 className="text-sm font-medium text-ink line-clamp-2 group-hover:text-pen-deep">
                             {vault.fileName || "Untitled document"}
                           </h3>
-                          <p className="text-xs text-slate-500 mt-1">{vault.pageCount} pages</p>
+                          <p className="text-xs text-faint mt-1">{vault.pageCount} pages</p>
                         </div>
                       </div>
                     </button>
@@ -483,61 +483,61 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
   const done = Object.values(analyses).filter((a) => a.status === "done").length;
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-transparent text-slate-200">
+    <div className="h-[100dvh] flex flex-col bg-transparent text-ink">
       {/* Top bar */}
-      <header className="shrink-0 h-14 flex items-center gap-3 px-3 sm:px-4 border-b border-white/[0.06] bg-[#f7f4ec]/90 backdrop-blur">
+      <header className="shrink-0 h-14 flex items-center gap-3 px-3 sm:px-4 border-b border-line bg-sheet backdrop-blur">
         <button
           onClick={onExit}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+          className="p-2 rounded-lg text-muted hover:text-ink hover:bg-ink/[0.06] transition-colors"
           aria-label="Back to documents"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="text-sm font-medium text-white truncate">{vault.fileName || "Untitled document"}</h1>
-          <p className="text-[11px] text-slate-500">
+          <h1 className="text-sm font-medium text-ink truncate">{vault.fileName || "Untitled document"}</h1>
+          <p className="text-[11px] text-faint">
             {numPages ? `${done} of ${numPages} pages analyzed` : "Loading…"}
           </p>
         </div>
 
         {numPages > 0 && (
           <div className="flex items-center gap-1 sm:gap-2">
-            <div className="flex items-center rounded-lg border border-white/[0.08] bg-[#fffdf8]/55">
+            <div className="flex items-center rounded-lg border border-line bg-sheet">
               <button
                 onClick={() => goToPage(currentPage - 1, driver.current)}
                 disabled={currentPage <= 1}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30"
+                className="p-1.5 text-muted hover:text-ink disabled:opacity-30"
                 aria-label="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs tabular-nums text-slate-300 px-1 min-w-[4.5rem] text-center">
+              <span className="text-xs tabular-nums text-ink/80 px-1 min-w-[4.5rem] text-center">
                 {currentPage} / {numPages}
               </span>
               <button
                 onClick={() => goToPage(currentPage + 1, driver.current)}
                 disabled={currentPage >= numPages}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30"
+                className="p-1.5 text-muted hover:text-ink disabled:opacity-30"
                 aria-label="Next page"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="hidden md:flex items-center rounded-lg border border-white/[0.08] bg-[#fffdf8]/55">
+            <div className="hidden md:flex items-center rounded-lg border border-line bg-sheet">
               <button
                 onClick={() => setZoomIdx((z) => Math.max(0, z - 1))}
                 disabled={zoomIdx === 0}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30"
+                className="p-1.5 text-muted hover:text-ink disabled:opacity-30"
                 aria-label="Zoom out"
               >
                 <Minus className="w-4 h-4" />
               </button>
-              <span className="text-xs tabular-nums text-slate-400 w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <span className="text-xs tabular-nums text-muted w-10 text-center">{Math.round(zoom * 100)}%</span>
               <button
                 onClick={() => setZoomIdx((z) => Math.min(ZOOMS.length - 1, z + 1))}
                 disabled={zoomIdx === ZOOMS.length - 1}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30"
+                className="p-1.5 text-muted hover:text-ink disabled:opacity-30"
                 aria-label="Zoom in"
               >
                 <Plus className="w-4 h-4" />
@@ -548,8 +548,8 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
               onClick={() => setSynced((s) => !s)}
               className={`hidden lg:flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                 synced
-                  ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
-                  : "border-white/[0.08] bg-[#fffdf8]/55 text-slate-400 hover:text-white"
+                  ? "border-pen/30 bg-pen/10 text-pen"
+                  : "border-line bg-sheet text-muted hover:text-ink"
               }`}
               title={synced ? "Scrolling is linked — click to scroll panes independently" : "Link scrolling"}
             >
@@ -561,22 +561,22 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
       </header>
 
       {/* Reading progress */}
-      <div className="shrink-0 h-0.5 bg-[#fffdf8]/75">
+      <div className="shrink-0 h-0.5 bg-sheet">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-[width] duration-300"
+          className="h-full bg-pen transition-[width] duration-300"
           style={{ width: numPages ? `${(currentPage / numPages) * 100}%` : 0 }}
         />
       </div>
 
       {/* Mobile pane switcher */}
-      <div className="lg:hidden shrink-0 p-2 border-b border-white/[0.06]">
-        <div className="grid grid-cols-2 rounded-lg bg-[#fffdf8]/75 p-1 text-sm">
+      <div className="lg:hidden shrink-0 p-2 border-b border-line">
+        <div className="grid grid-cols-2 rounded-lg bg-sheet p-1 text-sm">
           {(["pdf", "notes"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setMobileView(v)}
               className={`flex items-center justify-center gap-2 rounded-md py-1.5 transition-colors ${
-                mobileView === v ? "bg-white/10 text-white" : "text-slate-400"
+                mobileView === v ? "bg-ink/10 text-ink" : "text-muted"
               }`}
             >
               {v === "pdf" ? <FileText className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
@@ -588,9 +588,9 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
 
       {loadError ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-3">
-          <FileText className="w-8 h-8 text-slate-600" />
-          <p className="text-slate-300 max-w-md">{loadError}</p>
-          <button onClick={onExit} className="text-sm text-blue-400 hover:text-blue-300">
+          <FileText className="w-8 h-8 text-faint" />
+          <p className="text-ink/80 max-w-md">{loadError}</p>
+          <button onClick={onExit} className="text-sm text-pen hover:text-pen">
             Choose another document
           </button>
         </div>
@@ -604,14 +604,14 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
             onPointerDown={takeControl("pdf")}
             onTouchStart={takeControl("pdf")}
             onWheel={takeControl("pdf")}
-            className={`min-h-0 overflow-auto bg-[#f3eee2] lg:border-r border-white/[0.06] ${
+            className={`min-h-0 overflow-auto bg-sheet lg:border-r border-line ${
               mobileView === "pdf" ? "block" : "hidden lg:block"
             }`}
           >
             <div className="py-6 px-6 space-y-6 w-max min-w-full">
               {!pdf && (
                 <div className="flex justify-center py-32">
-                  <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
+                  <Loader2 className="w-7 h-7 text-pen animate-spin" />
                 </div>
               )}
               {pdf &&
@@ -637,7 +637,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
                       isAnalyzing={analyses[i + 1]?.status === "loading"}
                       scrollRoot={pdfPaneRef.current}
                     />
-                    <span className="text-[11px] tabular-nums text-slate-600">{i + 1}</span>
+                    <span className="text-[11px] tabular-nums text-faint">{i + 1}</span>
                   </div>
                 ))}
             </div>
@@ -654,8 +654,8 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
             className={`min-h-0 overflow-y-auto ${mobileView === "notes" ? "block" : "hidden lg:block"}`}
           >
             <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-6">
-              <div className="sticky top-0 z-10 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-4 pb-3 bg-[#f7f4ec]/90 backdrop-blur">
-                <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#fffdf8]/75 border border-white/[0.06] p-1">
+              <div className="sticky top-0 z-10 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-4 pb-3 bg-sheet backdrop-blur">
+                <div className="grid grid-cols-2 gap-1 rounded-xl bg-sheet border border-line p-1">
                   {(
                     [
                       { id: "overview", label: "Study guide", icon: <Sparkles className="w-4 h-4" />, hint: overview.status === "done" ? null : overview.status === "error" ? "!" : "…" },
@@ -666,12 +666,12 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
                       key={t.id}
                       onClick={() => setNotesTab(t.id)}
                       className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors ${
-                        notesTab === t.id ? "bg-white/10 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+                        notesTab === t.id ? "bg-ink/10 text-ink shadow-sm" : "text-muted hover:text-ink"
                       }`}
                     >
                       {t.icon}
                       {t.label}
-                      {t.hint && <span className="text-[11px] font-normal text-slate-500 tabular-nums">{t.hint}</span>}
+                      {t.hint && <span className="text-[11px] font-normal text-faint tabular-nums">{t.hint}</span>}
                     </button>
                   ))}
                 </div>

@@ -42,17 +42,16 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
     <div className="space-y-4">
       <button
         onClick={() => setSelectedVault(null)}
-        className={`w-full p-4 rounded-xl border text-left transition-all duration-200 ${
-          !selectedVault
-            ? "border-blue-500/30 bg-blue-500/10 text-blue-400"
-            : "border-white/[0.06] bg-[#fffdf8]/55 text-gray-400 hover:bg-[#fffdf8]/75"
+        aria-pressed={!selectedVault}
+        className={`w-full rounded-xl border p-4 text-left transition-colors ${
+          !selectedVault ? "border-pen bg-pen-wash text-pen-deep" : "border-line bg-sheet text-muted hover:border-line-strong"
         }`}
       >
         <div className="flex items-center gap-3">
           <Globe className="w-5 h-5" />
           <div>
-            <p className="font-medium text-sm">General Knowledge Mode</p>
-            <p className="text-xs opacity-60">No PDF context — uses AI knowledge</p>
+            <p className="text-sm font-medium">General knowledge</p>
+            <p className="text-xs opacity-70">No file selected. Answers come from the AI alone.</p>
           </div>
         </div>
       </button>
@@ -62,59 +61,60 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
         const isExpanded = expandedFolders[folder.id];
         
         return (
-          <div key={folder.id} className="border border-white/10 bg-[#fffdf8]/55 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 bg-white/[0.05]">
-              <button 
+          <div key={folder.id} className="overflow-hidden rounded-card border border-line bg-sheet shadow-sheet">
+            <div className="flex items-center justify-between bg-sunk p-4">
+              <button
                 onClick={() => toggleFolder(folder.id)}
-                className="flex items-center gap-3 flex-1 text-left"
+                aria-expanded={!!isExpanded}
+                className="flex flex-1 items-center gap-3 text-left"
               >
-                {isExpanded ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                <Folder className="w-5 h-5 text-blue-400" />
+                {isExpanded ? <ChevronDown className="w-5 h-5 text-muted" /> : <ChevronRight className="w-5 h-5 text-muted" />}
+                <Folder className="w-5 h-5 text-pen" />
                 <div>
-                  <h3 className="font-semibold text-white">{folder.name}</h3>
-                  <p className="text-xs text-gray-500">{folderDocs.length} files inside</p>
+                  <h3 className="font-display text-lg font-semibold text-ink">{folder.name}</h3>
+                  <p className="text-xs text-muted">{folderDocs.length} {folderDocs.length === 1 ? "file" : "files"}</p>
                 </div>
               </button>
-              <button 
+              <button
                 onClick={() => handleDeleteFolder(folder.id)}
-                className="p-2 text-gray-500 hover:text-red-400 transition-colors"
+                aria-label={`Delete folder ${folder.name}`}
+                className="rounded-lg p-2 text-faint transition-colors hover:text-margin"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
             
             {isExpanded && (
-              <div className="p-4 border-t border-[#e2d9c6] space-y-4 bg-white/[0.05]">
+              <div className="space-y-3 border-t border-line p-4">
                 {folderDocs.map(doc => (
                   <div
                     key={doc.id}
-                    className={`p-3 rounded-xl border transition-all duration-200 flex justify-between items-center ${
-                      selectedVault?.id === doc.id
-                        ? "border-blue-500/30 bg-blue-500/10"
-                        : "border-white/[0.06] bg-[#fffdf8]/55 hover:bg-[#fffdf8]/75"
+                    className={`flex items-center justify-between rounded-xl border transition-colors ${
+                      selectedVault?.id === doc.id ? "border-pen bg-pen-wash" : "border-line bg-sheet hover:border-line-strong"
                     }`}
                   >
                     <button
                       onClick={() => setSelectedVault(doc)}
-                      className="flex items-center gap-3 text-left flex-1"
+                      aria-pressed={selectedVault?.id === doc.id}
+                      className="flex flex-1 items-center gap-3 p-3 text-left"
                     >
-                      {doc.type === 'paper' ? <FileText className="w-4 h-4 text-purple-400" /> : <Book className="w-4 h-4 text-emerald-400" />}
+                      {doc.type === 'paper' ? <FileText className="w-4 h-4 text-pen" /> : <Book className="h-4 w-4 text-emerald-700" />}
                       <div>
-                        <p className="font-medium text-sm text-gray-200">{doc.fileName}</p>
+                        <p className="font-medium text-sm text-ink">{doc.fileName}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant={doc.type === 'paper' ? 'warning' : 'info'}>
-                            {doc.type === 'paper' ? 'Past Paper' : 'Textbook/Notes'}
+                            {doc.type === 'paper' ? 'Past paper' : 'Textbook or notes'}
                           </Badge>
-                          <span className="text-xs text-gray-500">{doc.pageCount} pages</span>
+                          <span className="text-xs text-faint">{doc.pageCount} pages</span>
                         </div>
                       </div>
                     </button>
                   </div>
                 ))}
                 
-                <div className="pt-4 border-t border-[#e2d9c6] mt-4">
-                  <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
-                    <Upload className="w-4 h-4" /> Add File to Folder
+                <div className="mt-4 border-t border-line pt-4">
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-ink">
+                    <Upload className="h-4 w-4 text-pen" /> Add a file to this folder
                   </h4>
                   <PdfUploader folderId={folder.id} onUploadComplete={onRefresh} />
                 </div>

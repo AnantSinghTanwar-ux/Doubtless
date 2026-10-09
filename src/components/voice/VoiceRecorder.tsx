@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Mic } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useMediaRecorder } from "@/hooks/useMediaRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -12,9 +13,9 @@ interface VoiceRecorderProps {
 }
 
 export default function VoiceRecorder({ onEvaluationRequest, loading }: VoiceRecorderProps) {
-  const { isRecording: isAudioRecording, startRecording, stopRecording } = useMediaRecorder();
-  const { transcript, isListening, metrics, startListening, stopListening } = useSpeechRecognition();
-  
+  const { startRecording, stopRecording } = useMediaRecorder();
+  const { transcript, metrics, startListening, stopListening } = useSpeechRecognition();
+
   const [recordingState, setRecordingState] = useState<"idle" | "recording" | "done">("idle");
   const [timer, setTimer] = useState(0);
 
@@ -58,86 +59,76 @@ export default function VoiceRecorder({ onEvaluationRequest, loading }: VoiceRec
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const stats = [
+    { label: "Words per minute", value: metrics.wordsPerMinute },
+    { label: "Filler words", value: metrics.fillerWordCount },
+    { label: "Long pauses", value: metrics.longPauseCount },
+    { label: "Longest pause", value: `${metrics.longestPause}s` },
+  ];
+
   return (
-    <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
-      
+    <div className="rounded-card border border-line bg-sheet p-6 shadow-sheet">
       {recordingState === "idle" && (
-        <div className="text-center py-8">
-          <div className="w-24 h-24 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">🎙️</span>
+        <div className="py-8 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-pen/10 text-pen">
+            <Mic className="h-9 w-9" aria-hidden />
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">Ready to Explain?</h3>
-          <p className="text-sm text-gray-400 mb-8 max-w-sm mx-auto">
-            Hit record and explain the concept aloud as if you were teaching it to a 5-year-old.
-          </p>
-          <Button onClick={handleStart} size="lg" className="rounded-full px-8">
-            Start Recording
+          <h3 className="mb-2 font-display text-xl font-semibold text-ink">Ready to explain?</h3>
+          <p className="mx-auto mb-8 max-w-sm text-sm text-muted">Press record and explain the concept out loud, as if you were teaching it to a 5-year-old.</p>
+          <Button onClick={handleStart} size="lg" className="px-8">
+            Start recording
           </Button>
         </div>
       )}
 
       {recordingState === "recording" && (
-        <div className="text-center py-8">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-red-500/30 animate-ping"></div>
-            <div className="relative w-full h-full rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500">
-              <span className="text-3xl text-red-500 animate-pulse">●</span>
+        <div className="py-8 text-center">
+          <div className="relative mx-auto mb-6 h-20 w-20">
+            <div className="absolute inset-0 animate-ping rounded-full border-4 border-margin/30" />
+            <div className="relative flex h-full w-full items-center justify-center rounded-full border-2 border-margin bg-margin/10">
+              <span className="h-4 w-4 animate-pulse rounded-full bg-margin" aria-hidden />
             </div>
           </div>
-          
-          <div className="text-2xl font-mono text-white mb-6">
+
+          <div className="tabular mb-6 font-mono text-2xl text-ink" role="timer" aria-label="Recording time">
             {formatTime(timer)}
           </div>
-          
-          <div className="max-w-lg mx-auto bg-white/[0.05] rounded-xl p-4 min-h-[100px] mb-8 border border-[#e2d9c6] text-left">
-            <p className="text-sm text-gray-300 italic h-full overflow-y-auto">
-              {transcript || "Listening..."}
-            </p>
+
+          <div className="mx-auto mb-8 min-h-[100px] max-w-lg rounded-xl border border-line bg-paper p-4 text-left">
+            <p className="h-full overflow-y-auto text-sm italic text-ink/80">{transcript || "Listening..."}</p>
           </div>
 
-          <Button onClick={handleStop} variant="danger" size="lg" className="rounded-full px-8">
-            Finish Explanation
+          <Button onClick={handleStop} variant="danger" size="lg" className="px-8">
+            Finish explanation
           </Button>
         </div>
       )}
 
       {recordingState === "done" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <h3 className="text-lg font-medium text-white">Review Transcript</h3>
+          <div className="flex items-center justify-between border-b border-line pb-4">
+            <h3 className="font-display text-lg font-semibold text-ink">Review your transcript</h3>
             <Button onClick={handleReset} variant="ghost" size="sm" disabled={loading}>
-              Retake
+              Record again
             </Button>
           </div>
-          
-          <div className="bg-white/[0.05] rounded-xl p-4 min-h-[120px] max-h-60 overflow-y-auto border border-[#e2d9c6]">
-            <p className="text-sm text-gray-300 leading-relaxed">
-              {transcript}
-            </p>
+
+          <div className="max-h-60 min-h-[120px] overflow-y-auto rounded-xl border border-line bg-paper p-4">
+            <p className="text-sm leading-relaxed text-ink/80">{transcript}</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
-              <div className="text-xs text-gray-500 uppercase">Words/Min</div>
-              <div className="text-xl font-medium text-white">{metrics.wordsPerMinute}</div>
-            </div>
-            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
-              <div className="text-xs text-gray-500 uppercase">Filler Words</div>
-              <div className="text-xl font-medium text-white">{metrics.fillerWordCount}</div>
-            </div>
-            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
-              <div className="text-xs text-gray-500 uppercase">Long Pauses</div>
-              <div className="text-xl font-medium text-white">{metrics.longPauseCount}</div>
-            </div>
-            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
-              <div className="text-xs text-gray-500 uppercase">Max Pause</div>
-              <div className="text-xl font-medium text-white">{metrics.longestPause}s</div>
-            </div>
-          </div>
+          <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {stats.map((s) => (
+              <div key={s.label} className="rounded-xl border border-line bg-paper p-3 text-center">
+                <dt className="text-xs text-muted">{s.label}</dt>
+                <dd className="display tabular mt-0.5 text-2xl text-ink">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-2">
             <Button onClick={handleSubmit} loading={loading}>
-              Get Feynman Analysis
+              Get my Feynman score
             </Button>
           </div>
         </div>

@@ -1,17 +1,17 @@
 "use client";
 
+import { AlertTriangle, CheckCircle2, Mic, Sparkles, Target, XCircle } from "lucide-react";
 import Card, { CardTitle } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
+import Callout from "@/components/ui/Callout";
+import { getScoreColor } from "@/lib/utils";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import type { VoiceEvaluation, VoiceMetrics } from "@/types";
+import type { VoiceEvaluation } from "@/types";
 
 interface VoiceReportProps {
   evaluation: VoiceEvaluation;
-  metrics: VoiceMetrics;
 }
 
-export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
-  
+export default function VoiceReport({ evaluation }: VoiceReportProps) {
   const chartData = [
     { subject: "Accuracy", A: evaluation.content_accuracy, fullMark: 10 },
     { subject: "Structure", A: evaluation.structure, fullMark: 10 },
@@ -25,67 +25,64 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
 
   return (
     <div className="space-y-6">
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <Card className="md:col-span-1 bg-[#fffdf8]/80 flex flex-col items-center justify-center min-h-[300px]">
-          <h3 className="text-sm text-gray-400 uppercase tracking-wider mb-2">Feynman Score</h3>
-          <div className="text-6xl font-bold text-white mb-6">
-            {overallScore}<span className="text-2xl text-gray-500">/10</span>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="flex min-h-[300px] flex-col items-center justify-center md:col-span-1">
+          <h3 className="mb-2 text-sm font-medium text-muted">Feynman score</h3>
+          <div className={`display tabular mb-4 text-6xl ${getScoreColor(overallScore)}`}>
+            {overallScore}
+            <span className="text-2xl text-faint">/10</span>
           </div>
-          
-          <div className="w-full h-48">
+
+          <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
-                <Radar name="Score" dataKey="A" stroke="#c2410c" fill="#c2410c" fillOpacity={0.3} />
+                <PolarGrid stroke="rgba(20,33,61,0.15)" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: "#4d5870", fontSize: 12 }} />
+                <Radar name="Score" dataKey="A" stroke="#c2410c" fill="#c2410c" fillOpacity={0.25} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="md:col-span-2 bg-[#fffdf8]/80 space-y-6">
+        <Card className="space-y-6 md:col-span-2">
           <div>
-            <CardTitle className="text-sm mb-3 flex items-center gap-2">
-              <span className="text-blue-400">🗣️</span> Delivery Analysis
+            <CardTitle className="mb-3 flex items-center gap-2 text-base">
+              <Mic className="h-4 w-4 text-pen" aria-hidden /> Delivery analysis
             </CardTitle>
-            <p className="text-sm text-gray-300 leading-relaxed bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
-              {evaluation.filler_analysis}
-            </p>
+            <p className="rounded-xl border border-line bg-paper p-4 text-sm leading-relaxed text-ink/85">{evaluation.filler_analysis}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
-              <h4 className="text-xs text-gray-500 uppercase mb-2">Hesitation Points</h4>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-line bg-paper p-4">
+              <h4 className="mb-2 text-sm font-medium text-muted">Where you hesitated</h4>
               {evaluation.where_they_hesitated.length > 0 ? (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {evaluation.where_they_hesitated.map((point, i) => (
-                    <li key={i} className="text-sm text-amber-400/90 flex items-start gap-2">
-                      <span className="mt-1 text-xs">⚠️</span> {point}
+                    <li key={i} className="flex items-start gap-2 text-sm text-ink/85">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden /> {point}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-emerald-400/90 flex items-center gap-2">
-                  <span className="text-xs">✅</span> None detected
+                <p className="flex items-center gap-2 text-sm text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden /> None detected
                 </p>
               )}
             </div>
 
-            <div className="bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
-              <h4 className="text-xs text-gray-500 uppercase mb-2">Missing Concepts</h4>
+            <div className="rounded-xl border border-line bg-paper p-4">
+              <h4 className="mb-2 text-sm font-medium text-muted">Concepts you missed</h4>
               {evaluation.missing_concepts.length > 0 ? (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {evaluation.missing_concepts.map((concept, i) => (
-                    <li key={i} className="text-sm text-red-400/90 flex items-start gap-2">
-                      <span className="mt-1 text-xs">⭕</span> {concept}
+                    <li key={i} className="flex items-start gap-2 text-sm text-ink/85">
+                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-margin" aria-hidden /> {concept}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-emerald-400/90 flex items-center gap-2">
-                  <span className="text-xs">✅</span> Covered all key points
+                <p className="flex items-center gap-2 text-sm text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden /> Covered every key point
                 </p>
               )}
             </div>
@@ -93,30 +90,16 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
         </Card>
       </div>
 
-      <Card className="bg-gradient-to-br from-blue-500/10 to-indigo-600/10 border-blue-500/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">🎓</div>
-        <div className="relative z-10">
-          <CardTitle className="text-sm mb-4 text-blue-400 flex items-center gap-2">
-            <span>✨</span> How a Top Student Would Explain It
-          </CardTitle>
-          <p className="text-sm text-gray-200 leading-relaxed italic border-l-2 border-blue-500/50 pl-4 py-2">
-            "{evaluation.better_explanation}"
-          </p>
-        </div>
+      <Card glow>
+        <CardTitle className="mb-4 flex items-center gap-2 text-base">
+          <Sparkles className="h-4 w-4 text-pen" aria-hidden /> How a top student would explain it
+        </CardTitle>
+        <blockquote className="border-l-2 border-pen/50 py-1 pl-4 text-sm italic leading-relaxed text-ink/85">{evaluation.better_explanation}</blockquote>
       </Card>
 
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-4 shadow-lg shadow-emerald-500/5">
-        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-xl flex-none">
-          🎯
-        </div>
-        <div>
-          <h4 className="text-emerald-400 font-medium text-sm">One Sentence Tip</h4>
-          <p className="text-emerald-400/90 text-sm mt-0.5">
-            {evaluation.one_sentence_tip}
-          </p>
-        </div>
-      </div>
-
+      <Callout tone="success" icon={Target} title="Your one tip">
+        {evaluation.one_sentence_tip}
+      </Callout>
     </div>
   );
 }

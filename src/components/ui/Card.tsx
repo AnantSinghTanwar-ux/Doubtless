@@ -11,15 +11,16 @@ interface CardProps {
   onClick?: () => void;
 }
 
+/** A sheet of paper: solid surface, hairline border, soft warm shadow. `glow` marks the card that matters on the page. */
 export default function Card({ children, className, hover = false, glow = false, onClick }: CardProps) {
+  const interactive = hover || !!onClick;
   return (
     <div
       onClick={onClick}
       className={cn(
-        "slide-up bg-[#fffdf8]/75 backdrop-blur-sm border border-white/[0.06] rounded-2xl p-6",
-        hover && "hover:bg-white/[0.06] hover:border-violet-400/30 hover:-translate-y-0.5 cursor-pointer transition-all duration-300",
-        glow && "shadow-lg shadow-blue-500/5",
-        onClick && "cursor-pointer",
+        "slide-up rounded-card border bg-sheet p-5 shadow-sheet sm:p-6",
+        glow ? "border-pen/30" : "border-line",
+        interactive && "cursor-pointer transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift",
         className
       )}
     >
@@ -33,9 +34,9 @@ export function CardHeader({ children, className }: { children: ReactNode; class
 }
 
 export function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
-  return <h3 className={cn("text-lg font-semibold text-white", className)}>{children}</h3>;
+  return <h3 className={cn("font-display text-lg font-semibold tracking-tight text-ink", className)}>{children}</h3>;
 }
 
 export function CardDescription({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("text-sm text-gray-400 mt-1", className)}>{children}</p>;
+  return <p className={cn("mt-1 text-sm text-muted", className)}>{children}</p>;
 }

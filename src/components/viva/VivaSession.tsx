@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { GraduationCap, Volume2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import type { VivaAnswer } from "@/types";
@@ -115,55 +116,61 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
 
   if (!sessionActive && questionCount === 0) {
     return (
-      <div className="text-center py-12 bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
-        <div className="text-5xl mb-4">🤖🗣️</div>
-        <h3 className="text-xl font-medium text-white mb-2">Ready for your Viva on {topic}?</h3>
-        <p className="text-sm text-gray-400 max-w-md mx-auto mb-8">
-          The AI will ask you 5 questions orally. You will answer using your microphone. 
-          The AI adapts the difficulty based on your answers.
+      <div className="rounded-card border border-line bg-sheet p-6 py-12 text-center shadow-sheet">
+        <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-pen/10 text-pen">
+          <GraduationCap className="h-8 w-8" aria-hidden />
+        </span>
+        <h3 className="mb-2 font-display text-2xl font-semibold text-ink">Ready for your viva on {topic}?</h3>
+        <p className="text-sm text-muted max-w-md mx-auto mb-8">
+          You will hear 5 questions and answer them with your microphone. The difficulty adapts to how well you answer.
         </p>
-        <Button onClick={handleStart} size="lg" className="rounded-full px-8">Start Viva Session</Button>
+        <Button onClick={handleStart} size="lg" className="px-8">Start the viva</Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/[0.06]">
-        <h3 className="text-lg font-medium text-white flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-          Live Examination
+    <div className="rounded-card border border-line bg-sheet p-6 shadow-sheet">
+      <div className="mb-8 flex items-center justify-between border-b border-line pb-4">
+        <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-ink">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-margin" aria-hidden />
+          Live exam
         </h3>
-        <span className="text-sm text-gray-500 font-medium bg-white/10 px-3 py-1 rounded-full">
+        <span className="tabular rounded-full bg-ink/[0.07] px-3 py-1 text-sm font-medium text-muted">
           Question {questionCount + 1} of 5
         </span>
       </div>
 
       {loadingNext ? (
-        <div className="py-12 text-center text-blue-400 animate-pulse">
-          Generating next adaptive question...
+        <div className="animate-pulse py-12 text-center text-pen" role="status">
+          Preparing your next question...
         </div>
       ) : nextQuestion ? (
         <div className="space-y-8">
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 relative">
-             <div className="absolute -top-3 left-6 bg-transparent px-2 text-xs text-blue-400 font-bold uppercase tracking-wider">AI Examiner</div>
-             <p className="text-lg text-white font-medium leading-relaxed">{nextQuestion.question}</p>
-             <button onClick={() => speakText(nextQuestion.question)} className="mt-3 text-xs text-gray-500 hover:text-white flex items-center gap-1">
-               <span>🔊</span> Replay Audio
+          <div className="rounded-card border border-pen/25 bg-pen-wash p-6">
+             <p className="mb-2 text-sm font-medium text-pen-deep">Examiner</p>
+             <p className="font-display text-xl font-medium leading-relaxed text-ink">{nextQuestion.question}</p>
+             <button onClick={() => speakText(nextQuestion.question)} className="mt-3 flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+               <Volume2 className="h-4 w-4" aria-hidden /> Hear it again
              </button>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-300">Your Answer</label>
-              {isListening && <span className="text-xs text-red-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Listening...</span>}
+              <label htmlFor="viva-answer" className="text-sm font-medium text-ink">Your answer</label>
+              {isListening && (
+                <span className="flex items-center gap-1.5 text-sm text-margin" role="status">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-margin" aria-hidden /> Listening...
+                </span>
+              )}
             </div>
             
             <textarea
+              id="viva-answer"
               value={currentAnswer}
               onChange={(e) => setCurrentAnswer(e.target.value)}
               placeholder="Speak your answer, or type it here..."
-              className="w-full h-32 p-4 border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500 transition-all"
+              className="h-32 w-full p-4"
             />
             
             <div className="flex justify-between items-center">
@@ -172,11 +179,11 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
                 onClick={isListening ? stopListening : startListening}
                 size="sm"
               >
-                {isListening ? "Stop Mic" : "Start Mic"}
+                {isListening ? "Stop the mic" : "Use the mic"}
               </Button>
               
               <Button onClick={handleSubmitAnswer} disabled={!currentAnswer.trim()}>
-                {questionCount === 4 ? "Finish Viva" : "Submit & Next Question"}
+                {questionCount === 4 ? "Finish the viva" : "Submit and continue"}
               </Button>
             </div>
           </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import Card, { CardTitle } from "@/components/ui/Card";
-import { getVerdictColor, getScoreColor } from "@/lib/utils";
+import { FileText, Library } from "lucide-react";
+import Callout from "@/components/ui/Callout";
+import { getScoreColor } from "@/lib/utils";
 import ReactMarkdown from 'react-markdown';
 import type { SolutionEvaluation } from "@/types";
 import { Cross, ScoreCircle, Tick } from "@/components/paper/Pen";
@@ -13,76 +15,42 @@ interface EvaluationResultProps {
 
 export default function EvaluationResult({ evaluation }: EvaluationResultProps) {
   
-  const getVerdictLabel = (verdict: string) => {
-    switch (verdict) {
-      case "correct": return "Correct";
-      case "error": return "Error";
-      case "redundant": return "Redundant";
-      case "unclear": return "Unclear";
-      default: return verdict;
-    }
-  };
-
-  const getVerdictIcon = (verdict: string) => {
-    switch (verdict) {
-      case "correct": return "✅";
-      case "error": return "❌";
-      case "redundant": return "⚠️";
-      case "unclear": return "❓";
-      default: return "";
-    }
-  };
-
   return (
     <div className="space-y-6">
       
-      {evaluation.first_error_step !== null && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-red-400 text-xl">🚨</span>
-          <div>
-            <h4 className="text-red-400 font-medium text-sm">Mistake caught at Step {evaluation.first_error_step}</h4>
-            <p className="text-red-400/80 text-xs mt-1">
-              Review that step carefully. The subsequent steps might be affected by this error.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {evaluation.first_error_step === null && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-emerald-400 text-xl">🎉</span>
-          <div>
-            <h4 className="text-emerald-400 font-medium text-sm">Perfect Solution!</h4>
-            <p className="text-emerald-400/80 text-xs mt-1">
-              All steps are logically sound and correct. Great job!
-            </p>
-          </div>
-        </div>
+      {evaluation.first_error_step !== null ? (
+        <Callout tone="error" title={`Mistake caught at step ${evaluation.first_error_step}`}>
+          Review that step carefully. The steps after it may be affected by the error.
+        </Callout>
+      ) : (
+        <Callout tone="success" title="Every step holds up">
+          All steps are logically sound and correct. Great work.
+        </Callout>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-[#fffdf8]/80 text-center p-4">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Score</div>
-          <div className={`text-3xl font-bold ${getScoreColor(evaluation.rubric.total)}`}>
-            {evaluation.rubric.total}<span className="text-base font-normal text-gray-500">/10</span>
+        <Card className="p-4 text-center">
+          <div className="mb-1 text-sm text-muted">Total Score</div>
+          <div className={`display tabular text-3xl ${getScoreColor(evaluation.rubric.total)}`}>
+            {evaluation.rubric.total}<span className="text-base font-normal text-faint">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#fffdf8]/80 text-center p-4">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Correctness</div>
-          <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.correctness)}`}>
-            {evaluation.rubric.correctness}<span className="text-sm font-normal text-gray-500">/10</span>
+        <Card className="p-4 text-center">
+          <div className="mb-1 text-sm text-muted">Correctness</div>
+          <div className={`display tabular text-2xl ${getScoreColor(evaluation.rubric.correctness)}`}>
+            {evaluation.rubric.correctness}<span className="text-sm font-normal text-faint">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#fffdf8]/80 text-center p-4">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Method</div>
-          <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.method)}`}>
-            {evaluation.rubric.method}<span className="text-sm font-normal text-gray-500">/10</span>
+        <Card className="p-4 text-center">
+          <div className="mb-1 text-sm text-muted">Method</div>
+          <div className={`display tabular text-2xl ${getScoreColor(evaluation.rubric.method)}`}>
+            {evaluation.rubric.method}<span className="text-sm font-normal text-faint">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#fffdf8]/80 text-center p-4">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Clarity</div>
-          <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.clarity_notation)}`}>
-            {evaluation.rubric.clarity_notation}<span className="text-sm font-normal text-gray-500">/10</span>
+        <Card className="p-4 text-center">
+          <div className="mb-1 text-sm text-muted">Clarity</div>
+          <div className={`display tabular text-2xl ${getScoreColor(evaluation.rubric.clarity_notation)}`}>
+            {evaluation.rubric.clarity_notation}<span className="text-sm font-normal text-faint">/10</span>
           </div>
         </Card>
       </div>
@@ -98,16 +66,16 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         </div>
 
         {evaluation.source_citations.length > 0 && (
-          <Card className="bg-[#fffdf8]/50 border-blue-500/20">
-            <CardTitle className="text-sm mb-3 text-blue-400 flex items-center gap-2">
-              <span>📚</span> Sources Used
+          <Card>
+            <CardTitle className="mb-3 flex items-center gap-2 text-base">
+              <Library className="h-4 w-4 text-pen" aria-hidden /> Sources used
             </CardTitle>
             <ul className="space-y-2">
               {evaluation.source_citations.map((cite, i) => (
-                <li key={i} className="text-sm text-gray-300 flex items-center gap-2 p-2 rounded-lg bg-[#fffdf8]/55 border border-white/[0.06]">
-                  <span className="text-blue-500 text-lg">📄</span> 
-                  <span className="font-medium text-white">{cite.pdf_name}</span> 
-                  <span className="text-gray-500">· Page {cite.page}</span>
+                <li key={i} className="flex items-center gap-2 rounded-lg border border-line bg-paper p-2.5 text-sm">
+                  <FileText className="h-4 w-4 shrink-0 text-pen" aria-hidden />
+                  <span className="font-medium text-ink">{cite.pdf_name}</span> 
+                  <span className="text-faint">Page {cite.page}</span>
                 </li>
               ))}
             </ul>
@@ -126,7 +94,7 @@ function MarkedSteps({ evaluation }: { evaluation: SolutionEvaluation }) {
 
   return (
     <div ref={ref} className="paper slide-up pb-8 pl-[4.6rem] pr-14 pt-[2.1rem]">
-      <p className="serif paper-line text-sm font-semibold uppercase tracking-wider text-[#1b2440]/70">Marked step by step</p>
+      <p className="serif paper-line text-sm font-semibold text-[#1b2440]/70">Marked step by step</p>
 
       {evaluation.steps.map((step, idx) => (
         <div key={idx} className="relative mb-[2.1rem]">

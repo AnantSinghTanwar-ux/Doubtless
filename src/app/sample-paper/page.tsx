@@ -1,19 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Library } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getVaultDocuments } from "@/lib/firestore";
 import type { VaultDocument } from "@/types";
-import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import Sidebar from "@/components/layout/Sidebar";
+import BottomNav from "@/components/layout/BottomNav";
+import TopBar from "@/components/layout/TopBar";
+import Button from "@/components/ui/Button";
+import Empty from "@/components/ui/Empty";
+import Loader from "@/components/ui/Loader";
+import { cn } from "@/lib/utils";
 
 export default function SamplePaperPage() {
-  const { user } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [vaults, setVaults] = useState<VaultDocument[]>([]);
   const [selectedVaults, setSelectedVaults] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [paper, setPaper] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && (!user || !profile)) router.replace("/login");
+  }, [user, profile, authLoading, router]);
 
   useEffect(() => {
     if (!user) return;
@@ -57,81 +70,87 @@ export default function SamplePaperPage() {
     }
   };
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Sample Paper Generator</h1>
-        <p className="text-gray-400">
-          Select multiple previous year papers or notes from your vault to generate a highly probable sample paper.
-        </p>
-      </header>
+    <div className="min-h-screen bg-transparent">
+      <Sidebar />
+      <div className="lg:ml-64">
+        <TopBar title="Sample Paper" />
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
+          {!paper ? (
+            <div className="animate-in">
+              <h2 className="display mb-2 text-2xl text-ink">Build a mock paper from your material</h2>
+              <p className="mb-6 text-muted">Choose previous year papers or notes from your vault. SolVε writes a paper with the questions most likely to come up.</p>
 
-      {!paper ? (
-        <div className="bg-[#fffdf8] border border-[#e2d9c6] rounded-2xl p-6 space-y-6 shadow-xl">
-          <h2 className="text-xl font-semibold text-white">Select Reference Material</h2>
-          {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+              <div className="space-y-6 rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6">
+                {loading ? (
+                  <Loader text="Loading your vault..." />
+                ) : vaults.length === 0 ? (
+                  <Empty
+                    icon={<Library />}
+                    title="Your vault is empty"
+                    description="Upload previous year papers or notes first, then come back to build a paper from them."
+                    action={<Button onClick={() => router.push("/vault")}>Go to the Study Vault</Button>}
+                  />
+                ) : (
+                  <fieldset>
+                    <legend className="mb-3 text-sm font-medium text-ink">Reference material</legend>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {vaults.map((vault) => {
+                        const on = selectedVaults.includes(vault.id!);
+                        return (
+                          <label
+                            key={vault.id}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-pen",
+                              on ? "border-pen bg-pen-wash" : "border-line bg-sheet hover:border-line-strong"
+                            )}
+                          >
+                            <input type="checkbox" checked={on} onChange={() => toggleVault(vault.id!)} className="sr-only" />
+                            <span className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border", on ? "border-pen bg-pen text-snow" : "border-line-strong bg-sheet")} aria-hidden>
+                              {on && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="line-clamp-1 block font-medium text-ink">{vault.fileName}</span>
+                              <span className="tabular mt-1 block text-xs text-muted">
+                                {vault.pageCount} pages, {vault.chunkCount} chunks
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
+
+                {vaults.length > 0 && (
+                  <div className="flex justify-end border-t border-line pt-4">
+                    <Button onClick={generatePaper} disabled={selectedVaults.length === 0} loading={generating}>
+                      {generating ? "Writing your paper..." : "Generate sample paper"}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          ) : vaults.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">
-              No vaults found. Upload some previous year papers in the Study Vault first!
-            </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {vaults.map((vault) => (
-                <div
-                  key={vault.id}
-                  onClick={() => toggleVault(vault.id!)}
-                  className={`p-4 rounded-xl cursor-pointer border transition-all duration-200 flex items-start gap-3 ${
-                    selectedVaults.includes(vault.id!)
-                      ? "bg-blue-500/10 border-blue-500/50"
-                      : "bg-[#fffdf8]/55 border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border mt-0.5 ${
-                    selectedVaults.includes(vault.id!) ? "bg-blue-500 border-blue-500" : "border-white/20"
-                  }`}>
-                    {selectedVaults.includes(vault.id!) && <span className="text-white text-xs">✓</span>}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-medium line-clamp-1">{vault.fileName}</h3>
-                    <p className="text-xs text-gray-400 mt-1">{vault.pageCount} pages • {vault.chunkCount} chunks</p>
-                  </div>
+            <div className="animate-in space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="display text-2xl text-ink">Your sample paper</h2>
+                <Button variant="secondary" onClick={() => setPaper(null)}>
+                  Make another
+                </Button>
+              </div>
+              <div className="paper paper-plain px-6 py-8 sm:px-10">
+                <div className="serif text-[16px] leading-[1.85] text-[#1b2440] [&_h1]:mb-3 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:font-semibold [&_hr]:my-5 [&_hr]:border-[#1b2440]/20 [&_li]:ml-6 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:mb-3 [&_strong]:font-semibold">
+                  <ReactMarkdown>{paper}</ReactMarkdown>
                 </div>
-              ))}
+              </div>
             </div>
           )}
-
-          <div className="pt-4 flex justify-end">
-            <button
-              onClick={generatePaper}
-              disabled={selectedVaults.length === 0 || generating}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-snow font-medium rounded-xl hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-            >
-              {generating && <Loader2 className="w-4 h-4 animate-spin" />}
-              {generating ? "Analyzing & Generating..." : "Generate Sample Paper"}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-white">Your Generated Sample Paper</h2>
-            <button
-              onClick={() => setPaper(null)}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              Generate Another
-            </button>
-          </div>
-          <div className="bg-[#fffdf8] border border-[#e2d9c6] rounded-2xl p-8 shadow-xl prose prose-invert max-w-none">
-            <ReactMarkdown>{paper}</ReactMarkdown>
-          </div>
-        </div>
-      )}
+        </main>
+      </div>
+      <BottomNav />
     </div>
   );
 }

@@ -1,76 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, GraduationCap } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import LandingNav from "./LandingNav";
-import HeroPreview from "./HeroPreview";
-import { Features, FinalCta, Footer, HowItWorks, Teachers } from "./Sections";
+import { Features, FinalCta, Footer, HowItWorks, Router, Teachers } from "./Sections";
 import { WordReveal } from "./Reveal";
-import PaperSolution from "./PaperSolution";
-import CornerBrackets from "./CornerBrackets";
-import PaperNote from "@/components/paper/PaperNote";
+import { MarkedSheet } from "./PaperSolution";
 
 export default function Landing() {
   return (
     <div className="relative min-h-screen overflow-x-clip">
       <LandingNav />
 
-      <main>
-        <section id="top" className="relative px-6 pb-16 pt-40 text-center sm:pt-48">
+      <main id="main">
+        <section id="top" className="pb-20 pt-28 sm:pt-36 lg:pb-28 lg:pt-40">
+          <div className="mx-auto grid max-w-6xl px-6 items-center gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-10">
+            <div>
+              <h1 className="display text-[3.4rem] text-ink sm:text-7xl lg:text-[5.25rem]">
+                <WordReveal text="Doubt less." level={0} />
+                <WordReveal text="Learn more." level={0} delay={240} />
+              </h1>
 
-          {/* scraps of notebook paper pinned around the headline */}
-          <div className="lp-rise pointer-events-none absolute left-[3%] top-[30%] hidden 2xl:block" style={{ animationDelay: "1.2s" }}>
-            <PaperNote rotate={-6}>why is a ≠ 0 at the top?? 🤔</PaperNote>
-          </div>
-          <div className="lp-rise pointer-events-none absolute right-[3%] top-[44%] hidden 2xl:block" style={{ animationDelay: "1.5s" }}>
-            <PaperNote rotate={5} ink="red">g = 9.8 m/s² always ✓</PaperNote>
-          </div>
+              <p className="lp-rise mt-7 max-w-lg text-lg leading-8 text-muted sm:text-xl sm:leading-9" style={{ animationDelay: "0.6s" }}>
+                SolVε works out why you&apos;re stuck, then sends you to the fastest help: an instant AI explanation, targeted practice, or a live session with a verified teacher.
+              </p>
 
-          <div className="relative mx-auto max-w-4xl">
-            <CornerBrackets />
-            <div className="lp-rise mx-auto mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-[#fffdf8]/75 px-4 py-2 text-sm text-zinc-300 backdrop-blur" style={{ animationDelay: "0.1s" }}>
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-70" />
-                <span className="relative h-2 w-2 rounded-full bg-violet-400" />
-              </span>
-              AI-native education, built around real doubts
+              <div className="lp-rise mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "0.8s" }}>
+                <Link href="/login" className="rounded-[10px] bg-ink px-6 py-3.5 text-base font-medium text-snow shadow-sheet transition-colors hover:bg-[#1f3159]">
+                  Start learning
+                </Link>
+                <Link href="/login" className="flex items-center gap-2 rounded-[10px] border border-line-strong bg-sheet px-6 py-3.5 text-base font-medium text-ink transition-colors hover:border-ink/40">
+                  <GraduationCap className="h-5 w-5 text-pen" aria-hidden /> Teach on SolVε
+                </Link>
+              </div>
+              <p className="lp-rise mt-5 text-sm text-faint" style={{ animationDelay: "0.95s" }}>
+                Sign in with Google. Ask your first doubt in under a minute.
+              </p>
             </div>
 
-            <WordReveal text="Doubt less." level={1} className="font-display text-6xl font-bold leading-[1.02] tracking-tight text-white sm:text-7xl md:text-8xl" />
-            <WordReveal text="Learn more." level={1} delay={260} className="font-display text-6xl font-bold leading-[1.02] tracking-tight sm:text-7xl md:text-8xl" wordClassName="text-orange-600" />
-
-            <p className="lp-rise mx-auto mt-8 max-w-2xl text-lg leading-8 text-zinc-400 sm:text-xl" style={{ animationDelay: "0.7s" }}>
-              SolVε reads your doubt, works out <span className="text-white">why you&apos;re stuck</span>, and sends you to the fastest help: an instant AI explanation, targeted practice, or a{" "}
-              <span className="text-violet-300">live session with a verified teacher</span>.
-            </p>
-
-            <div className="lp-rise mt-10 flex flex-wrap items-center justify-center gap-3" style={{ animationDelay: "0.9s" }}>
-              <Link href="/login" className="btn-sheen group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-semibold text-zinc-950 shadow-[0_8px_30px_-10px_rgba(255,255,255,0.35)] transition-transform hover:scale-[1.04]">
-                Start learning <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link href="/login" className="flex items-center gap-2 rounded-full border border-white/12 bg-[#fffdf8]/75 px-7 py-3.5 text-base font-medium text-white backdrop-blur transition-colors hover:border-violet-400/40 hover:bg-violet-500/10">
-                <GraduationCap className="h-5 w-5 text-violet-300" /> Teach on SolVε
-              </Link>
-            </div>
-
-            <div className="lp-rise mx-auto mt-14 grid max-w-xl grid-cols-3 gap-6 border-t border-white/10 pt-8 text-left" style={{ animationDelay: "1.1s" }}>
-              {[
-                ["10", "Learning tools"],
-                ["1:1", "Live video help"],
-                ["AI + Human", "Two ways to get help"],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <p className="whitespace-nowrap font-display text-xl font-bold text-white sm:text-2xl">{n}</p>
-                  <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-500">{l}</p>
-                </div>
-              ))}
+            <div className="lp-rise" style={{ animationDelay: "0.35s" }}>
+              <MarkedSheet />
             </div>
           </div>
-
-          <HeroPreview />
         </section>
 
-        <PaperSolution />
+        <Router />
         <Features />
         <HowItWorks />
         <Teachers />

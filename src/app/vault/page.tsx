@@ -9,6 +9,7 @@ import TopBar from "@/components/layout/TopBar";
 import VaultList from "@/components/vault/VaultList";
 import Loader from "@/components/ui/Loader";
 import Empty from "@/components/ui/Empty";
+import Button from "@/components/ui/Button";
 import { getVaultFolders, getVaultDocuments, createVaultFolder } from "@/lib/firestore";
 import type { VaultFolder, VaultDocument } from "@/types";
 import { FolderPlus } from "lucide-react";
@@ -73,36 +74,28 @@ export default function VaultPage() {
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Study Vault" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
+          <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Your Vault Folders</h2>
-              <p className="text-sm text-gray-400">
-                Organize your study material into folders. Upload Textbooks and Past Papers together.
-              </p>
+              <h2 className="display mb-2 text-2xl text-ink">Your study material</h2>
+              <p className="max-w-xl text-muted">Keep textbooks and past papers in folders. Pick a file and every answer you ask for will cite it.</p>
             </div>
-            <button
-              onClick={handleCreateFolder}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-snow px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-            >
-              <FolderPlus className="w-4 h-4" />
-              New Folder
-            </button>
+            <Button onClick={handleCreateFolder} variant="accent">
+              <FolderPlus className="h-4 w-4" aria-hidden />
+              New folder
+            </Button>
           </div>
 
           <div>
             {loadingData ? (
-              <Loader text="Loading vaults..." />
+              <Loader text="Loading your folders..." />
             ) : folders.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
-                <p className="text-gray-400 mb-4">No folders yet.</p>
-                <button
-                  onClick={handleCreateFolder}
-                  className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-                >
-                  Create your first Folder
-                </button>
-              </div>
+              <Empty
+                icon={<FolderPlus />}
+                title="No folders yet"
+                description="Create a folder for a subject, then upload your textbooks and past papers into it."
+                action={<Button onClick={handleCreateFolder}>Create your first folder</Button>}
+              />
             ) : (
               <VaultList folders={folders} documents={documents} onRefresh={fetchData} />
             )}

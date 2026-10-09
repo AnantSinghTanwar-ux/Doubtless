@@ -127,23 +127,24 @@ export default function VoicePage() {
     <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
-        <TopBar title="Voice Explain Mode" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
+        <TopBar title="Voice" />
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
           
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-2">Feynman Technique</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              The best way to test your knowledge is to teach it. Explain a concept aloud, and the AI will analyze your accuracy, clarity, and delivery.
+            <h2 className="display text-2xl text-ink mb-2">Teach it to learn it</h2>
+            <p className="text-sm text-muted mb-6">
+              If you can explain it simply, you understand it. Explain a concept out loud and get scored on accuracy, clarity and delivery.
             </p>
             
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">What are you explaining?</label>
+              <label htmlFor="voice-topic" className="mb-2 block text-sm font-medium text-ink">What are you explaining?</label>
               <input
+                id="voice-topic"
                 type="text"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g., How Newton's First Law works"
-                className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
+                className="w-full"
                 disabled={loading}
               />
             </div>
@@ -157,14 +158,14 @@ export default function VoicePage() {
 
           {loading && (
              <div className="py-12">
-               <Loader size="lg" text="Analyzing your explanation and voice metrics..." />
+               <Loader size="lg" text="Listening back to your explanation..." />
              </div>
           )}
 
           {evaluation && metrics && !loading && (
              <div className="animate-in fade-in slide-up mt-8">
-               <h2 className="text-xl font-semibold text-white mb-6">Feynman Analysis</h2>
-               <VoiceReport evaluation={evaluation} metrics={metrics} />
+               <h2 className="display mb-6 text-2xl text-ink">Your Feynman analysis</h2>
+               <VoiceReport evaluation={evaluation} />
              </div>
           )}
 

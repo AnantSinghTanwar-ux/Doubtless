@@ -74,14 +74,14 @@ export default function LoginPage() {
   // Signed in without a profile and not yet routed: we are checking whether this is an admin.
   if (loading || (user && !profile && !choosingRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader size="lg" />
       </div>
     );
   }
 
   const googleIcon = (
-    <svg className="w-5 h-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
       <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
       <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -97,30 +97,27 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-
-      <Link href="/" className="lp-drop absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-[#fffdf8]/75 px-4 py-2 text-sm text-zinc-300 backdrop-blur transition-colors hover:text-white">
-        <ArrowLeft className="h-4 w-4" /> Back to home
+      <Link href="/" className="lp-drop absolute left-5 top-5 z-20 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-ink/[0.05] hover:text-ink sm:left-8 sm:top-7">
+        <ArrowLeft className="h-4 w-4" aria-hidden /> Back to home
       </Link>
 
-      <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center gap-16 px-6 py-24 lg:grid-cols-[1.1fr_0.9fr]">
+      <main id="main" className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center gap-16 px-6 py-24 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="lp-rise hidden lg:block">
           <div className="mb-8 flex items-center gap-3">
-            <Logo size={52} />
-            <span className="font-display text-3xl font-semibold tracking-tight text-white">SolVε</span>
+            <Logo size={44} />
+            <span className="font-display text-3xl font-semibold tracking-tight text-ink">SolVε</span>
           </div>
-          <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white">
-            Get unstuck, <span className="text-orange-600">fast.</span>
-          </h1>
-          <p className="mt-5 max-w-md text-lg leading-8 text-zinc-400">The AI-native education OS that finds the real reason you&apos;re stuck and sends you to the fastest help.</p>
+          <h1 className="display text-5xl text-ink">Get unstuck, fast.</h1>
+          <p className="mt-5 max-w-md text-lg leading-8 text-muted">The AI-native education OS that finds the real reason you&apos;re stuck and sends you to the fastest help.</p>
           <ul className="mt-10 space-y-5">
             {perks.map((p, i) => (
               <li key={p.title} className="lp-rise flex items-start gap-4" style={{ animationDelay: `${0.25 + i * 0.12}s` }}>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-violet-500/10 text-violet-300">
-                  <p.icon className="h-5 w-5" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-pen/10 text-pen">
+                  <p.icon className="h-5 w-5" aria-hidden />
                 </span>
                 <div>
-                  <p className="font-medium text-white">{p.title}</p>
-                  <p className="text-sm text-zinc-500">{p.body}</p>
+                  <p className="font-medium text-ink">{p.title}</p>
+                  <p className="text-sm text-muted">{p.body}</p>
                 </div>
               </li>
             ))}
@@ -129,15 +126,15 @@ export default function LoginPage() {
 
         <div className="lp-rise mx-auto w-full max-w-md" style={{ animationDelay: "0.15s" }}>
           <div className="mb-8 flex flex-col items-center lg:hidden">
-            <Logo size={56} />
-            <h1 className="mt-4 font-display text-3xl font-semibold text-white">SolVε</h1>
+            <Logo size={52} />
+            <p className="mt-4 font-display text-3xl font-semibold text-ink">SolVε</p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#fffdf8]/85 p-8 shadow-[0_30px_100px_-40px_rgba(194, 65, 12,0.6)] backdrop-blur-xl">
+          <div className="rounded-card border border-line bg-sheet p-7 shadow-lift sm:p-8">
             {choosingRole ? (
               <div className="slide-up">
-                <h2 className="text-center font-display text-2xl font-semibold text-white">How will you use SolVε?</h2>
-                <p className="mb-7 mt-2 text-center text-sm text-zinc-500">Pick the one that fits you.</p>
+                <h1 className="text-center font-display text-2xl font-semibold text-ink">How will you use SolVε?</h1>
+                <p className="mb-7 mt-2 text-center text-sm text-muted">Pick the one that fits you.</p>
                 <div className="space-y-3">
                   {[
                     { role: "student" as UserRole, icon: GraduationCap, title: "I'm a student", body: "Ask doubts, practise and learn with AI" },
@@ -147,14 +144,14 @@ export default function LoginPage() {
                       key={o.role}
                       onClick={() => handleRoleSelect(o.role)}
                       disabled={settingRole}
-                      className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-[#fffdf8]/55 p-5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/40 hover:bg-violet-500/10 disabled:opacity-50"
+                      className="group flex w-full items-center gap-4 rounded-xl border border-line-strong bg-sheet p-4 text-left transition-[border-color,background-color] duration-150 hover:border-pen hover:bg-pen-wash disabled:opacity-50"
                     >
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 text-snow shadow-lg shadow-violet-600/30 transition-transform group-hover:scale-110">
-                        <o.icon className="h-5 w-5" />
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-ink text-snow">
+                        <o.icon className="h-5 w-5" aria-hidden />
                       </span>
                       <span>
-                        <span className="block font-semibold text-white">{o.title}</span>
-                        <span className="block text-sm text-zinc-500">{o.body}</span>
+                        <span className="block font-semibold text-ink">{o.title}</span>
+                        <span className="block text-sm text-muted">{o.body}</span>
                       </span>
                     </button>
                   ))}
@@ -167,10 +164,14 @@ export default function LoginPage() {
               </div>
             ) : adminMode ? (
               <form onSubmit={handleAdminSignIn} className="slide-up space-y-4">
-                <h2 className="text-center font-display text-2xl font-semibold text-white">Admin sign in</h2>
-                <input type="email" required autoComplete="username" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="Admin email" className="w-full" />
-                <input type="password" required autoComplete="current-password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Password" className="w-full" />
-                {adminError && <p className="text-sm text-rose-400">{adminError}</p>}
+                <h1 className="text-center font-display text-2xl font-semibold text-ink">Admin sign in</h1>
+                <input type="email" required autoComplete="username" aria-label="Admin email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="Admin email" className="w-full" />
+                <input type="password" required autoComplete="current-password" aria-label="Password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Password" className="w-full" />
+                {adminError && (
+                  <p role="alert" className="text-sm text-margin">
+                    {adminError}
+                  </p>
+                )}
                 <Button type="submit" size="lg" className="w-full" loading={adminBusy}>
                   Sign in
                 </Button>
@@ -180,29 +181,29 @@ export default function LoginPage() {
                     setAdminMode(false);
                     setAdminError("");
                   }}
-                  className="w-full text-sm text-zinc-500 transition-colors hover:text-white"
+                  className="w-full text-sm text-muted transition-colors hover:text-ink"
                 >
                   Back to student / teacher sign in
                 </button>
               </form>
             ) : (
               <div className="slide-up">
-                <h2 className="text-center font-display text-2xl font-semibold text-white">Welcome</h2>
-                <p className="mb-7 mt-2 text-center text-sm text-zinc-500">Sign in or create your account in one click.</p>
-                <Button onClick={handleSignIn} size="lg" className="btn-sheen w-full">
+                <h1 className="text-center font-display text-2xl font-semibold text-ink">Welcome to SolVε</h1>
+                <p className="mb-7 mt-2 text-center text-sm text-muted">Sign in or create your account in one click.</p>
+                <Button onClick={handleSignIn} size="lg" className="w-full">
                   {googleIcon}
                   Continue with Google
                 </Button>
-                <button onClick={() => setAdminMode(true)} className="mt-5 w-full text-sm text-zinc-500 transition-colors hover:text-zinc-200">
+                <button onClick={() => setAdminMode(true)} className="mt-5 w-full text-sm text-muted transition-colors hover:text-ink">
                   Admin? Sign in with email
                 </button>
               </div>
             )}
           </div>
 
-          <p className="mt-8 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-600">The Industry Games 2026 · District 03</p>
+          <p className="mt-8 text-center text-xs text-faint">The Industry Games 2026, District 03</p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

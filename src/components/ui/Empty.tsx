@@ -6,16 +6,16 @@ export default function Empty({
   description,
   action,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <span className="text-5xl mb-4">{icon}</span>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-sm text-gray-400 max-w-sm mb-6">{description}</p>
+    <div className="flex flex-col items-center justify-center rounded-card border border-dashed border-line-strong px-4 py-14 text-center">
+      <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-pen/10 text-pen [&_svg]:h-6 [&_svg]:w-6">{icon}</span>
+      <h3 className="font-display text-lg font-semibold text-ink">{title}</h3>
+      <p className="mb-6 mt-1.5 max-w-sm text-sm text-muted">{description}</p>
       {action}
     </div>
   );

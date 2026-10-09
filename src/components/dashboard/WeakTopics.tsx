@@ -1,9 +1,10 @@
 "use client";
 
-import Card, { CardTitle } from "@/components/ui/Card";
+import Card, { CardDescription, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import type { LearnerProfile } from "@/types";
 import { useRouter } from "next/navigation";
+import { Sprout } from "lucide-react";
 
 interface WeakTopicsProps {
   profile: LearnerProfile;
@@ -27,39 +28,49 @@ export default function WeakTopics({ profile }: WeakTopicsProps) {
     router.push(`/practice?topic=${encodeURIComponent(topic)}`);
   };
 
+  const row = "flex items-center justify-between gap-3 rounded-xl border border-line bg-paper p-3.5";
+
   return (
     <Card>
-      <CardTitle className="text-sm mb-4 text-gray-800">
-        Focus Areas
-      </CardTitle>
+      <CardTitle>Focus areas</CardTitle>
+      <CardDescription className="mb-4">Topics where a little practice will help most.</CardDescription>
 
       {weakTopics.length === 0 && frequentMistakes.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-sm text-gray-500">You're doing great! No weak areas identified yet.</p>
+        <div className="flex flex-col items-center py-8 text-center">
+          <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700">
+            <Sprout className="h-5 w-5" aria-hidden />
+          </span>
+          <p className="font-medium text-ink">No weak areas yet</p>
+          <p className="mt-1 max-w-xs text-sm text-muted">As you ask doubts and practise, the topics that need work will appear here.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {weakTopics.map(([topic, score]) => (
-            <div key={topic} className="flex items-center justify-between bg-white/[0.04] p-3 rounded-xl border border-white/[0.06] shadow-sm">
-              <div>
-                <p className="text-sm font-medium text-white">{topic}</p>
-                <p className="text-xs text-gray-500">Mastery: {score}%</p>
+            <div key={topic} className={row}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">{topic}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="h-1.5 w-28 overflow-hidden rounded-full bg-ink/10">
+                    <div className="h-full rounded-full bg-pen" style={{ width: `${Math.max(4, score)}%` }} />
+                  </div>
+                  <p className="tabular text-xs text-muted">{score}% mastery</p>
+                </div>
               </div>
-              <Button size="sm" variant="secondary" onClick={() => handlePractice(topic)} className="text-xs py-1.5 h-auto">
-                Practice
+              <Button size="sm" variant="secondary" onClick={() => handlePractice(topic)}>
+                Practise
               </Button>
             </div>
           ))}
 
           {frequentMistakes.length > 0 && weakTopics.length < 3 && (
             <div className="pt-2">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Frequent Mistakes</p>
+              <p className="mb-2 text-sm font-medium text-muted">Mistakes you repeat</p>
               {frequentMistakes.map(([mistake, count]) => (
-                <div key={mistake} className="flex items-center justify-between bg-white/[0.04] p-3 rounded-xl border border-white/[0.06] shadow-sm mb-2">
-                  <div>
-                    <p className="text-sm font-medium text-white capitalize">{mistake.replace(/_/g, " ")}</p>
-                    <p className="text-xs text-gray-500">Occurred {count} times</p>
-                  </div>
+                <div key={mistake} className={`${row} mb-2`}>
+                  <p className="text-sm font-medium capitalize text-ink">{mistake.replace(/_/g, " ")}</p>
+                  <p className="tabular text-xs text-muted">
+                    {count} {count === 1 ? "time" : "times"}
+                  </p>
                 </div>
               ))}
             </div>

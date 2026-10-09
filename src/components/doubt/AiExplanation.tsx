@@ -1,8 +1,9 @@
 "use client";
 
+import { Brain, Lightbulb } from "lucide-react";
 import Card, { CardTitle } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
-import ReactMarkdown from 'react-markdown';
+import Callout from "@/components/ui/Callout";
+import ReactMarkdown from "react-markdown";
 
 interface AiExplanationProps {
   explanation: {
@@ -18,15 +19,9 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
   return (
     <div className="space-y-6">
       {explanation.based_on_past_session && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-amber-400 text-xl">💡</span>
-          <div>
-            <h4 className="text-amber-400 font-medium text-sm">Enhanced by past teacher sessions</h4>
-            <p className="text-amber-400/80 text-xs mt-1">
-              This explanation incorporates successful strategies used by expert teachers for similar doubts.
-            </p>
-          </div>
-        </div>
+        <Callout tone="warning" icon={Lightbulb} title="Enhanced by past teacher sessions">
+          This explanation uses strategies expert teachers found worked for similar doubts.
+        </Callout>
       )}
 
       <div className="paper paper-plain slide-up px-7 pb-8 pt-7 sm:px-10">
@@ -36,7 +31,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {explanation.key_concepts.length > 0 && (
           <div className="paper paper-plain slide-up rotate-[-0.6deg] px-6 py-6">
             <p className="hand ink-red mb-2 text-2xl leading-none">Key ideas to remember</p>
@@ -53,14 +48,15 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         )}
 
         {explanation.analogies && explanation.analogies.length > 0 && (
-          <Card className="bg-[#fffdf8]/50">
-            <CardTitle className="text-sm mb-3 text-emerald-400 flex items-center gap-2">
-              <span>🧠</span> Helpful Analogies
+          <Card>
+            <CardTitle className="mb-3 flex items-center gap-2 text-base">
+              <Brain className="h-4 w-4 text-pen" aria-hidden /> Helpful analogies
             </CardTitle>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {explanation.analogies.map((analogy, i) => (
-                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5">•</span> {analogy}
+                <li key={i} className="flex items-start gap-2.5 text-sm text-ink/85">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-pen" aria-hidden />
+                  {analogy}
                 </li>
               ))}
             </ul>
@@ -70,14 +66,14 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
 
       {explanation.follow_up_questions && explanation.follow_up_questions.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Test your understanding</h4>
-          <div className="grid gap-2">
+          <h4 className="font-display text-lg font-semibold text-ink">Test your understanding</h4>
+          <ul className="grid gap-2">
             {explanation.follow_up_questions.map((q, i) => (
-              <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-[#fffdf8]/55 text-sm text-gray-300 hover:bg-[#fffdf8]/75 transition-colors cursor-pointer">
+              <li key={i} className="rounded-xl border border-line bg-sheet p-4 text-sm text-ink/85">
                 {q}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </div>

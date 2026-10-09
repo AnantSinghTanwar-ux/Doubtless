@@ -64,12 +64,12 @@ export default function AdminTeachersPage() {
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Teacher Verification" />
-        <main className="mx-auto max-w-7xl p-4 pb-16 md:p-6">
+        <main id="main" className="mx-auto max-w-7xl p-4 pb-16 md:p-6">
           {forbidden ? (
             <div className="mx-auto mt-16 max-w-md text-center">
               <ShieldAlert className="mx-auto mb-4 h-10 w-10 text-rose-400" />
-              <p className="text-lg font-semibold text-white">Admins only</p>
-              <p className="mt-2 text-sm text-slate-400">Your account isn&apos;t listed in ADMIN_EMAILS, so it can&apos;t review teacher applications.</p>
+              <p className="text-lg font-semibold text-ink">Admins only</p>
+              <p className="mt-2 text-sm text-muted">Your account isn&apos;t listed in ADMIN_EMAILS, so it can&apos;t review teacher applications.</p>
             </div>
           ) : (
             <>
@@ -85,20 +85,20 @@ export default function AdminTeachersPage() {
                       }}
                       className={cn(
                         "flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm transition-colors",
-                        tab === t.id ? "border-blue-400/30 bg-blue-500/10 text-white" : "border-white/[0.06] text-slate-400 hover:text-white"
+                        tab === t.id ? "border-pen/30 bg-pen/10 text-ink" : "border-line text-muted hover:text-ink"
                       )}
                     >
                       {t.label}
-                      <span className="rounded-full bg-white/[0.08] px-1.5 text-xs tabular-nums">{n}</span>
+                      <span className="rounded-full bg-ink/[0.08] px-1.5 text-xs tabular-nums">{n}</span>
                     </button>
                   );
                 })}
               </div>
 
               {visible.length === 0 ? (
-                <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/[0.08] py-20 text-center">
-                  <Inbox className="mb-3 h-8 w-8 text-slate-600" />
-                  <p className="text-sm text-slate-400">Nothing here.</p>
+                <div className="flex flex-col items-center rounded-card border border-dashed border-line py-20 text-center">
+                  <Inbox className="mb-3 h-8 w-8 text-faint" />
+                  <p className="text-sm text-muted">Nothing here.</p>
                 </div>
               ) : (
                 <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -108,16 +108,16 @@ export default function AdminTeachersPage() {
                         <button
                           onClick={() => setSelected(a.uid)}
                           className={cn(
-                            "w-full rounded-2xl border p-4 text-left transition-colors",
-                            current?.uid === a.uid ? "border-blue-400/30 bg-blue-500/[0.08]" : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
+                            "w-full rounded-card border p-4 text-left transition-colors",
+                            current?.uid === a.uid ? "border-pen/30 bg-pen/[0.08]" : "border-line bg-ink/[0.02] hover:bg-ink/[0.04]"
                           )}
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <p className="truncate font-medium text-white">{a.personal.fullName}</p>
+                            <p className="truncate font-medium text-ink">{a.personal.fullName}</p>
                             <Recommendation app={a} />
                           </div>
-                          <p className="mt-0.5 truncate text-xs text-slate-500">{a.professional.subjects.join(", ")}</p>
-                          <p className="mt-2 text-xs text-slate-600">Submitted {formatDistanceToNow(a.submittedAt, { addSuffix: true })}</p>
+                          <p className="mt-0.5 truncate text-xs text-faint">{a.professional.subjects.join(", ")}</p>
+                          <p className="mt-2 text-xs text-faint">Submitted {formatDistanceToNow(a.submittedAt, { addSuffix: true })}</p>
                         </button>
                       </li>
                     ))}
@@ -136,7 +136,7 @@ export default function AdminTeachersPage() {
 function Recommendation({ app }: { app: TeacherApplication }) {
   const s = app.screening;
   if (!s) return null;
-  if (s.status === "running") return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-slate-500" />;
+  if (s.status === "running") return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-faint" />;
   if (s.status === "failed" || !s.recommendation) return null;
   const cls = { approve: "text-emerald-300 bg-emerald-400/10", review: "text-amber-200 bg-amber-400/10", reject: "text-rose-300 bg-rose-500/10" }[s.recommendation];
   return <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize", cls)}>AI: {s.recommendation}</span>;
@@ -167,24 +167,24 @@ function useFileUrl(uid: string, file: string | undefined, key: string) {
 function Evidence({ app, k, label }: { app: TeacherApplication; k: keyof TeacherApplication["files"]; label: string }) {
   const f = useFileUrl(app.uid, app.files[k], k);
   return (
-    <figure className="overflow-hidden rounded-2xl border border-white/[0.06] bg-black/30">
+    <figure className="overflow-hidden rounded-card border border-line bg-black/30">
       <div className="relative flex aspect-video items-center justify-center bg-black">
         {!app.files[k] ? (
-          <p className="text-xs text-slate-500">Not provided</p>
+          <p className="text-xs text-faint">Not provided</p>
         ) : !f ? (
-          <Loader2 className="h-5 w-5 animate-spin text-slate-500" />
+          <Loader2 className="h-5 w-5 animate-spin text-faint" />
         ) : f.type.startsWith("video/") ? (
           <video src={f.url} controls className="h-full w-full object-contain" />
         ) : f.type.startsWith("image/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={f.url} alt={label} className="h-full w-full object-contain" />
         ) : (
-          <a href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-300">
+          <a href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-pen">
             <FileText className="h-5 w-5" /> Open PDF <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
       </div>
-      <figcaption className="px-3 py-2 text-xs text-slate-400">{label}</figcaption>
+      <figcaption className="px-3 py-2 text-xs text-muted">{label}</figcaption>
     </figure>
   );
 }
@@ -213,11 +213,11 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
 
   const s = app.screening;
   return (
-    <div className="space-y-5 rounded-3xl border border-white/[0.06] bg-[#fbf8f0]/80 p-5 md:p-6 slide-up">
+    <div className="space-y-5 rounded-card border border-line bg-sheet p-5 shadow-sheet md:p-6 slide-up">
       <div>
-        <h2 className="text-xl font-semibold text-white">{app.personal.fullName}</h2>
-        <p className="text-sm text-slate-400">{app.personal.headline}</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <h2 className="text-xl font-semibold text-ink">{app.personal.fullName}</h2>
+        <p className="text-sm text-muted">{app.personal.headline}</p>
+        <p className="mt-1 text-xs text-faint">
           {app.email} · {app.personal.phone}
           {app.personal.city && ` · ${app.personal.city}`}
         </p>
@@ -230,16 +230,16 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
       )}
 
       {s && (
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-200">
-            <Sparkles className="h-4 w-4 text-indigo-300" /> AI pre-screening
+        <div className="rounded-card border border-line bg-ink/[0.02] p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-medium text-ink">
+            <Sparkles className="h-4 w-4 text-pen" /> AI pre-screening
             <Recommendation app={app} />
           </p>
-          {s.status === "running" && <p className="text-sm text-slate-500">Running checks…</p>}
+          {s.status === "running" && <p className="text-sm text-faint">Running checks…</p>}
           {s.status === "failed" && <p className="text-sm text-rose-300">Screening failed: {s.error}</p>}
           {s.status === "done" && (
             <>
-              {s.summary && <p className="mb-3 text-sm text-slate-400">{s.summary}</p>}
+              {s.summary && <p className="mb-3 text-sm text-muted">{s.summary}</p>}
               <ul className="space-y-2">
                 {s.checks?.map((c) => (
                   <li key={c.label} className="flex gap-2.5 text-sm">
@@ -251,8 +251,8 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
                       <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
                     )}
                     <span>
-                      <span className="text-slate-200">{c.label}</span>
-                      <span className="text-slate-500"> · {c.detail}</span>
+                      <span className="text-ink">{c.label}</span>
+                      <span className="text-faint"> · {c.detail}</span>
                     </span>
                   </li>
                 ))}
@@ -268,7 +268,7 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
         <Evidence app={app} k="certificate" label="Qualification certificate" />
         <Evidence app={app} k="video" label={app.liveness.videoDurationSec ? `Video intro · ${app.liveness.videoDurationSec}s` : "Video intro"} />
       </div>
-      {app.liveness.videoPrompt && <p className="text-xs text-slate-500">Video prompt: {app.liveness.videoPrompt}</p>}
+      {app.liveness.videoPrompt && <p className="text-xs text-faint">Video prompt: {app.liveness.videoPrompt}</p>}
 
       <div className="grid gap-4 text-sm sm:grid-cols-2">
         <Info k="Qualification" v={`${app.professional.degree}, ${app.professional.institution}${app.professional.graduationYear ? ` (${app.professional.graduationYear})` : ""}`} />
@@ -279,7 +279,7 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
           <Info
             k="LinkedIn"
             v={
-              <a href={app.professional.linkedinUrl} target="_blank" rel="noreferrer" className="text-blue-300 hover:underline">
+              <a href={app.professional.linkedinUrl} target="_blank" rel="noreferrer" className="text-pen hover:underline">
                 {app.professional.linkedinUrl}
               </a>
             }
@@ -289,13 +289,13 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
       </div>
 
       {app.status === "approved" || app.status === "rejected" ? (
-        <p className="rounded-xl bg-white/[0.03] px-4 py-3 text-sm text-slate-400">
+        <p className="rounded-xl bg-ink/[0.03] px-4 py-3 text-sm text-muted">
           {app.status === "approved" ? "Approved" : "Rejected"} by {app.reviewedBy}
           {app.reviewedAt && ` ${formatDistanceToNow(app.reviewedAt, { addSuffix: true })}`}
           {app.reviewNote && ` · “${app.reviewNote}”`}
         </p>
       ) : (
-        <div className="space-y-3 border-t border-white/[0.06] pt-5">
+        <div className="space-y-3 border-t border-line pt-5">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -329,8 +329,8 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
 function Info({ k, v, wide }: { k: string; v: React.ReactNode; wide?: boolean }) {
   return (
     <div className={cn(wide && "sm:col-span-2")}>
-      <p className="text-xs text-slate-500">{k}</p>
-      <p className="mt-0.5 break-words text-slate-300">{v}</p>
+      <p className="text-xs text-faint">{k}</p>
+      <p className="mt-0.5 break-words text-ink/80">{v}</p>
     </div>
   );
 }

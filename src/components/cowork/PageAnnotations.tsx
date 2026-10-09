@@ -71,7 +71,7 @@ export default function PageAnnotations({ highlights, width: W, height: H }: Pag
               />
             )}
             <span
-              className="absolute whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow-md"
+              className="absolute whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide shadow-md"
               style={{
                 left: Math.max(2, Math.min(x + w - chipWidth(label) + 30, W - chipWidth(label))),
                 top: Math.max(2, y - 20),
@@ -135,7 +135,7 @@ function ImportantCallout({ x, y, w, h, W, label, delay }: { x: number; y: numbe
       <div className="absolute" style={{ left: x - 12, top: y - 12, width: 24, height: 24 }}>
         <span className="absolute inset-0 rounded-full bg-rose-500" style={anim("cw-ping", 1400, delay + 500, `cw-ping 1600ms ease-out ${delay + 1900}ms infinite`)} />
         <span
-          className="absolute inset-0 rounded-full bg-rose-600 text-snow text-[15px] font-black leading-6 text-center shadow-lg ring-2 ring-white"
+          className="absolute inset-0 rounded-full bg-rose-600 text-snow text-[15px] font-black leading-6 text-center shadow-lg ring-2 ring-ink"
           style={anim("cw-pop", 500, delay + 350)}
         >
           !
@@ -160,10 +160,10 @@ function ImportantCallout({ x, y, w, h, W, label, delay }: { x: number; y: numbe
       {/* Callout chip */}
       <div className="absolute" style={{ left: chipX, top: chipY, ...anim("cw-fade-up", 400, arrowDelay - 150) }}>
         <div
-          className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-600 pl-1.5 pr-3 text-[11px] font-bold text-snow shadow-[0_6px_16px_-4px_rgba(225,29,72,0.6)]"
+          className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-600 pl-1.5 pr-3 text-[11px] font-bold text-snow shadow-lift"
           style={{ height: ch, animation: `cw-nudge 2.4s ease-in-out ${arrowDelay + 600}ms infinite` }}
         >
-          <span className="w-4 h-4 rounded-full bg-white text-rose-600 text-[11px] font-black leading-4 text-center">!</span>
+          <span className="w-4 h-4 rounded-full bg-ink text-rose-600 text-[11px] font-black leading-4 text-center">!</span>
           {label}
         </div>
       </div>
