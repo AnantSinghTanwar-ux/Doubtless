@@ -189,7 +189,6 @@ export default function CoworkVoice({ fileName, page, numPages, getPageContext, 
 
   const live = status === "live";
   const active = status !== "idle";
-  const orbState = status === "connecting" ? "connecting" : live && speaking ? "speaking" : live ? "listening" : "idle";
   const last = lines[lines.length - 1];
   const caption =
     error ||
@@ -246,16 +245,12 @@ export default function CoworkVoice({ fileName, page, numPages, getPageContext, 
           aria-label={active ? "Voice call in progress" : `Talk to the tutor about page ${page}`}
           title={active ? undefined : `Ask by voice about page ${page}`}
         >
-          {/* Glow + colour field, clipped to a circle; a glassy core sits on top. */}
-          <span className="absolute -inset-2 rounded-full opacity-50 blur-md transition-transform duration-150" style={{ transform: `scale(${scale})` }}>
-            <span className="voice-orb-field absolute inset-0 rounded-full" data-state={orbState} />
-          </span>
-          <span className="absolute inset-0 overflow-hidden rounded-full shadow-lift transition-transform duration-150" style={{ transform: `scale(${scale})` }}>
-            <span className="voice-orb-field absolute -inset-3 rounded-full" data-state={orbState} />
-            <span className={cn("absolute inset-[5px] rounded-full bg-white/25 backdrop-blur-[2px] transition-opacity", muted && "bg-ink/40")} />
-          </span>
-          {!active && <Mic className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow" aria-hidden />}
-          {muted && <MicOff className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow" aria-hidden />}
+          {/* A plain solid circle: it grows slightly with the voice level and breathes while idle. */}
+          <span
+            className={cn("absolute inset-0 rounded-full shadow-md transition-[transform,background-color] duration-150", muted ? "bg-ink/60" : "bg-pen group-hover:bg-pen-deep")}
+            style={{ transform: `scale(${scale})` }}
+          />
+          {muted ? <MicOff className="absolute inset-0 m-auto h-5 w-5 text-snow" aria-hidden /> : <Mic className="absolute inset-0 m-auto h-5 w-5 text-snow" aria-hidden />}
         </button>
       </div>
     </div>
