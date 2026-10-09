@@ -24,7 +24,7 @@ export default function Button({
 
   const variants = {
     primary:
-      "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 focus:ring-blue-500 shadow-lg shadow-blue-500/25",
+      "bg-white text-zinc-950 hover:bg-zinc-200 focus:ring-white/40 shadow-lg shadow-white/5",
     secondary:
       "bg-white/5 text-white border border-white/10 hover:bg-white/10 focus:ring-white/20",
     ghost: "text-gray-400 hover:text-white hover:bg-white/5 focus:ring-white/20",

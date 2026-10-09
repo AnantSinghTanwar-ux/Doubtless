@@ -62,7 +62,7 @@ export default function LandingNav() {
           border: `1px solid rgba(255, 255, 255, ${p * 0.1})`,
           backdropFilter: `blur(${p * 18}px)`,
           WebkitBackdropFilter: `blur(${p * 18}px)`,
-          boxShadow: `0 12px 50px -14px rgba(139, 92, 246, ${p * 0.4})`,
+          boxShadow: `0 12px 50px -14px rgba(154, 95, 150, ${p * 0.4})`,
           transition: "all 160ms ease-out",
         }}
       >
@@ -100,7 +100,7 @@ export default function LandingNav() {
                 </Link>
                 <Link
                   href="/login"
-                  className="btn-sheen flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_-8px_rgba(139,92,246,0.9)] transition-transform hover:scale-[1.04]"
+                  className="btn-sheen flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[15px] font-semibold text-zinc-950 shadow-[0_8px_30px_-10px_rgba(255,255,255,0.35)] transition-transform hover:scale-[1.04]"
                 >
                   <Sparkles className="h-4 w-4" /> Get started
                 </Link>
@@ -121,7 +121,7 @@ export default function LandingNav() {
                   {l.label}
                 </a>
               ))}
-              <Link href="/login" className="mt-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-3 text-center font-semibold text-white">
+              <Link href="/login" className="mt-2 rounded-full bg-white px-5 py-3 text-center font-semibold text-zinc-950 shadow-[0_8px_30px_-10px_rgba(255,255,255,0.35)]">
                 {user ? "Dashboard" : "Get started"}
               </Link>
             </div>

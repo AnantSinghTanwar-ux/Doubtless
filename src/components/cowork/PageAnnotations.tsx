@@ -16,7 +16,7 @@ const STAGGER = 450; // ms between successive highlights
 const TAG_STYLE: Record<PageHighlight["kind"], { text: string; bg: string; fallback: string }> = {
   important: { text: "#fff", bg: "#e11d48", fallback: "Exam favourite" },
   definition: { text: "#78350f", bg: "#fcd34d", fallback: "Definition" },
-  formula: { text: "#fff", bg: "#7c3aed", fallback: "Key formula" },
+  formula: { text: "#fff", bg: "#824a7f", fallback: "Key formula" },
   keyword: { text: "#fff", bg: "#059669", fallback: "Key term" },
 };
 
@@ -59,7 +59,7 @@ export default function PageAnnotations({ highlights, width: W, height: H }: Pag
               <svg className="absolute overflow-visible" style={{ left: x, top: y }} width={w} height={hh}>
                 <rect
                   x={0} y={0} width={w} height={hh} rx={6}
-                  fill="rgba(139, 92, 246, 0.08)" stroke="#7c3aed" strokeWidth={2} strokeDasharray="1" strokeDashoffset="1" pathLength={1}
+                  fill="rgba(154, 95, 150, 0.08)" stroke="#824a7f" strokeWidth={2} strokeDasharray="1" strokeDashoffset="1" pathLength={1}
                   style={anim("cw-draw", 800, delay)}
                 />
               </svg>

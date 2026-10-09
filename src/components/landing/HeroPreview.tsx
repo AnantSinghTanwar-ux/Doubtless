@@ -25,7 +25,7 @@ export default function HeroPreview() {
 
   return (
     <div className="relative mx-auto mt-20 max-w-5xl px-2 [perspective:1600px]">
-      <div className="lp-glow absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-[3rem] bg-violet-600/20 blur-[90px]" />
+      <div className="lp-glow absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-[3rem] bg-violet-600/[0.09] blur-[90px]" />
 
       {/* floating chips */}
       <div className="lp-float absolute -left-4 -top-5 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#0e0e12]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex">
@@ -42,7 +42,7 @@ export default function HeroPreview() {
       </div>
 
       <div
-        className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f] shadow-[0_40px_120px_-30px_rgba(139,92,246,0.5)]"
+        className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f] shadow-[0_40px_120px_-30px_rgba(154, 95, 150,0.5)]"
         style={{ transform: `rotateX(${16 * (1 - p)}deg) scale(${0.92 + 0.08 * p})`, transformOrigin: "50% 0%", transition: "transform 120ms ease-out" }}
       >
         <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">

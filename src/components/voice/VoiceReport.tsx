@@ -39,7 +39,7 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
-                <Radar name="Score" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
+                <Radar name="Score" dataKey="A" stroke="#9a5f96" fill="#9a5f96" fillOpacity={0.3} />
               </RadarChart>
             </ResponsiveContainer>
           </div>

@@ -43,8 +43,8 @@ export default function VivaReportDisplay({ report }: VivaReportProps) {
                   contentStyle={{ backgroundColor: '#08080b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Line type="monotone" name="Confidence" dataKey="confidence" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" name="Score" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" name="Confidence" dataKey="confidence" stroke="#9a5f96" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" name="Score" dataKey="score" stroke="#9a5f96" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

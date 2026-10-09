@@ -21,7 +21,7 @@ export default function Landing() {
       <main>
         <section id="top" className="relative px-6 pb-16 pt-40 text-center sm:pt-48">
           <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-[44rem]" />
-          <div className="lp-glow pointer-events-none absolute left-1/2 top-24 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[120px]" />
+          <div className="lp-glow pointer-events-none absolute left-1/2 top-24 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-violet-600/[0.09] blur-[120px]" />
 
           {/* scraps of notebook paper pinned around the headline */}
           <div className="lp-rise pointer-events-none absolute left-[3%] top-[30%] hidden 2xl:block" style={{ animationDelay: "1.2s" }}>
@@ -49,7 +49,7 @@ export default function Landing() {
             </p>
 
             <div className="lp-rise mt-10 flex flex-wrap items-center justify-center gap-3" style={{ animationDelay: "0.9s" }}>
-              <Link href="/login" className="btn-sheen group flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-7 py-3.5 text-base font-semibold text-white shadow-[0_12px_40px_-10px_rgba(139,92,246,0.9)] transition-transform hover:scale-[1.04]">
+              <Link href="/login" className="btn-sheen group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-semibold text-zinc-950 shadow-[0_8px_30px_-10px_rgba(255,255,255,0.35)] transition-transform hover:scale-[1.04]">
                 Start learning <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link href="/login" className="flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-7 py-3.5 text-base font-medium text-white backdrop-blur transition-colors hover:border-violet-400/40 hover:bg-violet-500/10">

@@ -108,7 +108,7 @@ export function HowItWorks() {
 
         <div ref={ref} className="relative mt-16 pl-10 sm:pl-16">
           <div className="absolute bottom-2 left-[15px] top-2 w-px bg-white/10 sm:left-[23px]">
-            <div className="w-full bg-gradient-to-b from-violet-300 via-violet-500 to-purple-700 shadow-[0_0_14px_rgba(139,92,246,0.9)]" style={{ height: `${progress * 100}%`, transition: "height 120ms linear" }} />
+            <div className="w-full bg-gradient-to-b from-violet-300 via-violet-500 to-purple-700 shadow-[0_0_14px_rgba(154, 95, 150,0.9)]" style={{ height: `${progress * 100}%`, transition: "height 120ms linear" }} />
           </div>
           <div className="space-y-14">
             {STEPS.map((s, i) => {
@@ -119,7 +119,7 @@ export function HowItWorks() {
                     <span
                       className={cn(
                         "absolute -left-10 top-1 flex h-8 w-8 items-center justify-center rounded-full border font-mono text-[11px] transition-all duration-500 sm:-left-16 sm:h-12 sm:w-12 sm:text-sm",
-                        reached ? "border-violet-400 bg-violet-500 text-white shadow-[0_0_28px_rgba(139,92,246,0.7)]" : "border-white/15 bg-[#0e0e12] text-zinc-500"
+                        reached ? "border-violet-400 bg-violet-500 text-white shadow-[0_0_28px_rgba(154, 95, 150,0.7)]" : "border-white/15 bg-[#0e0e12] text-zinc-500"
                       )}
                     >
                       {s.n}
@@ -162,7 +162,7 @@ export function Teachers() {
         </div>
 
         <Reveal delay={120}>
-          <div ref={ref} className="relative rounded-3xl border border-white/10 bg-[#0e0e12]/85 p-7 shadow-[0_30px_100px_-40px_rgba(139,92,246,0.6)]">
+          <div ref={ref} className="relative rounded-3xl border border-white/10 bg-[#0e0e12]/85 p-7 shadow-[0_30px_100px_-40px_rgba(154, 95, 150,0.6)]">
             <div className="mb-6 flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 text-white">
                 <ScanFace className="h-7 w-7" />
@@ -204,8 +204,8 @@ export function FinalCta() {
     <section className="relative py-24">
       <div className="mx-auto max-w-5xl px-6">
         <Reveal>
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-[#16102b] to-[#0c0c10] px-8 py-16 text-center sm:px-16">
-            <div className="lp-glow pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/30 blur-[100px]" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-[#171017] to-[#0c0c10] px-8 py-16 text-center sm:px-16">
+            <div className="lp-glow pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/[0.14] blur-[100px]" />
             <h2 className="relative font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
               Ready to <span className="gradient-text">doubt less</span>?
             </h2>

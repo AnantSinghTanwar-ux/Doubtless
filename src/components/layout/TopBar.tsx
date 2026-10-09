@@ -45,7 +45,7 @@ export default function TopBar({ title }: { title: string }) {
           borderTopColor: "transparent",
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
-          boxShadow: `0 14px 40px -16px rgba(139, 92, 246, ${p * 0.45})`,
+          boxShadow: `0 14px 40px -16px rgba(154, 95, 150, ${p * 0.45})`,
           transition: "all 160ms ease-out",
         }}
       >

@@ -97,7 +97,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="lp-glow pointer-events-none absolute -top-40 left-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/20 blur-[130px]" />
+      <div className="lp-glow pointer-events-none absolute -top-40 left-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/[0.09] blur-[130px]" />
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-70" />
 
       <Link href="/" className="lp-drop absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-zinc-300 backdrop-blur transition-colors hover:text-white">
@@ -135,7 +135,7 @@ export default function LoginPage() {
             <h1 className="mt-4 font-display text-3xl font-semibold text-white">Doubtless</h1>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#0e0e12]/85 p-8 shadow-[0_30px_100px_-40px_rgba(139,92,246,0.6)] backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/10 bg-[#0e0e12]/85 p-8 shadow-[0_30px_100px_-40px_rgba(154, 95, 150,0.6)] backdrop-blur-xl">
             {choosingRole ? (
               <div className="slide-up">
                 <h2 className="text-center font-display text-2xl font-semibold text-white">How will you use Doubtless?</h2>
