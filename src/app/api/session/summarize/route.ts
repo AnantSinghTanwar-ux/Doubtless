@@ -1,5 +1,6 @@
 import { withUsage } from "@/lib/usage";
 import { remember } from "@/lib/memory";
+import { recordLearning } from "@/lib/learnerStats";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { sessionSummarySchema } from "@/lib/zod-schemas";
@@ -90,6 +91,12 @@ Summarize this session. Return JSON only.`;
         takeaway: `Stuck because: ${validated.root_cause}. What worked: ${validated.explanation_that_worked}`,
       });
     }
+
+    // Dashboard: a doubt sorted out by a teacher (the AI summary failing doesn't change that).
+    await recordLearning(before.studentId, {
+      resolvedBy: "teacher",
+      interaction: { type: "teacher_session", topic: before.doubtContext.topic, subtopic: before.doubtContext.subtopic, outcome: "completed", timestamp: Date.now() },
+    });
 
     return NextResponse.json({ ...validated, aiFailed });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { currentUser, withUsage } from "@/lib/usage";
 import { after, NextRequest, NextResponse } from "next/server";
 import { formatMemoriesForPrompt, recall, remember } from "@/lib/memory";
+import { recordLearning } from "@/lib/learnerStats";
 import { generateJSON } from "@/lib/aiProvider";
 import { aiExplanationSchema } from "@/lib/zod-schemas";
 import { formatChunksForPrompt } from "@/lib/embeddings";
@@ -87,6 +88,16 @@ Provide a thorough, clear explanation. Return JSON only.`;
         topic: [routerResult.topic, routerResult.subtopic].filter(Boolean).join(" / "),
         text: question,
         takeaway: (validated.key_concepts ?? []).slice(0, 4).join("; ") || validated.explanation.slice(0, 300),
+      })
+    );
+
+    // Dashboard: one more doubt sorted out by AI, and a mild "this topic needs work" signal (asking about it means it isn't solid).
+    after(() =>
+      recordLearning(uid, {
+        resolvedBy: "ai",
+        topic: routerResult.topic,
+        mastery: 40,
+        interaction: { type: "doubt", topic: routerResult.topic, subtopic: routerResult.subtopic, outcome: "ai_explained", timestamp: Date.now() },
       })
     );
 
