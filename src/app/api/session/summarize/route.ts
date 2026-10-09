@@ -42,8 +42,20 @@ ${transcript}
 
 Summarize this session. Return JSON only.`;
 
-    const result = await generateJSON<SessionSummary>(prompt, systemPrompt);
-    const validated = sessionSummarySchema.parse(result);
+    // Ending a session must never fail because the AI is unavailable: fall back to a plain summary.
+    let validated: SessionSummary;
+    let aiFailed = false;
+    try {
+      validated = sessionSummarySchema.parse(await generateJSON<SessionSummary>(prompt, systemPrompt));
+    } catch (aiError) {
+      console.error("Session summary AI failed, using fallback:", aiError);
+      aiFailed = true;
+      validated = {
+        doubt: before.doubtContext.topic || "General doubt",
+        root_cause: "An automatic summary wasn't available for this session.",
+        explanation_that_worked: "Resolved in a live session with the teacher.",
+      };
+    }
 
     await updateSession(sessionId, {
       summary: validated,
@@ -64,7 +76,7 @@ Summarize this session. Return JSON only.`;
       createdAt: Date.now(),
     });
 
-    return NextResponse.json(validated);
+    return NextResponse.json({ ...validated, aiFailed });
   } catch (error) {
     console.error("Session summarize error:", error);
     return NextResponse.json(

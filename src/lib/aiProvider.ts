@@ -34,7 +34,35 @@ export function parseJSON<T>(raw: string | undefined, source: string): T {
   throw new Error(`${source} returned invalid JSON`);
 }
 
+/**
+ * Tries the configured provider first. If it fails (e.g. AI_PROVIDER=ollama on a host with no local model,
+ * or a bad/missing Gemini key), falls back to OpenRouter when a key is available, so features degrade gracefully.
+ */
 export async function generateJSON<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
+  try {
+    return await generateJSONPrimary<T>(prompt, systemPrompt, useHighEnd);
+  } catch (primaryError) {
+    const key = process.env.OPENROUTER_API_KEY;
+    // useHighEnd already tried OpenRouter inside the primary path.
+    if (!key || useHighEnd) throw primaryError;
+    console.warn("[aiProvider] primary provider failed, trying OpenRouter:", primaryError instanceof Error ? primaryError.message : primaryError);
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
+        max_tokens: Number(process.env.OPENROUTER_MAX_TOKENS) || 2000,
+        messages: [...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []), { role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) throw primaryError;
+    const data = await res.json();
+    return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
+  }
+}
+
+async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
   const openRouterKey = process.env.OPENROUTER_API_KEY;
   const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
 
