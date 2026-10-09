@@ -29,10 +29,11 @@ import { dataUrlToBlob, type CameraStatus } from "@/hooks/useCamera";
 import LiveSelfie, { type SelfieResult } from "@/components/teacher/LiveSelfie";
 import VideoIntro, { type VideoResult } from "@/components/teacher/VideoIntro";
 import DocumentDrop from "@/components/teacher/DocumentDrop";
+import GradeRanges, { DEFAULT_RANGE } from "@/components/teacher/GradeRanges";
 import Logo from "@/components/landing/Logo";
 import Loader from "@/components/ui/Loader";
 import { cn } from "@/lib/utils";
-import type { TeacherApplication } from "@/types";
+import type { GradeRange, TeacherApplication } from "@/types";
 
 const STEPS = [
   { id: "about", label: "About you", icon: UserRound },
@@ -60,6 +61,7 @@ const emptyForm = {
   linkedinUrl: "",
   subjects: [] as string[],
   specialties: [] as string[],
+  subjectGrades: {} as Record<string, GradeRange>,
 };
 type Form = typeof emptyForm;
 
@@ -129,6 +131,7 @@ export default function TeacherOnboarding() {
             linkedinUrl: q.linkedinUrl,
             subjects: q.subjects,
             specialties: q.specialties,
+            subjectGrades: q.subjectGrades ?? {},
           });
           // Returning applicants already gave their details; take them straight to the live checks.
           setStep("selfie");
@@ -211,6 +214,7 @@ export default function TeacherOnboarding() {
             linkedinUrl: form.linkedinUrl,
             subjects: form.subjects,
             specialties: form.specialties,
+            subjectGrades: Object.fromEntries(form.subjects.map((s) => [s, form.subjectGrades[s] ?? DEFAULT_RANGE])),
           },
           liveness: skipLive
             ? { skipped: true }
@@ -428,6 +432,11 @@ export default function TeacherOnboarding() {
                 <Field label="Subjects you teach" className="sm:col-span-2">
                   <TagInput value={form.subjects} onChange={(v) => set("subjects", v)} placeholder="Type a subject and press Enter" suggestions={SUBJECT_SUGGESTIONS} />
                 </Field>
+                {form.subjects.length > 0 && (
+                  <Field label="Which grades can you teach?" hint="Roughly, per subject. We use it to match students at the right level (13 = college)." className="sm:col-span-2">
+                    <GradeRanges subjects={form.subjects} value={form.subjectGrades} onChange={(v) => set("subjectGrades", v)} />
+                  </Field>
+                )}
                 <Field label="Specialties" hint="Topics you're strongest at, e.g. Rotational Dynamics" optional className="sm:col-span-2">
                   <TagInput value={form.specialties} onChange={(v) => set("specialties", v)} placeholder="Type a topic and press Enter" />
                 </Field>

@@ -1,6 +1,6 @@
 import { doc, runTransaction, type DocumentReference, type Transaction } from "firebase/firestore";
 import { db } from "./firebase";
-import { topicKey } from "./teacherRanking";
+import { canonicalSubject, statKey } from "./teacherRanking";
 import type { RatingSums, TeacherProfile, TeacherReview, TopicStat } from "@/types";
 
 /** Transactions make both writers safe to run at the same time: two students reviewing, or a review landing as a session ends. */
@@ -30,8 +30,8 @@ export async function saveReview(review: Omit<TeacherReview, "id">): Promise<boo
     if (!teacher) throw new Error("Teacher not found");
 
     const overall = add(teacher.reviewStats ?? empty(), review);
-    const key = topicKey(review.topic);
-    const prev: TopicStat = teacher.topicStats?.[key] ?? { ...empty(), name: review.topic, sessions: 0 };
+    const key = statKey(review.topic, review.subtopic);
+    const prev: TopicStat = teacher.topicStats?.[key] ?? { ...empty(), name: canonicalSubject(review.topic, review.subtopic) ?? review.topic, sessions: 0 };
     const topic: TopicStat = { ...add(prev, review), name: prev.name, sessions: prev.sessions };
 
     tx.set(reviewRef, { ...review, id: review.sessionId });
@@ -51,13 +51,13 @@ export async function saveReview(review: Omit<TeacherReview, "id">): Promise<boo
 }
 
 /** Counts a finished live session toward the teacher's record for its topic (and their total). */
-export async function recordSessionCompleted(teacherId: string, topic: string): Promise<void> {
+export async function recordSessionCompleted(teacherId: string, topic: string, subtopic?: string): Promise<void> {
   const teacherRef = doc(db, "teachers", teacherId);
   await runTransaction(db, async (tx) => {
     const teacher = await readTeacher(tx, teacherRef);
     if (!teacher) return;
-    const key = topicKey(topic);
-    const prev: TopicStat = teacher.topicStats?.[key] ?? { ...empty(), name: topic, sessions: 0 };
+    const key = statKey(topic, subtopic);
+    const prev: TopicStat = teacher.topicStats?.[key] ?? { ...empty(), name: canonicalSubject(topic, subtopic) ?? topic, sessions: 0 };
     tx.set(
       teacherRef,
       { doubtsResolved: (teacher.doubtsResolved || 0) + 1, topicStats: { [key]: { ...prev, sessions: prev.sessions + 1 } } },

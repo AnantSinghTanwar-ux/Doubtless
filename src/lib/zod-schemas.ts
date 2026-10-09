@@ -21,6 +21,7 @@ export const doubtRouterSchema = z.object({
   difficulty: z.string(),
   doubt_type: z.enum(["concept_gap", "prerequisite_gap", "careless_error", "needs_human"]),
   confidence: z.number().min(0).max(1),
+  grade_level: z.number().int().min(1).max(13).optional(),
   route: z.enum(["ai_explain", "practice", "teacher"]),
   reasoning: z.string(),
 });

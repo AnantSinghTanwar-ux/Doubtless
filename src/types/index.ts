@@ -55,6 +55,8 @@ export interface DoubtRouterResult {
   confidence: number;
   route: RouteType;
   reasoning: string;
+  /** Rough school grade of the question, 1-12, or 13 for college level. */
+  grade_level?: number;
 }
 
 export interface DoubtRecord {
@@ -190,6 +192,13 @@ export interface TeacherProfile {
   topicStats?: Record<string, TopicStat>;
   /** Heartbeat from the teacher dashboard; "online" also requires this to be recent. */
   lastSeenAt?: number;
+  /** Roughly which school grades the teacher can handle in each subject (13 = college). */
+  subjectGrades?: Record<string, GradeRange>;
+}
+
+export interface GradeRange {
+  from: number;
+  to: number;
 }
 
 /** Sums rather than averages, so a new review is a plain increment inside a transaction. */
@@ -240,6 +249,10 @@ export interface MatchEvidence {
   depth: number | null;
   solving: number | null;
   resolvedRate: number | null;
+  /** How the doubt's grade sits against the grades the teacher says they teach in this subject. */
+  gradeMatch: "in" | "near" | "out" | "unknown";
+  gradeRange: [number, number] | null;
+  subject: string;
 }
 
 /**
@@ -268,6 +281,7 @@ export interface TeacherApplication {
     linkedinUrl: string;
     subjects: string[];
     specialties: string[];
+    subjectGrades?: Record<string, GradeRange>;
   };
   /** Stored file names under the applicant's private verification folder. */
   files: {

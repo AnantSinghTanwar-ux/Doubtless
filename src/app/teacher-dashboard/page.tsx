@@ -24,6 +24,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import FeedbackPanel from "@/components/teacher/FeedbackPanel";
+import TeachingLevels from "@/components/teacher/TeachingLevels";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
@@ -93,6 +95,17 @@ export default function TeacherDashboard() {
       .catch(() => {});
   }, [user, selfie, teacherId, photoURL, refreshProfile]);
 
+  // Heartbeat: students only see you as online while this page is open and pinging.
+  const tid = teacher?.id;
+  const wantOnline = !!teacher?.availability;
+  useEffect(() => {
+    if (!tid || !wantOnline) return;
+    const ping = () => void updateTeacher(tid, { lastSeenAt: Date.now() }).catch(() => {});
+    ping();
+    const t = setInterval(ping, 45_000);
+    return () => clearInterval(t);
+  }, [tid, wantOnline]);
+
   // Teachers without any registration go through onboarding first.
   useEffect(() => {
     if (app === null) router.replace("/teacher/onboarding");
@@ -118,7 +131,7 @@ export default function TeacherDashboard() {
     if (!teacher) return;
     setToggling(true);
     try {
-      await updateTeacher(teacher.id, { availability: !online });
+      await updateTeacher(teacher.id, { availability: !online, ...(online ? {} : { lastSeenAt: Date.now() }) });
       addToast(online ? "You're offline. Students won't see you in matches." : "You're online. Students can now request sessions.", "success");
     } catch {
       addToast("Couldn't update your availability.", "error");
@@ -173,6 +186,13 @@ export default function TeacherDashboard() {
           </section>
 
           <VerificationCard app={app} />
+
+          {teacher && (
+            <section className="grid gap-4 lg:grid-cols-2">
+              <FeedbackPanel teacher={teacher} />
+              <TeachingLevels key={teacher.subjects.join("|")} teacher={teacher} />
+            </section>
+          )}
 
           {/* Stats */}
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">

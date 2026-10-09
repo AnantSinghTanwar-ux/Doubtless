@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         photoURL: `/api/teacher/photo?uid=${encodeURIComponent(app.uid)}&v=${Date.now()}`,
         subjects: app.professional.subjects,
         specialties: app.professional.specialties,
+        subjectGrades: app.professional.subjectGrades ?? {},
         headline: app.personal.headline,
         bio: app.personal.bio,
         experienceYears: app.professional.experienceYears,

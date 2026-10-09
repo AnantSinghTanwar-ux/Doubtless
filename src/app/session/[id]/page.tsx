@@ -7,7 +7,8 @@ import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
 import SessionChat from "@/components/teachers/SessionChat";
 import VideoCall from "@/components/session/VideoCall";
-import { getSession, touchSession, updateSession } from "@/lib/firestore";
+import ReviewForm from "@/components/session/ReviewForm";
+import { getSession, subscribeSession, touchSession, updateSession } from "@/lib/firestore";
 import type { SessionRecord } from "@/types";
 
 export default function SessionPage() {
@@ -44,6 +45,13 @@ export default function SessionPage() {
     };
     if (user && profile) fetchSession();
   }, [params.id, user, profile]);
+
+  // The student follows the session live, so when the teacher ends it they move straight to the review screen.
+  const isStudent = profile?.role === "student";
+  useEffect(() => {
+    if (!params.id || !user || !isStudent) return;
+    return subscribeSession(params.id as string, (s) => s && setSession(s));
+  }, [params.id, user, isStudent]);
 
   // Heartbeat: dashboards use this to tell a live session from one that was simply abandoned.
   const sessionId = session?.id;
@@ -87,6 +95,14 @@ export default function SessionPage() {
 
   if (!session) {
     return <div className="text-ink p-8">Session not found.</div>;
+  }
+
+  if (session.status === "completed" && isStudent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 py-10">
+        <ReviewForm session={session} onDone={() => router.push("/dashboard")} />
+      </div>
+    );
   }
 
   if (session.status === "completed" || session.status === "expired") {

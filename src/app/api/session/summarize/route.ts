@@ -68,7 +68,7 @@ Summarize this session. Return JSON only.`;
     });
 
     // Credit the teacher once per completed session, and remember which topic it was on (used for recommendations).
-    await recordSessionCompleted(before.teacherId, before.doubtContext.topic).catch((e) => console.error("Could not record the session for the teacher:", e));
+    await recordSessionCompleted(before.teacherId, before.doubtContext.topic, before.doubtContext.subtopic).catch((e) => console.error("Could not record the session for the teacher:", e));
     await saveKnowledgeBase({
       sessionId,
       teacherId: before.teacherId,

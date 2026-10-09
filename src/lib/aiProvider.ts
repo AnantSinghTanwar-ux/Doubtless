@@ -17,7 +17,10 @@ const useLocalProvider = process.env.AI_PROVIDER === "ollama";
 /** AI_PROVIDER=nvidia makes NVIDIA NIM the first choice (recommended on hosts with no local model). */
 const preferNvidia = process.env.AI_PROVIDER === "nvidia";
 // Comma-separated list: several machines can host the models and the first one that answers is used.
-const ollamaUrls = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").split(",").map((u) => u.trim().replace(/\/$/, "")).filter(Boolean);
+const configuredOllama = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").split(",").map((u) => u.trim().replace(/\/$/, "")).filter(Boolean);
+const isLocalHost = (u: string) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(u);
+/** On your own machine only your own Ollama is used; remote (shared) hosts are for the deployed site. */
+const ollamaUrls = process.env.VERCEL ? configuredOllama : configuredOllama.filter(isLocalHost).concat(configuredOllama.some(isLocalHost) ? [] : ["http://localhost:11434"]);
 
 const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2";
 const ollamaEmbedModel = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
@@ -26,7 +29,7 @@ const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
 /** POST to Ollama, trying each configured host in turn. OLLAMA_API_KEY is sent as a bearer token for hosts behind an auth proxy. */
 async function ollamaPost(path: string, body: unknown): Promise<Response> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (process.env.OLLAMA_API_KEY) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
+  if (process.env.OLLAMA_API_KEY && process.env.VERCEL) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
   const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (process.env.VERCEL ? 40000 : 120000);
   const failures: string[] = [];
   for (const base of ollamaUrls) {
@@ -418,6 +421,8 @@ export async function openRouterJSON<T>(opts: {
   // llama3.2 cannot see images, so Ollama only goes first for text-only requests; with images it stays the last resort.
   const ollamaFirst = useLocalProvider && !hasImages && Date.now() >= ollamaPausedUntil;
   if (ollamaFirst) attempts.push(["Ollama", () => ollamaTextJSON<T>(opts)]);
+  // Pages with no text layer: on your own machine, read them with the local vision model rather than shipping them online.
+  if (useLocalProvider && !process.env.VERCEL && hasImages && Date.now() >= ollamaPausedUntil) attempts.push(["Ollama (llava reads the page)", () => ollamaVisionJSON<T>(opts)]);
   if (gatewayEnabled()) {
     attempts.push([
       "Gateway",
@@ -492,6 +497,25 @@ async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRout
     maxTokens: Math.max(opts.maxTokens, 1500),
   });
   return parseJSON<T>(text, "NVIDIA");
+}
+
+/** llava reads each page picture into text (one at a time, capped), then the text model does the reasoning. */
+async function ollamaVisionJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
+  const urls = [...new Set(opts.content.flatMap((c) => (c.type === "image_url" ? [c.image_url.url] : [])))].slice(0, 12);
+  const read = new Map<string, string>();
+  for (const url of urls) {
+    const res = await ollamaPost("/api/generate", {
+      model: ollamaVisionModel,
+      prompt: "Write out all the text on this slide or page exactly as written, including formulas. Then add one short line describing any diagram. Output only that.",
+      images: [url.replace(/^data:image\/\w+;base64,/, "")],
+      stream: false,
+    });
+    read.set(url, ((await res.json()).response ?? "").trim());
+  }
+  const content = opts.content.flatMap((c): OpenRouterContent[] =>
+    c.type === "image_url" ? (read.get(c.image_url.url) ? [{ type: "text", text: `(text read from the page image)\n${read.get(c.image_url.url)}` }] : []) : [c]
+  );
+  return ollamaTextJSON<T>({ system: opts.system, content });
 }
 
 /** Last resort on a machine with a local model: text parts only, since the default model can't see images. */

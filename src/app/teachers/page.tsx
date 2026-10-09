@@ -30,6 +30,7 @@ function TeachersContent() {
       difficulty: searchParams.get("difficulty") || "medium",
       doubt_type: (searchParams.get("type") as DoubtRouterResult["doubt_type"]) || "needs_human",
       confidence: Number.isFinite(confidence) && searchParams.get("confidence") ? confidence : 0.5,
+      grade_level: Number(searchParams.get("grade")) || undefined,
       route: "teacher",
       reasoning: "",
     };

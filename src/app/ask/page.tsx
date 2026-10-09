@@ -137,7 +137,7 @@ export default function AskPage() {
 
   const handleTeacher = () => {
     const r = routeResult;
-    const params = new URLSearchParams({ topic: r?.topic || "", subtopic: r?.subtopic || "", difficulty: r?.difficulty || "", type: r?.doubt_type || "", confidence: String(r?.confidence ?? ""), q: question.slice(0, 300) });
+    const params = new URLSearchParams({ topic: r?.topic || "", subtopic: r?.subtopic || "", difficulty: r?.difficulty || "", type: r?.doubt_type || "", confidence: String(r?.confidence ?? ""), grade: String(r?.grade_level ?? ""), q: question.slice(0, 300) });
     router.push(`/teachers?${params}`);
   };
 

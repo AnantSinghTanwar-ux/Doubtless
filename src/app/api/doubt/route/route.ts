@@ -49,8 +49,9 @@ ROUTING RULES:
 - Consider the learner profile to personalize the routing
 
 Return a JSON object with exactly these keys:
-- topic: string (broad subject, e.g. "Physics")
-- subtopic: string
+- topic: string (the BROAD school subject, e.g. "Mathematics", "Physics", "Chemistry", "Biology". Never a chapter name: use "Mathematics", not "Algebra")
+- subtopic: string (the specific chapter or concept, e.g. "Quadratic equations")
+- grade_level: integer 1-12 for the school grade this question is normally taught in, or 13 for college/university level
 - difficulty: "easy" | "medium" | "hard"
 - doubt_type: one of "concept_gap" | "prerequisite_gap" | "careless_error" | "needs_human"
 - confidence: number between 0 and 1
@@ -121,6 +122,7 @@ function normalizeRouterResult(raw: Partial<Record<keyof DoubtRouterResult, unkn
   if (confidence > 1) confidence = confidence / 100;
   return {
     topic: String(raw.topic || "General"),
+    grade_level: Math.min(13, Math.max(1, Math.round(Number(raw.grade_level)))) || undefined,
     subtopic: String(raw.subtopic || ""),
     difficulty: String(raw.difficulty || "medium"),
     doubt_type,

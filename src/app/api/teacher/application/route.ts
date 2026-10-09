@@ -11,6 +11,18 @@ const str = (v: unknown, max = 500) => (typeof v === "string" ? v.trim().slice(0
 const list = (v: unknown) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && !!x.trim()).map((x) => x.trim().slice(0, 60)).slice(0, 12) : [];
 
+/** Grade ranges only for listed subjects, each clamped to 1-13 with from <= to. */
+function grades(raw: unknown, subjects: string[]): Record<string, { from: number; to: number }> {
+  const out: Record<string, { from: number; to: number }> = {};
+  for (const s of subjects) {
+    const r = (raw as Record<string, { from?: unknown; to?: unknown }> | undefined)?.[s];
+    const from = Math.min(13, Math.max(1, Math.round(Number(r?.from)) || 6));
+    const to = Math.min(13, Math.max(1, Math.round(Number(r?.to)) || 12));
+    out[s] = { from: Math.min(from, to), to: Math.max(from, to) };
+  }
+  return out;
+}
+
 const DOCUMENT_KEYS: VerificationFileKey[] = ["idDocument", "certificate"];
 const LIVE_KEYS: VerificationFileKey[] = ["selfie", "video"];
 
@@ -41,6 +53,7 @@ export async function POST(request: NextRequest) {
       linkedinUrl: str(details.professional?.linkedinUrl, 300),
       subjects: list(details.professional?.subjects),
       specialties: list(details.professional?.specialties),
+      subjectGrades: grades(details.professional?.subjectGrades, list(details.professional?.subjects)),
     };
     // No camera on the device: the teacher registers, but stays unverified until they complete live checks.
     const skipped = details.liveness?.skipped === true;
@@ -113,6 +126,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       subjects: professional.subjects,
       specialties: professional.specialties,
+      subjectGrades: professional.subjectGrades,
       headline: personal.headline,
       bio: personal.bio,
       experienceYears: professional.experienceYears,
