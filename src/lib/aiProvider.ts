@@ -250,8 +250,72 @@ export type OpenRouterContent =
   | { type: "text"; text: string }
   | { type: "image_url"; image_url: { url: string } };
 
-/** Multimodal JSON call through OpenRouter (used by CoWork, which needs vision). */
+/**
+ * Multimodal JSON call (used by CoWork and teacher screening, which need vision). Prefers OpenRouter and falls
+ * back to Gemini when OpenRouter is unconfigured, out of credit or erroring, so these features keep working.
+ */
 export async function openRouterJSON<T>(opts: {
+  model?: string;
+  system: string;
+  content: OpenRouterContent[];
+  maxTokens: number;
+}): Promise<T> {
+  const attempts: [string, () => Promise<T>][] = [];
+  if (process.env.OPENROUTER_API_KEY) attempts.push(["OpenRouter", () => openRouterRequest<T>(opts)]);
+  if (process.env.GEMINI_API_KEY) attempts.push(["Gemini", () => geminiMultimodalJSON<T>(opts)]);
+  if (useLocalProvider) attempts.push(["Ollama (text only)", () => ollamaTextJSON<T>(opts)]);
+  if (attempts.length === 0) throw new Error("No AI provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY.");
+
+  const failures: string[] = [];
+  for (const [name, run] of attempts) {
+    try {
+      return await run();
+    } catch (err) {
+      failures.push(`${name}: ${shortError(err)}`);
+      console.warn(`[aiProvider] ${name} failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  throw new Error(`All AI providers failed. ${failures.join(" | ")}`);
+}
+
+/** One readable line from provider errors, which are often raw JSON blobs. */
+function shortError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  try {
+    const msg = JSON.parse(raw)?.error?.message;
+    if (typeof msg === "string") return msg.slice(0, 140);
+  } catch {}
+  return raw.replace(/\s+/g, " ").slice(0, 140);
+}
+
+/** Last resort on a machine with a local model: text parts only, since the default model can't see images. */
+async function ollamaTextJSON<T>(opts: { system: string; content: OpenRouterContent[] }): Promise<T> {
+  const prompt = opts.content.map((c) => (c.type === "text" ? c.text : "")).filter(Boolean).join("\n");
+  const res = await fetch(`${localProviderUrl}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384 } }),
+  });
+  if (!res.ok) throw new Error(`Ollama error ${res.status}`);
+  const data = await res.json();
+  return parseJSON<T>(data.response, "Ollama");
+}
+
+async function geminiMultimodalJSON<T>(opts: { system: string; content: OpenRouterContent[] }): Promise<T> {
+  const parts = opts.content.map((c) => {
+    if (c.type === "text") return { text: c.text };
+    const m = c.image_url.url.match(/^data:([^;]+);base64,(.*)$/);
+    return m ? { inlineData: { mimeType: m[1], data: m[2] } } : { text: "[image unavailable]" };
+  });
+  const response = await genai.models.generateContent({
+    model: getModel(),
+    contents: [{ role: "user", parts }],
+    config: { systemInstruction: opts.system, responseMimeType: "application/json" },
+  });
+  return parseJSON<T>(response.text, "Gemini");
+}
+
+async function openRouterRequest<T>(opts: {
   model?: string;
   system: string;
   content: OpenRouterContent[];
