@@ -118,7 +118,7 @@ function normalizeRouterResult(raw: Partial<Record<keyof DoubtRouterResult, unkn
   };
   const doubt_type = pick(raw.doubt_type, DOUBT_TYPES) ?? "concept_gap";
   let confidence = Number(raw.confidence);
-  if (!Number.isFinite(confidence)) confidence = 0.6;
+  if (!Number.isFinite(confidence) || confidence <= 0.02) confidence = 0.6; // 0 means the model gave no real estimate
   if (confidence > 1) confidence = confidence / 100;
   return {
     topic: String(raw.topic || "General"),

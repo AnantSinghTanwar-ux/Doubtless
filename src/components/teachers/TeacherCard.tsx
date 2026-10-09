@@ -82,9 +82,16 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
               <p className="text-sm text-muted">{teacher.subjects.join(", ")}</p>
             </div>
             {match && (
-              <Badge variant="success" className="shrink-0">
-                {match.score}% match
-              </Badge>
+              <div className="shrink-0 text-right">
+                <Badge variant="success">{match.score}% match</Badge>
+                {e && (
+                  <p className="mt-1.5 text-xs leading-5 text-muted">
+                    Skill fit {Math.round(e.skillFit * 100)}%
+                    <br />
+                    {e.isNew ? "New, no reviews yet" : `Track record ${Math.round(e.trackRecord * 100)}%`}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

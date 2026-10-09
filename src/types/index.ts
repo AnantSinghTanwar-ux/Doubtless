@@ -253,6 +253,14 @@ export interface MatchEvidence {
   gradeMatch: "in" | "near" | "out" | "unknown";
   gradeRange: [number, number] | null;
   subject: string;
+  /** 0-1: how well the teacher's declared skills fit this doubt (subject, specialty, grade). */
+  skillFit: number;
+  /** 0-1: what students and past sessions say. 0.5 means "no history yet", neither good nor bad. */
+  trackRecord: number;
+  /** How a listed specialty compares to the doubt: "exact" = it names this very topic. */
+  specialtyMatch: "exact" | "general" | "none";
+  /** True when there are no reviews yet. */
+  isNew: boolean;
 }
 
 /**
