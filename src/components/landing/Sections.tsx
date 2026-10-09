@@ -28,7 +28,7 @@ const eyebrow = "font-mono text-xs uppercase tracking-[0.22em] text-violet-300";
 const FEATURES = [
   { icon: Route, tag: "Doubt router", title: "Knows why you're stuck", body: "Diagnoses a concept gap, a missing prerequisite or a careless slip, then picks the fastest fix: AI explanation, targeted practice or a live teacher." },
   { icon: Library, tag: "Study vault", title: "Answers from your own notes", body: "Upload your PDFs and textbooks. Explanations are grounded in your material and point to the exact page." },
-  { icon: PenTool, tag: "Step solver", title: "Every step, checked", body: "Type your working or snap a photo. Doubtless finds the first wrong step, explains the slip and scores your method." },
+  { icon: PenTool, tag: "Step solver", title: "Every step, checked", body: "Type your working or snap a photo. SolVε finds the first wrong step, explains the slip and scores your method." },
   { icon: Mic, tag: "Voice explain", title: "Teach it out loud", body: "Explain a topic in your own words. Get scored on accuracy, structure, clarity, filler words and pauses." },
   { icon: Target, tag: "AI viva", title: "A spoken exam that adapts", body: "Face an oral exam that gets harder as you answer well, then get a report with weak topics and a study plan." },
   { icon: Dumbbell, tag: "Adaptive practice", title: "Practice that targets gaps", body: "Question sets built around the subtopics you keep missing, with hints and instant feedback." },
@@ -48,7 +48,7 @@ export function Features() {
         <WordReveal text="Ten tools. One place to get unstuck." className="mt-4 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl" />
         <Reveal delay={150}>
           <p className="mt-5 max-w-2xl text-lg text-zinc-400">
-            Doubtless is an AI-native education platform. Ask a doubt any way you like, and it works out what kind of help you need, from instant AI answers to a real teacher on video.
+            SolVε is an AI-native education platform. Ask a doubt any way you like, and it works out what kind of help you need, from instant AI answers to a real teacher on video.
           </p>
         </Reveal>
 
@@ -73,7 +73,7 @@ export function Features() {
 
 const STEPS = [
   { n: "01", title: "Ask however you like", body: "Type it, speak it, or upload a photo of the problem. Add your own notes to the Study Vault for answers that cite your material." },
-  { n: "02", title: "Doubtless finds the gap", body: "The router reads your doubt together with your history and learner profile, and decides whether you need an explanation, practice or a human." },
+  { n: "02", title: "SolVε finds the gap", body: "The router reads your doubt together with your history and learner profile, and decides whether you need an explanation, practice or a human." },
   { n: "03", title: "Get the right help, instantly", body: "An AI explanation with page citations, a practice set aimed at your weak spots, or a live video session with a verified teacher who already knows where you're stuck." },
   { n: "04", title: "It remembers, so you improve", body: "Session summaries and results feed your profile and a shared knowledge base. The next answer is a little sharper, and so are you." },
 ];
@@ -230,7 +230,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 text-sm text-zinc-500 sm:flex-row">
         <div className="flex items-center gap-3">
           <Logo size={32} />
-          <span className="font-display text-lg font-semibold text-zinc-200">Doubtless</span>
+          <span className="font-display text-lg font-semibold text-zinc-200">SolVε</span>
         </div>
         <p className="font-mono text-xs tracking-wide">The Industry Games 2026 · District 03: AI-Native Education</p>
       </div>

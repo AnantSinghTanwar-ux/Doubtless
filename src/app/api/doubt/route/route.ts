@@ -36,7 +36,7 @@ AI Resolved: ${profile.aiResolved}, Practice Resolved: ${profile.practiceResolve
             .join("\n")
         : "No recent interactions.";
 
-    const systemPrompt = `You are the Doubtless Doubt Router Agent. Your job is to analyze a student's doubt and determine the best route for resolution.
+    const systemPrompt = `You are the SolVε Doubt Router Agent. Your job is to analyze a student's doubt and determine the best route for resolution.
 
 ROUTING RULES:
 - prerequisite_gap or concept_gap → route to "ai_explain", then the system will offer "practice"

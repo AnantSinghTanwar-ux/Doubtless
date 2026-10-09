@@ -40,7 +40,7 @@ export default function Landing() {
             <WordReveal text="Learn more." level={1} delay={260} className="font-display text-6xl font-bold leading-[1.02] tracking-tight sm:text-7xl md:text-8xl" wordClassName="text-orange-600" />
 
             <p className="lp-rise mx-auto mt-8 max-w-2xl text-lg leading-8 text-zinc-400 sm:text-xl" style={{ animationDelay: "0.7s" }}>
-              Doubtless reads your doubt, works out <span className="text-white">why you&apos;re stuck</span>, and sends you to the fastest help: an instant AI explanation, targeted practice, or a{" "}
+              SolVε reads your doubt, works out <span className="text-white">why you&apos;re stuck</span>, and sends you to the fastest help: an instant AI explanation, targeted practice, or a{" "}
               <span className="text-violet-300">live session with a verified teacher</span>.
             </p>
 
@@ -49,7 +49,7 @@ export default function Landing() {
                 Start learning <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link href="/login" className="flex items-center gap-2 rounded-full border border-white/12 bg-[#fffdf8]/75 px-7 py-3.5 text-base font-medium text-white backdrop-blur transition-colors hover:border-violet-400/40 hover:bg-violet-500/10">
-                <GraduationCap className="h-5 w-5 text-violet-300" /> Teach on Doubtless
+                <GraduationCap className="h-5 w-5 text-violet-300" /> Teach on SolVε
               </Link>
             </div>
 

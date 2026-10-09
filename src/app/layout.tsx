@@ -13,7 +13,7 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
-  title: "Doubtless — AI Education OS",
+  title: "SolVε — AI Education OS",
   description:
     "Intelligent doubt resolution powered by AI. Get personalized explanations, practice, and connect with expert teachers.",
   manifest: "/manifest.json",

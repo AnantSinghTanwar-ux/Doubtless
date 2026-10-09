@@ -48,7 +48,7 @@ export default function HeroPreview() {
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
           <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-          <span className="ml-3 font-mono text-xs text-zinc-500">Doubtless · Ask a doubt</span>
+          <span className="ml-3 font-mono text-xs text-zinc-500">SolVε · Ask a doubt</span>
         </div>
 
         <div className="grid gap-5 p-5 text-left sm:p-7 md:grid-cols-[1.1fr_1fr]">

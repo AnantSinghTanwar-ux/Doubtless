@@ -106,7 +106,7 @@ export default function LoginPage() {
         <div className="lp-rise hidden lg:block">
           <div className="mb-8 flex items-center gap-3">
             <Logo size={52} />
-            <span className="font-display text-3xl font-semibold tracking-tight text-white">Doubtless</span>
+            <span className="font-display text-3xl font-semibold tracking-tight text-white">SolVε</span>
           </div>
           <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white">
             Get unstuck, <span className="text-orange-600">fast.</span>
@@ -130,13 +130,13 @@ export default function LoginPage() {
         <div className="lp-rise mx-auto w-full max-w-md" style={{ animationDelay: "0.15s" }}>
           <div className="mb-8 flex flex-col items-center lg:hidden">
             <Logo size={56} />
-            <h1 className="mt-4 font-display text-3xl font-semibold text-white">Doubtless</h1>
+            <h1 className="mt-4 font-display text-3xl font-semibold text-white">SolVε</h1>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#fffdf8]/85 p-8 shadow-[0_30px_100px_-40px_rgba(194, 65, 12,0.6)] backdrop-blur-xl">
             {choosingRole ? (
               <div className="slide-up">
-                <h2 className="text-center font-display text-2xl font-semibold text-white">How will you use Doubtless?</h2>
+                <h2 className="text-center font-display text-2xl font-semibold text-white">How will you use SolVε?</h2>
                 <p className="mb-7 mt-2 text-center text-sm text-zinc-500">Pick the one that fits you.</p>
                 <div className="space-y-3">
                   {[

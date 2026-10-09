@@ -1,6 +1,6 @@
-# Doubtless - AI-Native Education OS 🎓
+# SolVε - AI-Native Education OS 🎓
 
-Doubtless is an intelligent education platform that analyzes a student's doubt and contextually routes them to the best help: an AI explanation, adaptive practice, or a live session with an expert human teacher.
+SolVε is an intelligent education platform that analyzes a student's doubt and contextually routes them to the best help: an AI explanation, adaptive practice, or a live session with an expert human teacher.
 
 Built for **The Industry Games 2026, District 03**.
 

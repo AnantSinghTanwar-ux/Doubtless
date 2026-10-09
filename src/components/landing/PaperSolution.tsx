@@ -86,7 +86,7 @@ export default function PaperSolution() {
           </Reveal>
           <WordReveal text="Handwritten work, marked like a teacher would." className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl" />
           <Reveal delay={150}>
-            <p className="mt-5 text-lg leading-8 text-zinc-400">Doubtless reads your working the way a patient teacher does: line by line, with a red pen and a reason for every mark.</p>
+            <p className="mt-5 text-lg leading-8 text-zinc-400">SolVε reads your working the way a patient teacher does: line by line, with a red pen and a reason for every mark.</p>
           </Reveal>
           <ul className="mt-8 space-y-5">
             {POINTS.map((p, i) => (

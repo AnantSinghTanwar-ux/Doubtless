@@ -273,9 +273,9 @@ export default function TeacherOnboarding() {
         {/* Step rail */}
         <aside className="lg:sticky lg:top-12 lg:h-fit lg:w-72 shrink-0">
           <Link href="/teacher-dashboard" className="mb-8 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 font-bold shadow-lg shadow-blue-500/30">D</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 font-bold shadow-lg shadow-blue-500/30">S</div>
             <div>
-              <p className="font-semibold tracking-tight">Doubtless</p>
+              <p className="font-semibold tracking-tight">SolVε</p>
               <p className="text-[10px] uppercase tracking-widest text-slate-500">Teacher registration</p>
             </div>
           </Link>
@@ -529,7 +529,7 @@ export default function TeacherOnboarding() {
 
                 <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4 text-sm text-slate-300">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-blue-500 p-0" />
-                  I confirm these details and documents are genuine and belong to me, and I consent to Doubtless reviewing them to verify my identity.
+                  I confirm these details and documents are genuine and belong to me, and I consent to SolVε reviewing them to verify my identity.
                 </label>
               </div>
             )}

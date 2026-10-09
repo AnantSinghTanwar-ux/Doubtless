@@ -52,10 +52,10 @@ export default function Sidebar() {
       <div className="p-6 border-b border-white/[0.06]">
         <Link href={profile?.role === "teacher" ? "/teacher-dashboard" : "/dashboard"} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow font-bold text-lg shadow-lg shadow-blue-500/30">
-            D
+            S
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">Doubtless</h1>
+            <h1 className="text-lg font-bold text-white tracking-tight">SolVε</h1>
             <p className="text-[10px] text-gray-500 uppercase tracking-widest">AI Education OS</p>
           </div>
         </Link>

@@ -69,7 +69,7 @@ export default function LandingNav() {
         <div className="flex items-center justify-between gap-6">
           <a href="#top" className="lp-drop flex items-center gap-3" style={{ animationDelay: "0.05s" }}>
             <Logo size={44 - p * 8} />
-            <span className="font-display text-2xl font-semibold tracking-tight text-white">Doubtless</span>
+            <span className="font-display text-2xl font-semibold tracking-tight text-white">SolVε</span>
           </a>
 
           <nav className="hidden items-center gap-1 md:flex">

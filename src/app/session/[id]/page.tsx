@@ -107,7 +107,7 @@ export default function SessionPage() {
     <div className="h-screen bg-transparent flex flex-col overflow-hidden">
       <header className="h-16 flex-none bg-[#fffdf8]/55 border-b border-white/[0.06] px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow font-bold">D</div>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow font-bold">S</div>
           <div>
             <h1 className="text-sm font-semibold text-white">Live Session: {session.doubtContext.topic}</h1>
             <p className="text-xs text-gray-400">

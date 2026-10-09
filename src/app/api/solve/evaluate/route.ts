@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const contextStr = formatChunksForPrompt(chunks ?? []);
     const hasVault = chunks && chunks.length > 0;
 
-    const systemPrompt = `You are a meticulous solution evaluator in the Doubtless AI Education system.
+    const systemPrompt = `You are a meticulous solution evaluator in the SolVε AI Education system.
 
 ${hasVault ? `Ground your evaluation in the reference material provided. Cite sources (PDF name, page number) when relevant.` : `No reference material available. Evaluate using general knowledge. For GK questions, evaluate factual accuracy, completeness, and reasoning order instead of mathematical correctness.`}
 
