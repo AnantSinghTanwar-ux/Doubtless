@@ -1,5 +1,6 @@
 "use client";
 
+import { FileUp } from "lucide-react";
 import { useState, useRef } from "react";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,17 +108,24 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         onClick={() => fileRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 ${
-          dragOver
-            ? "border-blue-500 bg-blue-500/10"
-            : "border-white/10 hover:border-white/20 hover:bg-[#fffdf8]/55"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload a PDF"
+        className={`cursor-pointer rounded-card border-2 border-dashed p-10 text-center transition-colors ${
+          dragOver ? "border-pen bg-pen-wash" : "border-line-strong hover:border-pen hover:bg-pen-wash"
         }`}
       >
-        <div className="text-4xl mb-3">📄</div>
-        <p className="text-white font-medium mb-1">
+        <FileUp className="mx-auto mb-3 h-8 w-8 text-pen" aria-hidden />
+        <p className="mb-1 font-medium text-ink">
           {uploading ? "Processing..." : "Drop a PDF here or click to browse"}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted">
           {docType === 'content' ? "Notes, textbooks, study material" : "Past papers, exam questions"}
         </p>
 
@@ -135,39 +143,39 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
 
       {folderId && !uploading && (
         <div className="flex justify-center gap-4 pt-2">
-          <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-300 hover:text-white">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-ink/80 hover:text-ink">
             <input 
               type="radio" 
               name={`type-${folderId}`} 
               checked={docType === 'content'} 
               onChange={() => setDocType('content')} 
-              className="accent-blue-500"
+              className="accent-pen"
             />
-            Textbook / Notes
+            Textbook or notes
           </label>
-          <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-300 hover:text-white">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-ink/80 hover:text-ink">
             <input 
               type="radio" 
               name={`type-${folderId}`} 
               checked={docType === 'paper'} 
               onChange={() => setDocType('paper')} 
-              className="accent-purple-500"
+              className="accent-pen"
             />
-            Past Paper / PYQ
+            Past paper
           </label>
         </div>
       )}
 
       {uploading && (
         <div className="space-y-2">
-          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-pulse w-2/3" />
+          <div className="h-1.5 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-label="Uploading">
+            <div className="h-full bg-pen rounded-full animate-pulse w-2/3" />
           </div>
         </div>
       )}
 
       {progress && (
-        <p className={`text-sm ${progress.startsWith("✓") ? "text-emerald-400" : progress.startsWith("Please") ? "text-red-400" : "text-gray-400"}`}>
+        <p className={`text-sm ${progress.startsWith("✓") ? "text-emerald-700" : progress.startsWith("Please") ? "text-margin" : "text-muted"}`}>
           {progress}
         </p>
       )}

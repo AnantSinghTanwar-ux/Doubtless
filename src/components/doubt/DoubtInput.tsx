@@ -22,8 +22,9 @@ export default function DoubtInput({ onSubmit, loading }: DoubtInputProps) {
       <textarea
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder="What's your doubt? e.g., I don't understand how backpropagation calculates gradients..."
-        className="w-full min-h-[120px] p-4 pr-16 bg-[#fffdf8]/75 border border-white/[0.06] rounded-2xl text-white placeholder-gray-500 resize-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+        aria-label="Your doubt"
+        placeholder="Describe what you're stuck on. For example: I don't understand how backpropagation calculates gradients."
+        className="min-h-[140px] w-full resize-none rounded-card p-4 pb-16 shadow-sheet"
         disabled={loading}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
@@ -32,14 +33,9 @@ export default function DoubtInput({ onSubmit, loading }: DoubtInputProps) {
           }
         }}
       />
-      <div className="absolute bottom-4 right-4">
-        <Button
-          type="submit"
-          disabled={!question.trim() || loading}
-          loading={loading}
-          size="sm"
-          className="rounded-xl px-4 py-2"
-        >
+      <div className="absolute bottom-3 left-4 right-3 flex items-center justify-between gap-3">
+        <span className="hidden text-xs text-faint sm:block">Enter to send, Shift+Enter for a new line</span>
+        <Button type="submit" disabled={!question.trim() || loading} loading={loading} size="sm" className="ml-auto">
           Ask
         </Button>
       </div>

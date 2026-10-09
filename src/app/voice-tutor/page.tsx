@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Headphones, Mic, MicOff, PhoneOff } from "lucide-react";
+import { Headphones, Mic, MicOff, PhoneOff, Settings2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { addRecentInteraction } from "@/lib/firestore";
 import Sidebar from "@/components/layout/Sidebar";
 import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
+import Callout from "@/components/ui/Callout";
 import { cn } from "@/lib/utils";
 
 type CallStatus = "idle" | "connecting" | "live" | "ending";
@@ -128,9 +129,9 @@ export default function VoiceTutorPage() {
       client.on("volume-level", ((v: number) => setVolume(v)) as (v: never) => void);
       client.on("message", onMessage as (m: never) => void);
       client.on("error", ((e: { error?: { message?: string }; message?: string }) => {
-        console.error("Vapi error:", e);
         // Vapi also reports "meeting ended" style errors as a call winds down; those aren't failures.
         if (statusRef.current === "idle" || statusRef.current === "ending") return;
+        console.error("Vapi error:", e);
         const raw = e?.error?.message || e?.message || "";
         setError(/permission|denied|NotAllowed/i.test(raw) ? "Microphone access is blocked. Allow it in your browser's address bar, then try again." : raw || "The call couldn't be connected.");
         setStatus("idle");
@@ -181,14 +182,13 @@ export default function VoiceTutorPage() {
         <TopBar title="Voice Tutor" />
         <main className="mx-auto grid max-w-6xl gap-6 p-4 pb-24 md:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:pb-8">
           {/* Call panel */}
-          <section className="flex flex-col items-center rounded-3xl border border-[#e2d9c6] bg-[#fffdf8]/75 p-8 text-center">
+          <section className="flex flex-col items-center rounded-card border border-line bg-sheet p-8 text-center shadow-sheet">
             {!configured ? (
-              <div className="py-6 text-left">
-                <p className="flex items-center gap-2 font-medium text-white">
-                  <AlertCircle className="h-5 w-5 text-amber-400" /> Voice tutor isn&apos;t set up yet
-                </p>
-                <p className="mt-2 text-sm text-gray-400">Add these to your environment (locally in .env.local, and in Vercel), then restart:</p>
-                <pre className="mt-3 overflow-x-auto rounded-xl bg-white/[0.05] p-4 text-xs text-white">
+              <div className="w-full py-2 text-left">
+                <Callout tone="warning" icon={Settings2} title="Voice tutor isn't set up yet">
+                  Add these to your environment (locally in .env.local, and in Vercel), then restart:
+                </Callout>
+                <pre className="mt-3 overflow-x-auto rounded-xl border border-line bg-paper p-4 text-xs text-ink">
 {`NEXT_PUBLIC_VAPI_PUBLIC_KEY=...
 NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 </pre>
@@ -198,11 +198,11 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 {/* The orb pulses with the voice level while someone is talking. */}
                 <div className="relative mt-4 flex h-52 w-52 items-center justify-center">
                   <span
-                    className="absolute inset-0 rounded-full bg-orange-600/15 transition-transform duration-150"
+                    className="absolute inset-0 rounded-full bg-pen/10 transition-transform duration-150"
                     style={{ transform: `scale(${live ? 1 + volume * 0.9 : 1})` }}
                   />
                   <span
-                    className="absolute inset-6 rounded-full bg-orange-600/20 transition-transform duration-150"
+                    className="absolute inset-6 rounded-full bg-pen/15 transition-transform duration-150"
                     style={{ transform: `scale(${live ? 1 + volume * 0.5 : 1})` }}
                   />
                   <button
@@ -211,31 +211,31 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                     aria-label={live ? "End call" : "Start call"}
                     className={cn(
                       "relative flex h-28 w-28 items-center justify-center rounded-full text-snow shadow-xl transition-all hover:scale-105 disabled:opacity-60",
-                      live ? "bg-red-600" : "bg-orange-600"
+                      live ? "bg-margin" : "bg-pen"
                     )}
                   >
                     {live ? <PhoneOff className="h-9 w-9" /> : <Headphones className="h-10 w-10" />}
                   </button>
                 </div>
 
-                <p className="mt-6 font-display text-xl font-semibold text-white">
+                <p className="display mt-6 text-2xl text-ink">
                   {status === "connecting" ? "Connecting…" : status === "ending" ? "Ending…" : live ? (assistantSpeaking ? "SolVε is speaking" : "Listening…") : "Tap to talk it through"}
                 </p>
-                <p className="mt-1 h-5 font-mono text-xs tabular-nums text-gray-500">{live ? fmt(seconds) : ""}</p>
+                <p className="mt-1 h-5 font-mono text-xs tabular-nums text-muted">{live ? fmt(seconds) : ""}</p>
 
                 {live ? (
-                  <button onClick={toggleMute} className="mt-4 flex items-center gap-2 rounded-full border border-[#e2d9c6] px-4 py-2 text-sm text-white hover:bg-white/5">
-                    {muted ? <MicOff className="h-4 w-4 text-red-600" /> : <Mic className="h-4 w-4" />} {muted ? "Unmute" : "Mute"}
+                  <button onClick={toggleMute} className="mt-4 flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-ink hover:bg-ink/5">
+                    {muted ? <MicOff className="h-4 w-4 text-margin" /> : <Mic className="h-4 w-4" />} {muted ? "Unmute" : "Mute"}
                   </button>
                 ) : (
                   <div className="mt-6 w-full text-left">
-                    <label className="mb-1.5 block text-sm font-medium text-white">What are you stuck on? <span className="font-normal text-gray-500">Optional</span></label>
+                    <label className="mb-1.5 block text-sm font-medium text-ink">What are you stuck on? <span className="font-normal text-muted">Optional</span></label>
                     <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. De Morgan's laws, projectile motion…" className="w-full" disabled={busy} />
                   </div>
                 )}
 
-                {error && <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-left text-sm text-red-400">{error}</p>}
-                <p className="mt-6 text-xs leading-5 text-gray-500">Your browser will ask for microphone access. Speak naturally; you can interrupt the tutor at any time.</p>
+                {error && <Callout tone="error" title="Couldn't start the call" className="mt-4 w-full text-left">{error}</Callout>}
+                <p className="mt-6 text-xs leading-5 text-muted">Your browser will ask for microphone access. Speak naturally; you can interrupt the tutor at any time.</p>
               </>
             )}
           </section>

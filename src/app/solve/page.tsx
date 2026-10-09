@@ -125,16 +125,16 @@ export default function SolvePage() {
     <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
-        <TopBar title="Step-by-Step Solver" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
+        <TopBar title="Solve" />
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
           
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-2">Check your work</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              Write your solution step-by-step or upload a photo of your notebook. Our AI will analyze your method and pinpoint exactly where you went wrong.
+            <h2 className="display text-2xl text-ink mb-2">Check your work</h2>
+            <p className="text-sm text-muted mb-6">
+              Write your solution step by step or upload a photo of your notebook. SolVε checks your method and points to the first step that goes wrong.
             </p>
             
-            <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
+            <div className="rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6">
               <StepEditor 
                 onSubmitSteps={handleSubmitSteps} 
                 onSubmitImage={handleSubmitImage}
@@ -146,13 +146,13 @@ export default function SolvePage() {
 
           {loading && (
              <div className="py-12">
-               <Loader size="lg" text="Meticulously analyzing your solution..." />
+               <Loader size="lg" text="Checking your working line by line..." />
              </div>
           )}
 
           {evaluation && !loading && (
              <div className="animate-in fade-in slide-up mt-8">
-               <h2 className="text-xl font-semibold text-white mb-6">Evaluation Results</h2>
+               <h2 className="display mb-6 text-2xl text-ink">Your results</h2>
                <EvaluationResult evaluation={evaluation} />
              </div>
           )}

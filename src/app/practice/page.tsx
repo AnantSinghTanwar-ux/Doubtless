@@ -9,7 +9,9 @@ import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
+import Callout from "@/components/ui/Callout";
 import Card from "@/components/ui/Card";
+import { CheckCircle2, Trophy, XCircle } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import type { PracticeQuestion, PracticeSet } from "@/types";
 import { savePracticeSet } from "@/lib/firestore";
@@ -183,105 +185,98 @@ function PracticeContent() {
     <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
-        <TopBar title="Adaptive Practice" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
+        <TopBar title="Practice" />
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
           
           {questions.length === 0 && !loading && (
             <div className="mb-8 animate-in fade-in">
-              <h2 className="text-xl font-semibold text-white mb-2">Practice makes perfect</h2>
-              <p className="text-sm text-gray-400 mb-6">
-                Generate a personalized practice set targeted at your weak spots. The AI adjusts the difficulty based on your past performance.
+              <h2 className="display text-2xl text-ink mb-2">Practise what you keep missing</h2>
+              <p className="text-sm text-muted mb-6">
+                Get a set of 5 questions aimed at your weak spots. The difficulty adapts to how you have been doing.
               </p>
               
-              <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6 space-y-4">
+              <div className="rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Topic</label>
+                  <label htmlFor="practice-topic" className="mb-2 block text-sm font-medium text-ink">Topic</label>
                   <input
+                    id="practice-topic"
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g., Algebra"
-                    className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
+                    className="w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Subtopic (Optional)</label>
+                  <label htmlFor="practice-subtopic" className="mb-2 block text-sm font-medium text-ink">Subtopic <span className="font-normal text-faint">(optional)</span></label>
                   <input
+                    id="practice-subtopic"
                     type="text"
                     value={subtopic}
                     onChange={(e) => setSubtopic(e.target.value)}
                     placeholder="e.g., Quadratic Equations"
-                    className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
+                    className="w-full"
                   />
                 </div>
                 <div className="pt-2">
-                  <Button onClick={handleGenerate} disabled={!topic.trim()}>Generate 5 Questions</Button>
+                  <Button onClick={handleGenerate} disabled={!topic.trim()}>Generate 5 questions</Button>
                 </div>
               </div>
             </div>
           )}
 
           {loading && (
-            <div className="py-12"><Loader text="Generating adaptive questions..." /></div>
+            <div className="py-12"><Loader text="Writing questions for you..." /></div>
           )}
 
           {questions.length > 0 && !isFinished && (
              <div className="animate-in fade-in">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-semibold text-white">Question {currentIndex + 1} of {questions.length}</h2>
+                  <h2 className="font-display text-xl font-semibold text-ink">Question {currentIndex + 1} of {questions.length}</h2>
                   <Badge variant="info">Difficulty: {questions[currentIndex].difficulty}/5</Badge>
                 </div>
 
-                <Card className="bg-[#fffdf8]/80 mb-6">
-                  <p className="text-lg text-white font-medium mb-4">{questions[currentIndex].question}</p>
+                <Card className="mb-6">
+                  <p className="mb-4 font-display text-xl font-medium leading-relaxed text-ink">{questions[currentIndex].question}</p>
                   
-                  <div className="space-y-2 mt-6">
-                    <h4 className="text-xs text-gray-500 uppercase tracking-wider">Hints available:</h4>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {questions[currentIndex].hints.map((hint, i) => (
-                         <li key={i} className="text-sm text-gray-400 opacity-50 hover:opacity-100 transition-opacity cursor-pointer blur-sm hover:blur-none select-none">
-                           {hint}
-                         </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {questions[currentIndex].hints.length > 0 && (
+                    <details className="group mt-6 rounded-xl border border-line bg-paper px-4 py-3">
+                      <summary className="cursor-pointer text-sm font-medium text-pen-deep">Need a hint?</summary>
+                      <ul className="mt-3 list-disc space-y-1 pl-5">
+                        {questions[currentIndex].hints.map((hint, i) => (
+                          <li key={i} className="text-sm text-muted">
+                            {hint}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </Card>
 
                 {!showFeedback ? (
                   <div className="space-y-4">
                     <textarea
                       value={answer}
+                      aria-label="Your answer"
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="Type your answer here..."
-                      className="w-full h-32 p-4 bg-[#fffdf8]/75 border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500"
+                      className="h-32 w-full p-4"
                       disabled={evaluating}
                     />
                     <div className="flex justify-end">
                       <Button onClick={handleSubmitAnswer} loading={evaluating} disabled={!answer.trim()}>
-                        Check Answer
+                        Check my answer
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4 animate-in slide-up">
-                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-                      results[currentIndex].correct 
-                        ? "bg-emerald-500/10 border-emerald-500/30" 
-                        : "bg-red-500/10 border-red-500/30"
-                    }`}>
-                      <span className="text-2xl mt-1">{results[currentIndex].correct ? "✅" : "❌"}</span>
-                      <div>
-                        <h4 className={`font-medium ${results[currentIndex].correct ? "text-emerald-400" : "text-red-400"}`}>
-                          {results[currentIndex].correct ? "Correct!" : "Incorrect"}
-                        </h4>
-                        <p className="text-sm text-gray-300 mt-2 leading-relaxed">
-                          {results[currentIndex].feedback}
-                        </p>
-                      </div>
-                    </div>
+                    <Callout tone={results[currentIndex].correct ? "success" : "error"} icon={results[currentIndex].correct ? CheckCircle2 : XCircle} title={results[currentIndex].correct ? "Correct" : "Not quite"}>
+                      <p className="leading-relaxed">{results[currentIndex].feedback}</p>
+                    </Callout>
                     <div className="flex justify-end">
                       <Button onClick={handleNext}>
-                        {currentIndex + 1 === questions.length ? "Finish Practice" : "Next Question"}
+                        {currentIndex + 1 === questions.length ? "Finish the set" : "Next question"}
                       </Button>
                     </div>
                   </div>
@@ -291,15 +286,17 @@ function PracticeContent() {
 
           {isFinished && (
              <div className="text-center py-12 animate-in slide-up">
-               <span className="text-6xl mb-4 block">🏆</span>
-               <h2 className="text-2xl font-bold text-white mb-2">Practice Complete!</h2>
-               <p className="text-gray-400 mb-8">
-                 You scored an average of <strong className="text-white">{(results.reduce((s, r) => s + r.score, 0) / results.length).toFixed(1)}/10</strong> across 5 questions.
+               <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-pen/10 text-pen">
+                 <Trophy className="h-8 w-8" aria-hidden />
+               </span>
+               <h2 className="display mb-2 text-3xl text-ink">Set complete</h2>
+               <p className="text-muted mb-8">
+                 You scored an average of <strong className="text-ink">{(results.reduce((s, r) => s + r.score, 0) / results.length).toFixed(1)}/10</strong> across 5 questions.
                  Your mastery profile has been updated.
                </p>
                <div className="flex justify-center gap-4">
-                 <Button variant="secondary" onClick={() => router.push("/dashboard")}>Back to Dashboard</Button>
-                 <Button onClick={() => handleGenerate()}>Practice Again</Button>
+                 <Button variant="secondary" onClick={() => router.push("/dashboard")}>Back to the dashboard</Button>
+                 <Button onClick={() => handleGenerate()}>Practise again</Button>
                </div>
              </div>
           )}
@@ -313,7 +310,7 @@ function PracticeContent() {
 
 export default function PracticePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-transparent flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader size="lg" /></div>}>
       <PracticeContent />
     </Suspense>
   );

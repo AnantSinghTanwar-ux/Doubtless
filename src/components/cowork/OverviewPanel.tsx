@@ -21,12 +21,12 @@ interface OverviewPanelProps {
 
 function Block({ id, icon, title, count, accent, children, action }: { id: string; icon: ReactNode; title: string; count?: number; accent: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section id={id} className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] p-5 sm:p-6 scroll-mt-20">
+    <section id={id} className="rounded-card border border-line bg-sheet p-5 sm:p-6 scroll-mt-20">
       <header className="flex items-center justify-between gap-3 mb-4">
-        <h3 className="flex items-center gap-2.5 text-base font-semibold text-white">
+        <h3 className="flex items-center gap-2.5 text-base font-semibold text-ink">
           <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}>{icon}</span>
           {title}
-          {count !== undefined && <span className="text-xs font-medium text-slate-500">{count}</span>}
+          {count !== undefined && <span className="text-xs font-medium text-faint">{count}</span>}
         </h3>
         {action}
       </header>
@@ -56,7 +56,7 @@ function PageLinks({ pages, onGoToPage }: { pages: number[]; onGoToPage: (p: num
               onGoToPage(p);
             }
           }}
-          className="cursor-pointer rounded-md bg-white/[0.05] hover:bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-slate-400 hover:text-blue-200 transition-colors"
+          className="cursor-pointer rounded-md bg-ink/[0.05] hover:bg-pen/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted hover:text-pen-deep transition-colors"
         >
           p.{p}
         </span>
@@ -69,25 +69,25 @@ function Question({ q, onGoToPage }: { q: DocumentOverview["importantQuestions"]
   const [open, setOpen] = useState(false);
   const high = q.priority === "high";
   return (
-    <div className={`rounded-xl border overflow-hidden ${high ? "border-rose-400/20 bg-rose-500/[0.04]" : "border-white/[0.07] bg-[#fffdf8]/55"}`}>
+    <div className={`rounded-xl border overflow-hidden ${high ? "border-rose-400/20 bg-rose-500/[0.04]" : "border-line bg-sheet"}`}>
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-start gap-3 p-4 text-left">
         {high ? (
-          <span className="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-rose-600 text-snow text-xs font-black leading-5 text-center shadow-[0_0_12px_rgba(225,29,72,0.5)]">!</span>
+          <span className="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-rose-600 text-snow text-xs font-black leading-5 text-center shadow-lift">!</span>
         ) : (
           <span className="mt-2 w-1.5 h-1.5 mx-[7px] shrink-0 rounded-full bg-slate-500" />
         )}
         <span className="flex-1 min-w-0">
           <span className="block text-[15px] leading-6 text-slate-100">{q.question}</span>
-          <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+          <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-faint">
             {q.topic && <span>{q.topic}</span>}
             <PageLinks pages={q.pages} onGoToPage={onGoToPage} />
           </span>
         </span>
-        <ChevronDown className={`w-4 h-4 mt-1 shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 mt-1 shrink-0 text-faint transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="px-4 pb-4 pl-12">
-          <div className="border-l-2 border-blue-400/30 pl-3">
+          <div className="border-l-2 border-pen/30 pl-3">
             <Md>{q.answer}</Md>
           </div>
         </div>
@@ -99,22 +99,22 @@ function Question({ q, onGoToPage }: { q: DocumentOverview["importantQuestions"]
 function PyqGroup({ group, defaultOpen }: { group: DocumentOverview["pyqs"][number]; defaultOpen: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-white/[0.07] overflow-hidden">
-      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#fffdf8]/55 hover:bg-[#fffdf8]/75 text-left">
+    <div className="rounded-xl border border-line overflow-hidden">
+      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-sheet hover:bg-sheet text-left">
         <span className="text-sm font-medium text-slate-100">{group.topic}</span>
-        <span className="flex items-center gap-2 text-xs text-slate-500">
+        <span className="flex items-center gap-2 text-xs text-faint">
           {group.questions.length}
           <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
       {open && (
-        <ol className="divide-y divide-white/[0.05]">
+        <ol className="divide-y divide-ink/[0.05]">
           {group.questions.map((q, i) => (
             <li key={i} className="flex items-start gap-3 px-4 py-3">
-              <span className="text-xs tabular-nums text-slate-600 mt-0.5 w-4 shrink-0">{i + 1}.</span>
-              <span className="flex-1 text-sm leading-6 text-slate-200">{q.question}</span>
+              <span className="text-xs tabular-nums text-faint mt-0.5 w-4 shrink-0">{i + 1}.</span>
+              <span className="flex-1 text-sm leading-6 text-ink">{q.question}</span>
               <span className="flex flex-col items-end gap-1 shrink-0">
-                {q.marks ? <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-semibold text-slate-300">{q.marks}M</span> : null}
+                {q.marks ? <span className="rounded-md bg-ink/[0.06] px-1.5 py-0.5 text-[10px] font-semibold text-ink/80">{q.marks}M</span> : null}
                 {q.source === "past_paper" && (
                   <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">Past paper</span>
                 )}
@@ -131,26 +131,26 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
   if (state.status === "idle" || state.status === "preparing" || state.status === "generating") {
     const pct = state.status === "preparing" ? Math.round((state.done / Math.max(1, state.total)) * 60) : state.status === "generating" ? 75 : 0;
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] px-6 py-16 text-center">
+      <div className="rounded-card border border-line bg-sheet px-6 py-16 text-center">
         <div className="relative w-14 h-14 mx-auto mb-5">
-          <div className="absolute inset-0 rounded-2xl bg-blue-500/20 animate-ping" />
-          <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="absolute inset-0 rounded-card bg-pen/20 animate-ping" />
+          <div className="relative w-14 h-14 rounded-card bg-pen flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-ink" />
           </div>
         </div>
-        <p className="text-white font-medium">
+        <p className="text-ink font-medium">
           {state.status === "generating" ? "Building your study guide…" : `Reading all ${numPages || ""} pages…`}
         </p>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-faint mt-1">
           {state.status === "preparing"
             ? `Preparing page ${state.done} of ${state.total}`
             : state.status === "generating"
               ? "Summary, formula sheet, important questions and PYQs. This takes about a minute."
               : "Starting…"}
         </p>
-        <div className="mt-6 mx-auto max-w-xs h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="mt-6 mx-auto max-w-xs h-1.5 rounded-full bg-ink/[0.06] overflow-hidden">
           <div
-            className={`h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500 transition-[width] duration-500 ${state.status === "generating" ? "animate-pulse" : ""}`}
+            className={`h-full rounded-full bg-pen transition-[width] duration-500 ${state.status === "generating" ? "animate-pulse" : ""}`}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -160,13 +160,13 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
 
   if (state.status === "error") {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] px-6 py-16 text-center">
+      <div className="rounded-card border border-line bg-sheet px-6 py-16 text-center">
         <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-3" />
-        <p className="text-slate-200 font-medium">Couldn&apos;t build the study guide</p>
-        <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">{state.error}</p>
+        <p className="text-ink font-medium">Couldn&apos;t build the study guide</p>
+        <p className="text-sm text-faint mt-1 max-w-md mx-auto">{state.error}</p>
         <button
           onClick={onRegenerate}
-          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white/[0.06] hover:bg-white/10 border border-white/10 px-4 py-2 text-sm text-slate-200"
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-ink/[0.06] hover:bg-ink/10 border border-line px-4 py-2 text-sm text-ink"
         >
           <RotateCw className="w-4 h-4" /> Try again
         </button>
@@ -187,18 +187,17 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
   return (
     <div className="space-y-5">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border border-blue-400/15 bg-gradient-to-br from-[#f3eee2] via-[#f3eee2] to-[#f3eee2] p-6 sm:p-7">
-        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-violet-600/20 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden rounded-card border border-line bg-sheet p-6 shadow-sheet sm:p-7">
         <div className="relative">
           <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-blue-200">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/[0.06] px-2.5 py-1 text-[11px] font-medium text-pen-deep">
               <FileStack className="w-3.5 h-3.5" /> Whole-document guide · {numPages} pages
             </span>
-            <button onClick={onRegenerate} className="text-slate-500 hover:text-slate-300 p-1" title="Regenerate">
+            <button onClick={onRegenerate} className="text-faint hover:text-ink/80 p-1" title="Regenerate">
               <RotateCw className="w-3.5 h-3.5" />
             </button>
           </div>
-          {d.subject && <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">{d.subject}</h2>}
+          {d.subject && <h2 className="display mt-4 text-3xl text-ink">{d.subject}</h2>}
           <div className="mt-3">
             <Md>{d.overview}</Md>
           </div>
@@ -211,9 +210,9 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
                   e.preventDefault();
                   document.getElementById(x.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] px-3 py-1.5 text-xs text-slate-200 transition-colors"
+                className="rounded-lg bg-ink/[0.06] hover:bg-ink/[0.1] border border-line px-3 py-1.5 text-xs text-ink transition-colors"
               >
-                {x.label} <span className="text-slate-500 ml-1">{x.n}</span>
+                {x.label} <span className="text-faint ml-1">{x.n}</span>
               </a>
             ))}
           </div>
@@ -221,27 +220,27 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
       </section>
 
       {d.topics.length > 0 && (
-        <Block id="ov-topics" icon={<Layers className="w-4 h-4 text-blue-300" />} accent="bg-blue-500/15" title="Topics covered" count={d.topics.length}>
+        <Block id="ov-topics" icon={<Layers className="w-4 h-4 text-pen" />} accent="bg-pen/15" title="Topics covered" count={d.topics.length}>
           <ol className="relative space-y-1">
             {d.topics.map((t, i) => (
               <li key={i}>
                 <button
                   onClick={() => t.pages[0] && onGoToPage(t.pages[0])}
-                  className="group w-full flex items-start gap-3 rounded-lg px-2 py-2.5 -mx-2 text-left hover:bg-[#fffdf8]/75 transition-colors"
+                  className="group w-full flex items-start gap-3 rounded-lg px-2 py-2.5 -mx-2 text-left hover:bg-sheet transition-colors"
                 >
                   <span
                     className={`mt-1.5 w-2 h-2 shrink-0 rounded-full ${
-                      t.importance === "high" ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]" : t.importance === "medium" ? "bg-amber-400" : "bg-slate-600"
+                      t.importance === "high" ? "bg-rose-500 shadow-lift" : t.importance === "medium" ? "bg-amber-400" : "bg-slate-600"
                     }`}
                   />
                   <span className="flex-1 min-w-0">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium text-slate-100 group-hover:text-white">{t.name}</span>
+                      <span className="text-sm font-medium text-slate-100 group-hover:text-ink">{t.name}</span>
                       {t.importance === "high" && (
-                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-300">Must know</span>
+                        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-rose-300">Must know</span>
                       )}
                     </span>
-                    {t.summary && <span className="block text-[13px] leading-5 text-slate-400 mt-0.5">{t.summary}</span>}
+                    {t.summary && <span className="block text-[13px] leading-5 text-muted mt-0.5">{t.summary}</span>}
                   </span>
                   <PageLinks pages={t.pages} onGoToPage={onGoToPage} />
                 </button>
@@ -252,7 +251,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
       )}
 
       {d.formulas.length > 0 && (
-        <Block id="ov-formulas" icon={<Sigma className="w-4 h-4 text-violet-300" />} accent="bg-violet-500/15" title="Formula sheet" count={d.formulas.length}>
+        <Block id="ov-formulas" icon={<Sigma className="w-4 h-4 text-pen" />} accent="bg-pen/15" title="Formula sheet" count={d.formulas.length}>
           <div className="grid gap-2.5 sm:grid-cols-2">
             {d.formulas.map((f, i) => (
               <FormulaCard key={i} {...f} onPage={f.page ? () => onGoToPage(f.page!) : undefined} />
@@ -283,7 +282,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
       {d.pyqs.length > 0 && (
         <Block id="ov-pyqs" icon={<GraduationCap className="w-4 h-4 text-emerald-300" />} accent="bg-emerald-500/15" title="Previous year questions by topic" count={pyqCount}>
           {!d.hasPastPapers && (
-            <p className="mb-4 rounded-lg bg-[#fffdf8]/75 border border-white/[0.06] px-3 py-2 text-xs leading-5 text-slate-400">
+            <p className="mb-4 rounded-lg bg-sheet border border-line px-3 py-2 text-xs leading-5 text-muted">
               These are frequently asked university questions on this unit&apos;s topics. Upload past papers to this folder in your Study Vault to get questions taken from your own papers.
             </p>
           )}

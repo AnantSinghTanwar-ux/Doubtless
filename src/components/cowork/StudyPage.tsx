@@ -21,13 +21,13 @@ interface StudyPageProps {
 }
 
 const markdown: Components = {
-  p: ({ children }) => <p className="text-[15px] leading-7 text-slate-300 [&:not(:first-child)]:mt-3">{children}</p>,
-  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-  em: ({ children }) => <em className="text-slate-200">{children}</em>,
-  ul: ({ children }) => <ul className="mt-3 space-y-1.5 list-disc pl-5 marker:text-blue-400/70 text-slate-300">{children}</ul>,
-  ol: ({ children }) => <ol className="mt-3 space-y-1.5 list-decimal pl-5 marker:text-blue-400/70 text-slate-300">{children}</ol>,
+  p: ({ children }) => <p className="text-[15px] leading-7 text-ink/80 [&:not(:first-child)]:mt-3">{children}</p>,
+  strong: ({ children }) => <strong className="font-semibold text-ink">{children}</strong>,
+  em: ({ children }) => <em className="text-ink">{children}</em>,
+  ul: ({ children }) => <ul className="mt-3 space-y-1.5 list-disc pl-5 marker:text-pen/70 text-ink/80">{children}</ul>,
+  ol: ({ children }) => <ol className="mt-3 space-y-1.5 list-decimal pl-5 marker:text-pen/70 text-ink/80">{children}</ol>,
   li: ({ children }) => <li className="text-[15px] leading-7 pl-1">{children}</li>,
-  code: ({ children }) => <code className="px-1.5 py-0.5 rounded bg-white/10 text-blue-200 text-[13px] font-mono">{children}</code>,
+  code: ({ children }) => <code className="px-1.5 py-0.5 rounded bg-ink/10 text-pen-deep text-[13px] font-mono">{children}</code>,
 };
 
 export function Md({ children }: { children: string }) {
@@ -37,7 +37,7 @@ export function Md({ children }: { children: string }) {
 function Section({ icon, title, accent, children }: { icon: ReactNode; title: string; accent: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h4 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] ${accent}`}>
+      <h4 className={`flex items-center gap-2 text-xs font-semibold ${accent}`}>
         {icon}
         {title}
       </h4>
@@ -51,19 +51,19 @@ function PracticeQuestion({ q, n }: { q: PageAnalysis["practice"][number]; n: nu
   const answered = picked !== null;
 
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-[#fffdf8]/55 p-4">
+    <div className="rounded-xl border border-line bg-sheet p-4">
       <p className="text-[15px] leading-6 text-slate-100 font-medium">
-        <span className="text-violet-300 mr-2">Q{n}.</span>
+        <span className="text-pen mr-2">Q{n}.</span>
         {q.question}
       </p>
       <div className="mt-3 grid gap-2">
         {q.options.map((opt, i) => {
           const isCorrect = i === q.answer;
           const isPicked = i === picked;
-          let cls = "border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 text-slate-300";
+          let cls = "border-line hover:border-pen/50 hover:bg-pen/5 text-ink/80";
           if (answered && isCorrect) cls = "border-emerald-500/60 bg-emerald-500/10 text-emerald-100";
           else if (answered && isPicked) cls = "border-rose-500/60 bg-rose-500/10 text-rose-100";
-          else if (answered) cls = "border-[#e2d9c6] text-slate-500";
+          else if (answered) cls = "border-[#e2d9c6] text-faint";
           return (
             <button
               key={i}
@@ -80,7 +80,7 @@ function PracticeQuestion({ q, n }: { q: PageAnalysis["practice"][number]; n: nu
         })}
       </div>
       {answered && q.explanation && (
-        <p className="mt-3 text-sm leading-6 text-slate-400 border-l-2 border-violet-400/40 pl-3">{q.explanation}</p>
+        <p className="mt-3 text-sm leading-6 text-muted border-l-2 border-pen/40 pl-3">{q.explanation}</p>
       )}
     </div>
   );
@@ -89,35 +89,35 @@ function PracticeQuestion({ q, n }: { q: PageAnalysis["practice"][number]; n: nu
 function Skeleton() {
   return (
     <div className="space-y-6 animate-pulse" aria-label="Analyzing page">
-      <div className="h-7 w-2/3 rounded-lg bg-white/[0.06]" />
+      <div className="h-7 w-2/3 rounded-lg bg-ink/[0.06]" />
       <div className="space-y-2.5">
-        <div className="h-3.5 rounded bg-white/[0.05]" />
-        <div className="h-3.5 rounded bg-white/[0.05]" />
-        <div className="h-3.5 w-4/5 rounded bg-white/[0.05]" />
+        <div className="h-3.5 rounded bg-ink/[0.05]" />
+        <div className="h-3.5 rounded bg-ink/[0.05]" />
+        <div className="h-3.5 w-4/5 rounded bg-ink/[0.05]" />
       </div>
       <div className="space-y-2.5">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-10 rounded-lg bg-[#fffdf8]/75" />
+          <div key={i} className="h-10 rounded-lg bg-sheet" />
         ))}
       </div>
-      <p className="text-xs text-slate-500">Reading this page and building your notes…</p>
+      <p className="text-xs text-faint">Reading this page and building your notes…</p>
     </div>
   );
 }
 
 export function FormulaCard({ name, formula, note, page, onPage }: { name: string; formula: string; note?: string; page?: number; onPage?: () => void }) {
   return (
-    <div className="rounded-xl border border-violet-400/15 bg-violet-500/[0.04] p-3.5">
+    <div className="rounded-xl border border-pen/15 bg-pen/[0.04] p-3.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-violet-200/80">{name}</p>
+        <p className="text-xs font-medium text-pen-deep/80">{name}</p>
         {page && onPage && (
-          <button onClick={onPage} className="shrink-0 text-[10px] font-medium text-slate-500 hover:text-violet-300">
+          <button onClick={onPage} className="shrink-0 text-[10px] font-medium text-faint hover:text-pen">
             p.{page}
           </button>
         )}
       </div>
-      <p className="mt-1.5 font-mono text-[15px] leading-6 text-white break-words">{formula}</p>
-      {note && <p className="mt-1.5 text-xs leading-5 text-slate-400">{note}</p>}
+      <p className="mt-1.5 font-mono text-[15px] leading-6 text-ink break-words">{formula}</p>
+      {note && <p className="mt-1.5 text-xs leading-5 text-muted">{note}</p>}
     </div>
   );
 }
@@ -128,13 +128,13 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
 
   return (
     <article
-      className={`relative rounded-2xl border bg-[#fbf8f0] transition-colors duration-300 ${
-        isActive ? "border-blue-500/30" : "border-white/[0.06]"
+      className={`relative rounded-card border bg-sheet transition-colors duration-300 ${
+        isActive ? "border-pen/30" : "border-line"
       }`}
       style={{ minHeight: isBlank ? 200 : minHeight }}
     >
       <div
-        className={`absolute left-0 top-6 bottom-6 w-[3px] rounded-full transition-opacity duration-300 bg-gradient-to-b from-blue-400 to-violet-500 ${
+        className={`absolute left-0 top-6 bottom-6 w-[3px] rounded-full transition-opacity duration-300 bg-pen ${
           isActive ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -142,10 +142,10 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
       <header className="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6">
         <button
           onClick={onJumpToPdf}
-          className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 hover:text-blue-300 transition-colors"
+          className="text-xs font-semibold text-faint hover:text-pen transition-colors"
           title="Show this page in the PDF"
         >
-          Page {pageNumber} <span className="text-slate-600">/ {totalPages}</span>
+          Page {pageNumber} <span className="text-faint">/ {totalPages}</span>
         </button>
         {data && data.highlights.length > 0 && (
           <button
@@ -163,7 +163,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
         {(!state || state.status === "loading") && <Skeleton />}
 
         {isBlank && (
-          <div className="flex items-center gap-3 py-6 text-slate-500">
+          <div className="flex items-center gap-3 py-6 text-faint">
             <ImageOff className="w-5 h-5 shrink-0" />
             <p className="text-sm">{data.title ? `${data.title} — ` : ""}nothing to study on this page.</p>
           </div>
@@ -173,12 +173,12 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
           <div className="flex flex-col items-center justify-center text-center py-16 gap-4">
             <AlertCircle className="w-8 h-8 text-rose-400" />
             <div>
-              <p className="text-slate-200 font-medium">Couldn&apos;t analyze this page</p>
-              <p className="text-sm text-slate-500 mt-1 max-w-sm line-clamp-3">{state.error}</p>
+              <p className="text-ink font-medium">Couldn&apos;t analyze this page</p>
+              <p className="text-sm text-faint mt-1 max-w-sm line-clamp-3">{state.error}</p>
             </div>
             <button
               onClick={onRetry}
-              className="flex items-center gap-2 rounded-lg bg-white/[0.06] hover:bg-white/10 border border-white/10 px-4 py-2 text-sm text-slate-200 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-ink/[0.06] hover:bg-ink/10 border border-line px-4 py-2 text-sm text-ink transition-colors"
             >
               <RotateCw className="w-4 h-4" /> Try again
             </button>
@@ -187,10 +187,10 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
 
         {data && !isBlank && (
           <div className="space-y-8">
-            {data.title && <h3 className="text-2xl font-semibold tracking-tight text-white leading-snug">{data.title}</h3>}
+            {data.title && <h3 className="text-2xl font-semibold tracking-tight text-ink leading-snug">{data.title}</h3>}
 
             {data.summary && (
-              <Section icon={<BookOpen className="w-3.5 h-3.5" />} title="Summary" accent="text-blue-300">
+              <Section icon={<BookOpen className="w-3.5 h-3.5" />} title="Summary" accent="text-pen">
                 <Md>{data.summary}</Md>
               </Section>
             )}
@@ -201,7 +201,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
                   {data.keyPoints.map((k, i) => (
                     <li key={i} className="flex gap-3 rounded-lg bg-amber-400/[0.04] border border-amber-400/10 px-3.5 py-2.5">
                       <span className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-300/80 shrink-0" />
-                      <span className="text-[15px] leading-6 text-slate-200">{k}</span>
+                      <span className="text-[15px] leading-6 text-ink">{k}</span>
                     </li>
                   ))}
                 </ul>
@@ -209,7 +209,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
             )}
 
             {data.formulas.length > 0 && (
-              <Section icon={<Sigma className="w-3.5 h-3.5" />} title="Formulas & notation" accent="text-violet-300">
+              <Section icon={<Sigma className="w-3.5 h-3.5" />} title="Formulas & notation" accent="text-pen">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {data.formulas.map((f, i) => (
                     <FormulaCard key={i} {...f} />

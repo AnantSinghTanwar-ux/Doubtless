@@ -126,11 +126,11 @@ export default function AskPage() {
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Ask Doubt" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white mb-2">What are you struggling with?</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              Ask your doubt and our Intelligent Router will find the best way to help you: AI explanation, adaptive practice, or a live teacher.
+            <h2 className="display text-2xl text-ink mb-2">What are you struggling with?</h2>
+            <p className="text-sm text-muted mb-6">
+              Ask in your own words. SolVε picks the fastest help: an AI explanation, practice, or a live teacher.
             </p>
             <DoubtInput onSubmit={handleSubmit} loading={loadingRoute || loadingExplain} />
             {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
@@ -139,7 +139,7 @@ export default function AskPage() {
           <div className="space-y-8 mt-8">
             {loadingRoute && (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader size="lg" text="Analyzing your doubt and finding the best route..." />
+                <Loader size="lg" text="Working out why you are stuck..." />
               </div>
             )}
 
@@ -151,7 +151,7 @@ export default function AskPage() {
 
             {loadingExplain && (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader size="md" text="Generating personalized explanation based on your profile..." />
+                <Loader size="md" text="Writing an explanation for you..." />
               </div>
             )}
 
@@ -161,10 +161,10 @@ export default function AskPage() {
                 
                 <div className="mt-8 flex justify-center">
                   <Button onClick={handlePractice} variant="secondary" className="mr-4">
-                    Take a Quick Practice
+                    Try a quick practice set
                   </Button>
                   <Button onClick={handleTeacher} variant="ghost">
-                    Still confused? Talk to a Teacher
+                    Still confused? Talk to a teacher
                   </Button>
                 </div>
               </div>
@@ -172,13 +172,13 @@ export default function AskPage() {
 
             {routeResult && routeResult.route === "practice" && !loadingRoute && (
                <div className="mt-8 flex justify-center animate-in fade-in slide-up">
-                 <Button onClick={handlePractice} size="lg">Start Adaptive Practice</Button>
+                 <Button onClick={handlePractice} size="lg">Start practising</Button>
                </div>
             )}
 
             {routeResult && routeResult.route === "teacher" && !loadingRoute && (
                <div className="mt-8 flex justify-center animate-in fade-in slide-up">
-                 <Button onClick={handleTeacher} size="lg">Find an Expert Teacher</Button>
+                 <Button onClick={handleTeacher} size="lg">Find a teacher</Button>
                </div>
             )}
           </div>

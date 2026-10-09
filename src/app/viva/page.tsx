@@ -131,28 +131,29 @@ export default function VivaPage() {
     <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
-        <TopBar title="AI Viva Mode" />
-        <main className="p-4 md:p-6 pb-24 lg:pb-6 max-w-4xl mx-auto">
+        <TopBar title="Viva" />
+        <main id="main" className="mx-auto max-w-6xl p-4 pb-24 md:p-6 md:pb-24 lg:pb-8 [&>*]:max-w-4xl">
           
           {!report && !nextQuestion && !loadingQuestion && (
             <div className="mb-8 animate-in fade-in">
-              <h2 className="text-xl font-semibold text-white mb-2">Oral Examination</h2>
-              <p className="text-sm text-gray-400 mb-6">
-                Test your knowledge under pressure. The AI examiner will ask you 5 questions, adapting to your answers in real-time.
+              <h2 className="display text-2xl text-ink mb-2">Face an oral exam</h2>
+              <p className="text-sm text-muted mb-6">
+                An AI examiner asks you 5 questions out loud and adapts to each answer, like a real viva.
               </p>
               
-              <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">What topic do you want to be examined on?</label>
+              <div className="rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6">
+                <label htmlFor="viva-topic" className="mb-2 block text-sm font-medium text-ink">What topic should you be examined on?</label>
                 <div className="flex gap-2">
                   <input
+                    id="viva-topic"
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g., Photosynthesis"
-                    className="flex-1 bg-[#fffdf8]/75 border-white/[0.06]"
+                    className="min-w-0 flex-1"
                   />
                   <Button onClick={() => handleNextRequested([])} disabled={!topic.trim()}>
-                    Start Viva
+                    Start the viva
                   </Button>
                 </div>
               </div>
@@ -171,15 +172,15 @@ export default function VivaPage() {
 
           {loadingReport && (
              <div className="py-12 flex flex-col items-center">
-               <Loader size="lg" text="Analyzing your performance and generating report..." />
+               <Loader size="lg" text="Marking your answers and writing your report..." />
              </div>
           )}
 
           {report && !loadingReport && (
              <div className="animate-in fade-in slide-up">
                <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-semibold text-white">Viva Examination Report</h2>
-                 <Button variant="ghost" onClick={() => { setReport(null); setTopic(""); }}>Take another Viva</Button>
+                 <h2 className="display text-2xl text-ink">Your viva report</h2>
+                 <Button variant="ghost" onClick={() => { setReport(null); setTopic(""); }}>Take another viva</Button>
                </div>
                <VivaReportDisplay report={report} />
              </div>

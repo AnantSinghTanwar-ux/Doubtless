@@ -86,14 +86,14 @@ export default function SessionPage() {
   }
 
   if (!session) {
-    return <div className="text-white p-8">Session not found.</div>;
+    return <div className="text-ink p-8">Session not found.</div>;
   }
 
   if (session.status === "completed" || session.status === "expired") {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="font-display text-2xl font-semibold text-white">This session has ended</h1>
-        <p className="max-w-sm text-sm text-zinc-400">
+        <h1 className="font-display text-2xl font-semibold text-ink">This session has ended</h1>
+        <p className="max-w-sm text-sm text-muted">
           {session.status === "completed" ? "The teacher wrapped it up and a summary was saved." : "Nobody was in the room for a while, so it was closed."}
         </p>
         <Button onClick={() => router.push(profile?.role === "teacher" ? "/teacher-dashboard" : "/teachers")}>
@@ -105,12 +105,12 @@ export default function SessionPage() {
 
   return (
     <div className="h-screen bg-transparent flex flex-col overflow-hidden">
-      <header className="h-16 flex-none bg-[#fffdf8]/55 border-b border-white/[0.06] px-6 flex items-center justify-between">
+      <header className="h-16 flex-none bg-sheet border-b border-line px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow font-bold">S</div>
+          <div className="w-8 h-8 rounded-lg bg-pen flex items-center justify-center text-snow font-bold">S</div>
           <div>
-            <h1 className="text-sm font-semibold text-white">Live Session: {session.doubtContext.topic}</h1>
-            <p className="text-xs text-gray-400">
+            <h1 className="text-sm font-semibold text-ink">Live Session: {session.doubtContext.topic}</h1>
+            <p className="text-xs text-muted">
               {session.status === "pending" ? "Waiting for teacher..." : "Session Active"}
             </p>
           </div>
@@ -130,16 +130,16 @@ export default function SessionPage() {
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left column: Jitsi & Context */}
-        <div className="flex-1 flex flex-col h-full border-r border-white/[0.06]">
+        <div className="flex-1 flex flex-col h-full border-r border-line">
           <div className="flex-1 bg-black relative min-h-[240px]">
             {user && <VideoCall sessionId={session.id} uid={user.uid} />}
           </div>
-          <div className="h-1/3 min-h-[200px] p-4 bg-[#fffdf8]/55 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-white mb-3">AI Diagnostic Context</h3>
-            <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.06] space-y-2 text-sm">
-              <p><span className="text-gray-500 w-24 inline-block">Topic:</span> <span className="text-blue-400">{session.doubtContext.topic} ({session.doubtContext.subtopic})</span></p>
-              <p><span className="text-gray-500 w-24 inline-block">Diagnosis:</span> <span className="text-amber-400">{session.doubtContext.doubt_type}</span></p>
-              <p><span className="text-gray-500 w-24 inline-block align-top">Reasoning:</span> <span className="text-gray-300">{session.doubtContext.reasoning}</span></p>
+          <div className="h-1/3 min-h-[200px] p-4 bg-sheet overflow-y-auto">
+            <h3 className="text-sm font-semibold text-ink mb-3">AI Diagnostic Context</h3>
+            <div className="bg-ink/[0.05] rounded-xl p-4 border border-line space-y-2 text-sm">
+              <p><span className="text-faint w-24 inline-block">Topic:</span> <span className="text-pen">{session.doubtContext.topic} ({session.doubtContext.subtopic})</span></p>
+              <p><span className="text-faint w-24 inline-block">Diagnosis:</span> <span className="text-amber-400">{session.doubtContext.doubt_type}</span></p>
+              <p><span className="text-faint w-24 inline-block align-top">Reasoning:</span> <span className="text-ink/80">{session.doubtContext.reasoning}</span></p>
             </div>
           </div>
         </div>

@@ -94,8 +94,8 @@ export default function PdfPageView({ pdf, pageNumber, aspect, width, isActive, 
   return (
     <div
       ref={wrapperRef}
-      className={`relative mx-auto bg-white rounded-sm transition-shadow duration-300 ${
-        isActive ? "shadow-[0_0_0_2px_rgba(96,165,250,0.6),0_20px_50px_-12px_rgba(0,0,0,0.8)]" : "shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)]"
+      className={`relative mx-auto bg-ink rounded-sm transition-shadow duration-300 ${
+        isActive ? "shadow-lift" : "shadow-lift"
       }`}
       style={{ width, height }}
     >
@@ -108,8 +108,8 @@ export default function PdfPageView({ pdf, pageNumber, aspect, width, isActive, 
       {rendered && inView && highlights.length > 0 && <PageAnnotations highlights={highlights} width={width} height={height} />}
       {rendered && isAnalyzing && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-sm">
-          <div className="cw-scan absolute inset-x-0 h-28 bg-gradient-to-b from-transparent via-blue-400/20 to-transparent" />
-          <span className="absolute top-3 right-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-[11px] font-medium text-blue-200 backdrop-blur">
+          <div className="cw-scan absolute inset-x-0 h-28 bg-gradient-to-b from-transparent via-pen/20 to-transparent" />
+          <span className="absolute top-3 right-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-[11px] font-medium text-pen-deep backdrop-blur">
             Finding key points…
           </span>
         </div>

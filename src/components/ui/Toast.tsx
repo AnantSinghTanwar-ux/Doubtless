@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 
 interface ToastProps {
   message: string;
@@ -8,25 +8,21 @@ interface ToastProps {
   onClose: () => void;
 }
 
-export default function Toast({ message, type, onClose }: ToastProps) {
-  const bgColors = {
-    success: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400",
-    error: "bg-red-500/20 border-red-500/50 text-red-400",
-    info: "bg-blue-500/20 border-blue-500/50 text-blue-400",
-  };
+const styles = {
+  success: { box: "border-emerald-700/30", icon: CheckCircle2, color: "text-emerald-700" },
+  error: { box: "border-margin/40", icon: AlertCircle, color: "text-margin" },
+  info: { box: "border-pen/30", icon: Info, color: "text-pen" },
+};
 
-  const icons = {
-    success: "✅",
-    error: "❌",
-    info: "ℹ️",
-  };
+export default function Toast({ message, type, onClose }: ToastProps) {
+  const { box, icon: Icon, color } = styles[type];
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-md animate-in slide-up fade-in duration-300 ${bgColors[type]}`}>
-      <span>{icons[type]}</span>
-      <p className="text-sm font-medium">{message}</p>
-      <button onClick={onClose} className="ml-auto text-current opacity-70 hover:opacity-100 transition-opacity">
-        ×
+    <div role="status" className={`slide-up flex max-w-sm items-start gap-3 rounded-xl border bg-sheet px-4 py-3 shadow-lift ${box}`}>
+      <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} aria-hidden />
+      <p className="text-sm font-medium text-ink">{message}</p>
+      <button onClick={onClose} aria-label="Dismiss" className="ml-auto rounded p-0.5 text-faint transition-colors hover:text-ink">
+        <X className="h-4 w-4" />
       </button>
     </div>
   );

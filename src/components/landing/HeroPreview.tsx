@@ -1,99 +1,66 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { BadgeCheck, BookOpen, Sparkles, TrendingUp, Video } from "lucide-react";
+import { BadgeCheck, BookOpen, Sparkles, Video } from "lucide-react";
+import { useInView } from "./Reveal";
 
-/** An illustrative product window. It tilts back at the top of the page and settles flat as you scroll. */
+/** An illustrative product window: a doubt goes in, gets routed, and an explanation streams out. It plays once when scrolled into view. */
 export default function HeroPreview() {
-  const [p, setP] = useState(0);
-  const frame = useRef(0);
-
-  useEffect(() => {
-    const update = () => {
-      frame.current = 0;
-      setP(Math.min(1, window.scrollY / 420));
-    };
-    const onScroll = () => {
-      if (!frame.current) frame.current = requestAnimationFrame(update);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(frame.current);
-    };
-  }, []);
+  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  const run = inView ? "" : "opacity-0";
 
   return (
-    <div className="relative mx-auto mt-20 max-w-5xl px-2 [perspective:1600px]">
-
-      {/* floating chips */}
-      <div className="lp-float absolute -left-4 -top-5 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#fffdf8]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex">
-        <TrendingUp className="h-4 w-4 text-violet-300" />
-        <span className="text-zinc-200">Mastery trending up</span>
-      </div>
-      <div className="lp-float absolute -bottom-5 -right-4 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#fffdf8]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex" style={{ animationDelay: "-3s" }}>
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
-          <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
+    <div ref={ref} className="overflow-hidden rounded-card border border-line-strong bg-sheet shadow-lift">
+      <div className="flex items-center justify-between border-b border-line bg-sunk px-4 py-2.5">
+        <span className="text-sm font-medium text-muted">Ask a doubt</span>
+        <span className="flex items-center gap-1.5 text-xs text-faint">
+          <BadgeCheck className="h-3.5 w-3.5 text-pen" aria-hidden /> Verified teachers online
         </span>
-        <span className="text-zinc-200">Verified teacher online</span>
-        <BadgeCheck className="h-4 w-4 fill-violet-500 text-[#fffdf8]" />
       </div>
 
-      <div
-        className="overflow-hidden rounded-2xl border border-white/10 bg-[#fffdf8] shadow-[0_40px_120px_-30px_rgba(194, 65, 12,0.5)]"
-        style={{ transform: `rotateX(${16 * (1 - p)}deg) scale(${0.92 + 0.08 * p})`, transformOrigin: "50% 0%", transition: "transform 120ms ease-out" }}
-      >
-        <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-          <span className="ml-3 font-mono text-xs text-zinc-500">SolVε · Ask a doubt</span>
-        </div>
-
-        <div className="grid gap-5 p-5 text-left sm:p-7 md:grid-cols-[1.1fr_1fr]">
-          <div className="space-y-4">
-            <div className="lp-rise ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-violet-600/90 px-4 py-3 text-[15px] text-white" style={{ animationDelay: "0.8s" }}>
-              Why is acceleration still 9.8 m/s² at the top of a throw, if the ball has stopped?
-            </div>
-
-            <div className="lp-rise rounded-2xl border border-white/10 bg-[#fffdf8]/75 p-4" style={{ animationDelay: "1.6s" }}>
-              <p className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-violet-300">
-                <Sparkles className="h-3.5 w-3.5" /> Doubt router
-              </p>
-              <div className="mb-3 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-lg border border-white/10 bg-[#fffdf8]/75 px-2.5 py-1 text-zinc-200">Physics · Kinematics</span>
-                <span className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-amber-200">concept gap</span>
-              </div>
-              <div className="mb-1 flex justify-between font-mono text-[11px] text-zinc-500">
-                <span>CONFIDENCE</span>
-                <span>0.82</span>
-              </div>
-              <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
-                <div className="lp-fill h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" style={{ ["--w" as string]: "82%", animationDelay: "2.1s" }} />
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <span className="lp-pop rounded-lg border border-violet-400/50 bg-violet-500/20 py-2 font-medium text-violet-100" style={{ animationDelay: "2.6s" }}>AI explain</span>
-                <span className="rounded-lg border border-white/10 py-2 text-zinc-500">Practice</span>
-                <span className="rounded-lg border border-white/10 py-2 text-zinc-500">Teacher</span>
-              </div>
-            </div>
+      <div className="grid gap-5 p-5 text-left sm:p-6 md:grid-cols-[1.1fr_1fr]">
+        <div className="space-y-4">
+          <div className={`${inView ? "lp-rise" : ""} ${run} ml-auto max-w-[90%] rounded-2xl rounded-br-md bg-ink px-4 py-3 text-[15px] text-snow`} style={{ animationDelay: "0.1s" }}>
+            Why is acceleration still 9.8 m/s² at the top of a throw, if the ball has stopped?
           </div>
 
-          <div className="lp-rise rounded-2xl border border-white/10 bg-[#fffdf8]/55 p-5" style={{ animationDelay: "3.1s" }}>
-            <p className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-              <BookOpen className="h-3.5 w-3.5" /> Explanation
+          <div className={`${inView ? "lp-rise" : ""} ${run} rounded-xl border border-line bg-paper p-4`} style={{ animationDelay: "0.9s" }}>
+            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-ink">
+              <Sparkles className="h-4 w-4 text-pen" aria-hidden /> Doubt router
             </p>
-            <p className="text-[15px] leading-7 text-zinc-300">
-              At the peak the <span className="rounded bg-violet-500/20 px-1 text-violet-200">velocity</span> is momentarily zero, but gravity never stops pulling. Acceleration depends on the force, not on how fast the ball is moving right now
-              <span className="lp-caret ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 bg-violet-300" />
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-400">From your notes · p.14</span>
-              <span className="flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-violet-200">
-                <Video className="h-3 w-3" /> Still stuck? Ask a teacher
-              </span>
+            <div className="mb-3 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-md border border-line bg-sheet px-2.5 py-1 text-ink">Physics, Kinematics</span>
+              <span className="rounded-md border border-amber-700/25 bg-amber-500/15 px-2.5 py-1 text-amber-800">Concept gap</span>
             </div>
+            <div className="mb-1 flex justify-between text-xs text-muted">
+              <span>Confidence</span>
+              <span className="tabular">82%</span>
+            </div>
+            <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-ink/10">
+              <div className={`${inView ? "lp-fill" : ""} h-full rounded-full bg-pen`} style={{ ["--w" as string]: "82%", animationDelay: "1.4s", width: inView ? undefined : 0 }} />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <span className={`${inView ? "lp-pop" : ""} ${run} rounded-lg border border-pen bg-pen-wash py-2 font-medium text-pen-deep`} style={{ animationDelay: "1.9s" }}>
+                AI explain
+              </span>
+              <span className="rounded-lg border border-line py-2 text-faint">Practice</span>
+              <span className="rounded-lg border border-line py-2 text-faint">Teacher</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`${inView ? "lp-rise" : ""} ${run} rounded-xl border border-line bg-paper p-5`} style={{ animationDelay: "2.3s" }}>
+          <p className="mb-3 flex items-center gap-2 text-sm font-medium text-ink">
+            <BookOpen className="h-4 w-4 text-pen" aria-hidden /> Explanation
+          </p>
+          <p className="text-[15px] leading-7 text-ink/85">
+            At the peak the <mark className="rounded bg-pen/15 px-1 text-pen-deep">velocity</mark> is momentarily zero, but gravity never stops pulling. Acceleration depends on the force, not on how fast the ball is moving right now
+            <span className="lp-caret ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 bg-pen" aria-hidden />
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-line px-3 py-1 text-muted">From your notes, p.14</span>
+            <span className="flex items-center gap-1.5 rounded-full border border-pen/30 bg-pen-wash px-3 py-1 text-pen-deep">
+              <Video className="h-3 w-3" aria-hidden /> Still stuck? Ask a teacher
+            </span>
           </div>
         </div>
       </div>

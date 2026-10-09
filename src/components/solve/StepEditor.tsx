@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Button from "@/components/ui/Button";
+import { Camera, Plus, Trash2 } from "lucide-react";
 import { fileToBase64 } from "@/lib/utils";
 
 interface StepEditorProps {
@@ -67,25 +68,26 @@ export default function StepEditor({ onSubmitSteps, onSubmitImage, loading }: St
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">The Question / Problem</label>
+        <label htmlFor="solve-question" className="mb-2 block text-sm font-medium text-ink">The question</label>
         <textarea
+          id="solve-question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="e.g., Solve for x: 2x^2 + 5x - 3 = 0"
-          className="w-full h-24 p-4 bg-white/[0.03] border border-white/[0.06] rounded-2xl text-white placeholder-gray-500 resize-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+          className="h-24 w-full resize-none p-4"
           disabled={loading}
           required
         />
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="group" aria-label="Input method">
         <Button 
           type="button" 
           variant={mode === "text" ? "primary" : "secondary"} 
           onClick={() => setMode("text")}
           size="sm"
         >
-          Type Solution Steps
+          Type the steps
         </Button>
         <Button 
           type="button" 
@@ -93,58 +95,59 @@ export default function StepEditor({ onSubmitSteps, onSubmitImage, loading }: St
           onClick={() => setMode("image")}
           size="sm"
         >
-          Upload Photo of Work
+          Upload a photo
         </Button>
       </div>
 
       {mode === "text" ? (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Your Solution Steps</label>
+          <p className="mb-2 text-sm font-medium text-ink">Your solution steps</p>
           {steps.map((step, index) => (
             <div key={index} className="flex gap-2 items-start">
-              <span className="flex-none flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 font-semibold text-sm border border-blue-500/20 mt-1">
+              <span className="flex-none flex items-center justify-center w-8 h-8 rounded-full bg-pen/10 text-pen font-semibold text-sm border border-pen/25 mt-1.5">
                 {index + 1}
               </span>
               <textarea
                 value={step}
                 onChange={(e) => handleStepChange(index, e.target.value)}
                 placeholder={`Step ${index + 1}`}
-                className="flex-1 min-h-[60px] p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 transition-all"
+                className="min-h-[60px] flex-1 p-3"
+                aria-label={`Step ${index + 1}`}
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => handleRemoveStep(index)}
                 disabled={steps.length <= 1 || loading}
-                className="flex-none p-2 mt-1 text-gray-500 hover:text-red-400 disabled:opacity-50 transition-colors"
+                className="mt-1 flex-none rounded-lg p-2 text-faint transition-colors hover:text-margin disabled:opacity-40"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <Trash2 className="h-5 w-5" aria-label="Remove step" />
               </button>
             </div>
           ))}
           <Button type="button" variant="ghost" onClick={handleAddStep} disabled={loading} size="sm" className="mt-2">
-            + Add Step
+            <Plus className="h-4 w-4" aria-hidden /> Add a step
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Upload Photo</label>
+          <p className="mb-2 text-sm font-medium text-ink">Photo of your working</p>
           
           {!imagePreview ? (
-            <div 
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-white/10 hover:border-blue-500/50 bg-white/[0.02] hover:bg-blue-500/5 rounded-2xl p-10 text-center cursor-pointer transition-all duration-300"
+              className="flex w-full flex-col items-center rounded-card border-2 border-dashed border-line-strong p-10 text-center transition-colors hover:border-pen hover:bg-pen-wash"
             >
-              <div className="text-4xl mb-3">📸</div>
-              <p className="text-white font-medium mb-1">Click to upload photo</p>
-              <p className="text-sm text-gray-500">Handwritten solutions supported</p>
-            </div>
+              <Camera className="mb-3 h-8 w-8 text-pen" aria-hidden />
+              <span className="mb-1 font-medium text-ink">Choose a photo</span>
+              <span className="text-sm text-muted">Handwritten solutions work too</span>
+            </button>
           ) : (
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 group">
-              <img src={imagePreview} alt="Solution preview" className="w-full object-contain max-h-96 bg-black/50" />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <div className="relative rounded-card overflow-hidden border border-line group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagePreview} alt="Solution preview" className="max-h-96 w-full bg-sunk object-contain" />
+              <div className="absolute inset-0 bg-ink/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity">
                 <Button type="button" variant="secondary" onClick={() => { setImageFile(null); setImagePreview(null); }}>
                   Remove Image
                 </Button>
@@ -161,13 +164,13 @@ export default function StepEditor({ onSubmitSteps, onSubmitImage, loading }: St
         </div>
       )}
 
-      <div className="pt-4 border-t border-white/10 flex justify-end">
+      <div className="pt-4 border-t border-line flex justify-end">
         <Button 
           type="submit" 
           disabled={!question.trim() || (mode === "text" && steps[0].trim() === "") || (mode === "image" && !imageFile) || loading}
           loading={loading}
         >
-          Evaluate Solution
+          Check my working
         </Button>
       </div>
     </form>
