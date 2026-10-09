@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { nvidiaChat, nvidiaConfigured, withJsonInstruction, type NvidiaContent } from "./nvidia";
 
 const apiKey = process.env.GEMINI_API_KEY || "placeholder_for_build";
 const genai = new GoogleGenAI({ apiKey });
@@ -12,6 +13,8 @@ export function getEmbedModel() {
 }
 
 const useLocalProvider = process.env.AI_PROVIDER === "ollama";
+/** AI_PROVIDER=nvidia makes NVIDIA NIM the first choice (recommended on hosts with no local model). */
+const preferNvidia = process.env.AI_PROVIDER === "nvidia";
 const localProviderUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 
 const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2";
@@ -39,13 +42,29 @@ export function parseJSON<T>(raw: string | undefined, source: string): T {
  * or a bad/missing Gemini key), falls back to OpenRouter when a key is available, so features degrade gracefully.
  */
 export async function generateJSON<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
+  const nvidiaJSON = async () => parseJSON<T>(await nvidiaChat({ system: withJsonInstruction(systemPrompt), user: prompt, maxTokens: 3000 }), "NVIDIA");
+  if (preferNvidia && nvidiaConfigured()) {
+    try {
+      return await nvidiaJSON();
+    } catch (err) {
+      console.warn("[aiProvider] NVIDIA failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
   try {
     return await generateJSONPrimary<T>(prompt, systemPrompt, useHighEnd);
   } catch (primaryError) {
+    if (!preferNvidia && nvidiaConfigured()) {
+      console.warn("[aiProvider] primary provider failed, trying NVIDIA:", primaryError instanceof Error ? primaryError.message : primaryError);
+      try {
+        return await nvidiaJSON();
+      } catch (err) {
+        console.warn("[aiProvider] NVIDIA failed too:", err instanceof Error ? err.message : err);
+      }
+    }
     const key = process.env.OPENROUTER_API_KEY;
     // useHighEnd already tried OpenRouter inside the primary path.
     if (!key || useHighEnd) throw primaryError;
-    console.warn("[aiProvider] primary provider failed, trying OpenRouter:", primaryError instanceof Error ? primaryError.message : primaryError);
+    console.warn("[aiProvider] trying OpenRouter:", primaryError instanceof Error ? primaryError.message : primaryError);
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -135,6 +154,25 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
 }
 
 export async function generateText(prompt: string, systemPrompt?: string): Promise<string> {
+  if (preferNvidia && nvidiaConfigured()) {
+    try {
+      return await nvidiaChat({ system: systemPrompt, user: prompt, maxTokens: 3000 });
+    } catch (err) {
+      console.warn("[aiProvider] NVIDIA failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
+  try {
+    return await generateTextPrimary(prompt, systemPrompt);
+  } catch (primaryError) {
+    if (!preferNvidia && nvidiaConfigured()) {
+      console.warn("[aiProvider] primary text provider failed, trying NVIDIA:", primaryError instanceof Error ? primaryError.message : primaryError);
+      return nvidiaChat({ system: systemPrompt, user: prompt, maxTokens: 3000 }).catch(() => Promise.reject(primaryError));
+    }
+    throw primaryError;
+  }
+}
+
+async function generateTextPrimary(prompt: string, systemPrompt?: string): Promise<string> {
   if (useLocalProvider) {
     const res = await fetch(`${localProviderUrl}/api/generate`, {
       method: "POST",
@@ -164,6 +202,39 @@ export async function generateText(prompt: string, systemPrompt?: string): Promi
 }
 
 export async function generateWithImage(
+  prompt: string,
+  imageBase64: string,
+  mimeType: string,
+  systemPrompt?: string
+): Promise<string> {
+  const viaNvidia = () => {
+    const url = imageBase64.startsWith("data:") ? imageBase64 : `data:${mimeType};base64,${imageBase64}`;
+    return nvidiaChat({
+      system: withJsonInstruction(systemPrompt),
+      user: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url } }],
+      vision: true,
+      maxTokens: 3000,
+    });
+  };
+  if (preferNvidia && nvidiaConfigured()) {
+    try {
+      return await viaNvidia();
+    } catch (err) {
+      console.warn("[aiProvider] NVIDIA vision failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
+  try {
+    return await generateWithImagePrimary(prompt, imageBase64, mimeType, systemPrompt);
+  } catch (primaryError) {
+    if (!preferNvidia && nvidiaConfigured()) {
+      console.warn("[aiProvider] primary vision provider failed, trying NVIDIA:", primaryError instanceof Error ? primaryError.message : primaryError);
+      return viaNvidia().catch(() => Promise.reject(primaryError));
+    }
+    throw primaryError;
+  }
+}
+
+async function generateWithImagePrimary(
   prompt: string,
   imageBase64: string,
   mimeType: string,
@@ -261,8 +332,11 @@ export async function openRouterJSON<T>(opts: {
   maxTokens: number;
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
+  const nvidiaAttempt: [string, () => Promise<T>] = ["NVIDIA", () => nvidiaMultimodalJSON<T>(opts)];
+  if (preferNvidia && nvidiaConfigured()) attempts.push(nvidiaAttempt);
   if (process.env.OPENROUTER_API_KEY) attempts.push(["OpenRouter", () => openRouterRequest<T>(opts)]);
   if (process.env.GEMINI_API_KEY) attempts.push(["Gemini", () => geminiMultimodalJSON<T>(opts)]);
+  if (!preferNvidia && nvidiaConfigured()) attempts.push(nvidiaAttempt);
   if (useLocalProvider) attempts.push(["Ollama (text only)", () => ollamaTextJSON<T>(opts)]);
   if (attempts.length === 0) throw new Error("No AI provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY.");
 
@@ -286,6 +360,18 @@ function shortError(err: unknown): string {
     if (typeof msg === "string") return msg.slice(0, 140);
   } catch {}
   return raw.replace(/\s+/g, " ").slice(0, 140);
+}
+
+/** Text and images through NVIDIA: a vision model when the request carries images, otherwise the text model. */
+async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
+  const hasImages = opts.content.some((c) => c.type === "image_url");
+  const text = await nvidiaChat({
+    system: withJsonInstruction(opts.system),
+    user: opts.content as NvidiaContent,
+    vision: hasImages,
+    maxTokens: Math.max(opts.maxTokens, 1500),
+  });
+  return parseJSON<T>(text, "NVIDIA");
 }
 
 /** Last resort on a machine with a local model: text parts only, since the default model can't see images. */

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON, generateWithImage, parseJSON } from "@/lib/aiProvider";
+import { nvidiaConfigured, nvidiaTranscribe } from "@/lib/nvidia";
 import { solutionEvaluationSchema } from "@/lib/zod-schemas";
 import { formatChunksForPrompt } from "@/lib/embeddings";
 import type { SolutionEvaluation, RetrievedChunk } from "@/types";
+
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +43,19 @@ Evaluate each step of the student's solution and return JSON with:
 
     let result: SolutionEvaluation;
 
-    if (imageBase64 && imageMimeType) {
+    // Photos: read the handwriting with a vision model, then judge the steps with the stronger text model.
+    let transcribed: string[] | null = null;
+    if (!steps?.length && imageBase64 && imageMimeType && nvidiaConfigured()) {
+      try {
+        const lines = await nvidiaTranscribe(imageBase64, imageMimeType);
+        if (lines.length > 0) transcribed = lines;
+      } catch (err) {
+        console.warn("[solve] handwriting transcription failed, using direct image evaluation:", err instanceof Error ? err.message : err);
+      }
+    }
+    const studentSteps = transcribed ?? steps;
+
+    if (!transcribed && imageBase64 && imageMimeType) {
       const prompt = `QUESTION: "${question}"
 
 REFERENCE MATERIAL:
@@ -49,8 +65,8 @@ The student has uploaded a photo of their handwritten solution. Analyze each ste
 
       const response = await generateWithImage(prompt, imageBase64, imageMimeType, systemPrompt);
       result = parseJSON<SolutionEvaluation>(response, "Vision model");
-    } else if (steps) {
-      const stepsStr = steps.map((s, i) => `Step ${i + 1}: ${s}`).join("\n");
+    } else if (studentSteps) {
+      const stepsStr = studentSteps.map((s, i) => `Step ${i + 1}: ${s}`).join("\n");
 
       const prompt = `QUESTION: "${question}"
 

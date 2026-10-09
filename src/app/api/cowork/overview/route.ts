@@ -101,6 +101,9 @@ export async function GET(request: NextRequest) {
   return cached ? NextResponse.json(cached) : NextResponse.json({ error: "Not generated yet" }, { status: 404 });
 }
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const { vaultId, folderId, pages, force } = await request.json();

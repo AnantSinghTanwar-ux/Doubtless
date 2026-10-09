@@ -3,6 +3,9 @@ import { generateText } from "@/lib/aiProvider";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const { vaultIds } = await request.json();

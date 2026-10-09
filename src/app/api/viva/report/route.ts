@@ -3,6 +3,9 @@ import { generateJSON } from "@/lib/aiProvider";
 import { vivaReportSchema } from "@/lib/zod-schemas";
 import type { VivaReport, VivaAnswer } from "@/types";
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const { topic, answers } = (await request.json()) as {

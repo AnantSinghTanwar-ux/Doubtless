@@ -82,6 +82,9 @@ async function processPdf(fileBuffer: Buffer, fileName: string, userId: string, 
   }
 }
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();

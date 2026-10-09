@@ -42,6 +42,9 @@ function cleanHighlights(raw: unknown): PageHighlight[] {
     .slice(0, 6);
 }
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const { image, text } = await request.json();

@@ -4,6 +4,9 @@ import { voiceEvaluationSchema } from "@/lib/zod-schemas";
 import { formatChunksForPrompt } from "@/lib/embeddings";
 import type { VoiceEvaluation, VoiceMetrics, RetrievedChunk } from "@/types";
 
+/** AI calls can take a while; give them room on serverless hosts. */
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const { topic, transcript, metrics, chunks } = (await request.json()) as {
