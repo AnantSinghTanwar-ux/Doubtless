@@ -260,7 +260,7 @@ export default function TeacherDashboard() {
           <section className="space-y-3">
             <SectionTitle icon={Sparkles} title="Past sessions" count={past.length} />
             {past.length === 0 ? (
-              <EmptyState icon={Sparkles} title="No sessions yet" body="When you end a session, SolVε writes an AI summary of what helped the student. It shows up here." />
+              <EmptyState icon={Sparkles} title="No sessions yet" body="When you end a session, ωlvε writes an AI summary of what helped the student. It shows up here." />
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {past.slice(0, 12).map((s) => (

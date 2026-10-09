@@ -64,7 +64,7 @@ export default function CoWorkPage() {
 
   return (
     <div className="min-h-[100dvh] bg-transparent">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <button
           onClick={() => router.push("/dashboard")}
           className="flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors mb-8"
@@ -100,13 +100,15 @@ export default function CoWorkPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-10">
+          // Folders sit side by side as columns; the files inside each folder stack under its title.
+          <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
             {groups.map((group) => (
-              <section key={group.id}>
-                <h2 className="flex items-center gap-2 text-xs font-semibold text-faint mb-4">
-                  <Folder className="w-3.5 h-3.5" /> {group.name}
+              <section key={group.id} className="rounded-card border border-line bg-sheet/60 p-4 shadow-sheet">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+                  <Folder className="h-4 w-4 text-pen" /> {group.name}
+                  <span className="ml-auto text-xs font-normal text-faint">{group.docs.length} {group.docs.length === 1 ? "file" : "files"}</span>
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-2.5">
                   {group.docs.map((vault) => (
                     <button
                       key={vault.id}

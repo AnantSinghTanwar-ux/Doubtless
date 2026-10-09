@@ -31,7 +31,7 @@ export default function LandingNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3.5">
         <a href="#top" className="lp-drop flex items-center gap-2.5">
           <Logo size={34} />
-          <span className="font-display text-xl font-semibold tracking-tight text-ink">SolVε</span>
+          <span className="font-display text-xl font-semibold tracking-tight text-ink">ωlvε</span>
         </a>
 
         <nav aria-label="Sections" className="hidden items-center gap-1 md:flex">

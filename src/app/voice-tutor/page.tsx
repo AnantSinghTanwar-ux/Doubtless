@@ -30,6 +30,19 @@ interface VapiClient {
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
 const ASSISTANT_ID = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
 
+/** Vapi reports errors in several shapes ({error:{msg}}, {message}, or a bare string); reduce any of them to text. */
+function errorText(e: unknown): string {
+  const pick = (v: unknown): string => {
+    if (typeof v === "string") return v;
+    if (v && typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      return pick(o.msg) || pick(o.message) || pick(o.error) || "";
+    }
+    return "";
+  };
+  return pick(e);
+}
+
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export default function VoiceTutorPage() {
@@ -128,11 +141,18 @@ export default function VoiceTutorPage() {
       client.on("speech-end", (() => setAssistantSpeaking(false)) as () => void);
       client.on("volume-level", ((v: number) => setVolume(v)) as (v: never) => void);
       client.on("message", onMessage as (m: never) => void);
-      client.on("error", ((e: { error?: { message?: string }; message?: string }) => {
+      client.on("error", ((e: unknown) => {
         // Vapi also reports "meeting ended" style errors as a call winds down; those aren't failures.
         if (statusRef.current === "idle" || statusRef.current === "ending") return;
         console.error("Vapi error:", e);
-        const raw = e?.error?.message || e?.message || "";
+        const raw = errorText(e);
+        // Hitting the 10-minute cap or the tutor hanging up surfaces as "Meeting has ended": just end quietly.
+        if (/meeting has ended|ejected/i.test(raw)) {
+          setStatus("idle");
+          setAssistantSpeaking(false);
+          setVolume(0);
+          return;
+        }
         setError(/permission|denied|NotAllowed/i.test(raw) ? "Microphone access is blocked. Allow it in your browser's address bar, then try again." : raw || "The call couldn't be connected.");
         setStatus("idle");
       }) as (e: never) => void);
@@ -219,7 +239,7 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 </div>
 
                 <p className="display mt-6 text-2xl text-ink">
-                  {status === "connecting" ? "Connecting…" : status === "ending" ? "Ending…" : live ? (assistantSpeaking ? "SolVε is speaking" : "Listening…") : "Tap to talk it through"}
+                  {status === "connecting" ? "Connecting…" : status === "ending" ? "Ending…" : live ? (assistantSpeaking ? "ωlvε is speaking" : "Listening…") : "Tap to talk it through"}
                 </p>
                 <p className="mt-1 h-5 font-mono text-xs tabular-nums text-muted">{live ? fmt(seconds) : ""}</p>
 
@@ -251,7 +271,7 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
               ) : (
                 lines.map((l, i) => (
                   <div key={i} className={cn(!l.final && "opacity-70")}>
-                    <p className={cn("hand text-xl leading-none", l.role === "user" ? "ink-blue" : "ink-red")}>{l.role === "user" ? "You" : "SolVε"}</p>
+                    <p className={cn("hand text-xl leading-none", l.role === "user" ? "ink-blue" : "ink-red")}>{l.role === "user" ? "You" : "ωlvε"}</p>
                     <p className="serif text-[15px] leading-7 text-[#1b2440]">{l.text}</p>
                   </div>
                 ))

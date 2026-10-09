@@ -130,7 +130,7 @@ export default function AskPage() {
           <div className="mb-8">
             <h2 className="display text-2xl text-ink mb-2">What are you struggling with?</h2>
             <p className="text-sm text-muted mb-6">
-              Ask in your own words. SolVε picks the fastest help: an AI explanation, practice, or a live teacher.
+              Ask in your own words. ωlvε picks the fastest help: an AI explanation, practice, or a live teacher.
             </p>
             <DoubtInput onSubmit={handleSubmit} loading={loadingRoute || loadingExplain} />
             {error && <p className="text-red-400 text-sm mt-3">{error}</p>}

@@ -22,7 +22,7 @@ export default function Landing() {
               </h1>
 
               <p className="lp-rise mt-7 max-w-lg text-lg leading-8 text-muted sm:text-xl sm:leading-9" style={{ animationDelay: "0.6s" }}>
-                SolVε works out why you&apos;re stuck, then sends you to the fastest help: an instant AI explanation, targeted practice, or a live session with a verified teacher.
+                ωlvε works out why you&apos;re stuck, then sends you to the fastest help: an instant AI explanation, targeted practice, or a live session with a verified teacher.
               </p>
 
               <div className="lp-rise mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "0.8s" }}>
@@ -30,7 +30,7 @@ export default function Landing() {
                   Start learning
                 </Link>
                 <Link href="/login" className="flex items-center gap-2 rounded-[10px] border border-line-strong bg-sheet px-6 py-3.5 text-base font-medium text-ink transition-colors hover:border-ink/40">
-                  <GraduationCap className="h-5 w-5 text-pen" aria-hidden /> Teach on SolVε
+                  <GraduationCap className="h-5 w-5 text-pen" aria-hidden /> Teach on ωlvε
                 </Link>
               </div>
               <p className="lp-rise mt-5 text-sm text-faint" style={{ animationDelay: "0.95s" }}>

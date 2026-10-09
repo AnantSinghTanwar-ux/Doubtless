@@ -33,7 +33,7 @@ export function Router() {
         <div className="mb-10 max-w-2xl">
           <WordReveal text="A doubt goes in. The right help comes out." className={h2} />
           <Reveal delay={120}>
-            <p className={lede}>Ask in your own words. SolVε reads it against your history and your notes, names the kind of gap, and picks the route that will fix it fastest.</p>
+            <p className={lede}>Ask in your own words. ωlvε reads it against your history and your notes, names the kind of gap, and picks the route that will fix it fastest.</p>
           </Reveal>
         </div>
         <Reveal>
@@ -47,7 +47,7 @@ export function Router() {
 const FEATURES = [
   { icon: Route, title: "Knows why you're stuck", body: "Diagnoses a concept gap, a missing prerequisite or a careless slip, then picks the fastest fix: AI explanation, targeted practice or a live teacher." },
   { icon: Library, title: "Answers from your own notes", body: "Upload your PDFs and textbooks. Explanations are grounded in your material and point to the exact page." },
-  { icon: PenTool, title: "Every step, checked", body: "Type your working or snap a photo. SolVε finds the first wrong step, explains the slip and scores your method." },
+  { icon: PenTool, title: "Every step, checked", body: "Type your working or snap a photo. ωlvε finds the first wrong step, explains the slip and scores your method." },
   { icon: Mic, title: "Teach it out loud", body: "Explain a topic in your own words. Get scored on accuracy, structure, clarity, filler words and pauses." },
   { icon: Target, title: "A spoken exam that adapts", body: "Face an oral exam that gets harder as you answer well, then get a report with weak topics and a study plan." },
   { icon: Dumbbell, title: "Practice that targets gaps", body: "Question sets built around the subtopics you keep missing, with hints and instant feedback." },
@@ -63,7 +63,7 @@ export function Features() {
       <div className="mx-auto max-w-6xl px-6">
         <WordReveal text="Ten tools. One place to get unstuck." className={cn(h2, "max-w-3xl")} />
         <Reveal delay={120}>
-          <p className={lede}>Ask a doubt any way you like. SolVε works out what kind of help you need, from instant AI answers to a real teacher on video.</p>
+          <p className={lede}>Ask a doubt any way you like. ωlvε works out what kind of help you need, from instant AI answers to a real teacher on video.</p>
         </Reveal>
 
         <ul className="mt-14 grid gap-x-14 sm:grid-cols-2">
@@ -86,7 +86,7 @@ export function Features() {
 
 const STEPS = [
   { n: "1", title: "Ask however you like", body: "Type it, speak it, or upload a photo of the problem. Add your own notes to the Study Vault for answers that cite your material." },
-  { n: "2", title: "SolVε finds the gap", body: "The router reads your doubt together with your history and learner profile, and decides whether you need an explanation, practice or a human." },
+  { n: "2", title: "ωlvε finds the gap", body: "The router reads your doubt together with your history and learner profile, and decides whether you need an explanation, practice or a human." },
   { n: "3", title: "Get the right help, instantly", body: "An AI explanation with page citations, a practice set aimed at your weak spots, or a live video session with a verified teacher who already knows where you're stuck." },
   { n: "4", title: "It remembers, so you improve", body: "Session summaries and results feed your profile and a shared knowledge base. The next answer is a little sharper, and so are you." },
 ];
@@ -230,7 +230,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 text-sm text-muted sm:flex-row">
         <div className="flex items-center gap-3">
           <Logo size={30} />
-          <span className="font-display text-lg font-semibold text-ink">SolVε</span>
+          <span className="font-display text-lg font-semibold text-ink">ωlvε</span>
         </div>
         <p>The Industry Games 2026, District 03: AI-Native Education</p>
       </div>

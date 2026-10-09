@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const contextStr = formatChunksForPrompt(chunks ?? []);
 
-    const systemPrompt = `You are a Feynman-method voice explanation evaluator in the SolVε AI Education system.
+    const systemPrompt = `You are a Feynman-method voice explanation evaluator in the ωlvε AI Education system.
 
 The student attempted to explain a topic verbally. Evaluate their explanation using the Feynman technique criteria:
 - Content Accuracy: Did they explain correctly?
