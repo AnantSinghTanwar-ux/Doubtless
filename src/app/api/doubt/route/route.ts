@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { doubtRouterSchema } from "@/lib/zod-schemas";
 import { formatChunksForPrompt } from "@/lib/embeddings";
+import { canonicalSubject } from "@/lib/teacherRanking";
 import type { DoubtRouterResult, RetrievedChunk, LearnerProfile, RecentInteraction } from "@/types";
 
 /** AI calls can take a while; give them room on serverless hosts. */
@@ -50,14 +51,16 @@ ROUTING RULES:
 - Consider the learner profile to personalize the routing
 
 Return a JSON object with exactly these keys:
-- topic: string (the BROAD school subject, e.g. "Mathematics", "Physics", "Chemistry", "Biology". Never a chapter name: use "Mathematics", not "Algebra")
+- topic: string (the BROAD subject: "Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics", "English"... Never a chapter name: use "Mathematics", not "Algebra". Machine learning, AI, LLMs/RAG, programming, algorithms, data structures, databases and networks are "Computer Science" even when they use maths.)
 - subtopic: string (the specific chapter or concept, e.g. "Quadratic equations")
 - grade_level: integer 1-12 for the school grade this question is normally taught in, or 13 for college/university level
 - difficulty: "easy" | "medium" | "hard"
 - doubt_type: one of "concept_gap" | "prerequisite_gap" | "careless_error" | "needs_human"
 - confidence: number between 0 and 1
 - route: exactly one of "ai_explain" | "practice" | "teacher"
-- reasoning: string (1-2 sentences)`;
+- reasoning: string (1-2 sentences)
+
+Classify the STUDENT DOUBT itself. The reference material is retrieved from the student's notes and can be about a different topic; use it only when it is clearly about the same thing as the doubt.`;
 
     const prompt = `STUDENT DOUBT: "${question}"
 
@@ -74,6 +77,13 @@ Analyze this doubt and determine the routing. Return JSON only.`;
 
     const result = await generateJSON<DoubtRouterResult>(prompt, systemPrompt);
     const validated = doubtRouterSchema.parse(normalizeRouterResult(result));
+    // Small models file ML or programming questions under Mathematics; when the question's own words clearly name a
+    // subject, that wins (it also decides which teachers are recommended).
+    const fromQuestion = canonicalSubject(question);
+    if (fromQuestion && fromQuestion !== (canonicalSubject(validated.topic) ?? validated.topic)) {
+      if (!validated.subtopic) validated.subtopic = validated.topic;
+      validated.topic = fromQuestion;
+    }
 
     const sameSubtopicFailures = (recentInteractions ?? []).filter(
       (i) =>

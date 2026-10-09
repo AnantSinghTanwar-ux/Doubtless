@@ -68,19 +68,22 @@ export const maxDuration = 300;
 
 async function handlePost(request: NextRequest) {
   try {
-    const { image, text: layerText, ocrText } = await request.json();
-    if (typeof image !== "string" || !image.startsWith("data:image/")) {
-      return NextResponse.json({ error: "A page image is required" }, { status: 400 });
-    }
+    const { image, text: layerText, ocrText, fast } = await request.json();
     const layer = typeof layerText === "string" ? layerText : "";
     // Scanned pages have no text layer; the browser OCRs them and sends that text, which we use for exact quotes.
     const ocr = typeof ocrText === "string" ? ocrText.trim() : "";
 
     // Pages with a real text layer are analysed from that text: it is exact, cheap, and lets a strong text model do the
-    // reasoning. Scanned pages still send the picture (it reads formulas far better than OCR) plus the OCR text for quoting.
-    const hasText = layer.trim().length >= 120;
+    // reasoning. Scanned pages send the picture (it reads formulas far better than OCR) plus the OCR text for quoting.
+    // Pages read in the background ("fast") use the OCR text alone when there is enough of it: much quicker on a local model.
+    const useOcrAsText = !!fast && ocr.length >= 200 && layer.trim().length < 120;
+    const hasText = layer.trim().length >= 120 || useOcrAsText;
+    if (!hasText && (typeof image !== "string" || !image.startsWith("data:image/"))) {
+      return NextResponse.json({ error: "A page image is required" }, { status: 400 });
+    }
     const content: OpenRouterContent[] = hasText ? [] : [{ type: "image_url", image_url: { url: image } }];
-    if (layer.trim()) content.push({ type: "text", text: `Text layer of this page:\n${layer.slice(0, 8000)}` });
+    if (useOcrAsText) content.push({ type: "text", text: `Text of this page (read by OCR, may contain small errors; quote highlights from it word for word):\n${ocr.slice(0, 6000)}` });
+    else if (layer.trim()) content.push({ type: "text", text: `Text layer of this page:\n${layer.slice(0, 8000)}` });
     if (!hasText && ocr) {
       content.push({ type: "text", text: `Text recognised on this page by OCR (may contain small errors; quote highlights from it word for word):\n${ocr.slice(0, 6000)}` });
     }

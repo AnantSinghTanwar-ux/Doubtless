@@ -7,6 +7,8 @@ export interface UserProfile {
   photoURL: string | null;
   role: UserRole;
   createdAt: number;
+  /** Subscription plan ("free", "pro", "sprint"); unset means free. Only checked once plans are enforced (src/lib/plans.ts). */
+  plan?: string;
 }
 
 export interface VaultFolder {

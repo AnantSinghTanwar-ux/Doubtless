@@ -24,7 +24,7 @@ const SUBJECT_WORDS: Record<string, string[]> = {
   Physics: "physics mechanics kinematics newton newtons optics thermodynamics electricity magnetism electromagnetism waves motion force forces momentum circuit circuits velocity acceleration gravitation gravity energy friction pendulum current voltage refraction".split(" "),
   Chemistry: "chemistry organic inorganic stoichiometry acid acids base bases reaction reactions periodic mole molarity bond bonding electrolysis oxidation reduction titration".split(" "),
   Biology: "biology cell cells genetics photosynthesis respiration ecology evolution anatomy physiology dna enzyme enzymes".split(" "),
-  "Computer Science": "programming algorithm algorithms code coding python java datastructures recursion database sql".split(" "),
+  "Computer Science": "programming algorithm algorithms code coding python java javascript datastructures recursion database sql machine neural kernel kernels mercer svm svms perceptron backpropagation overfitting transformer transformers llm llms rag retrieval embedding embeddings tokenizer dataset datasets compiler operating cnn rnn lstm".split(" "),
   English: "english grammar essay literature poem comprehension vocabulary".split(" "),
   Economics: "economics demand supply inflation gdp microeconomics macroeconomics".split(" "),
   Accountancy: "accountancy accounting ledger balance journal".split(" "),

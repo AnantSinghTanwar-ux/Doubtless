@@ -9,12 +9,16 @@ export type OverviewState =
   | { status: "idle" }
   | { status: "preparing"; done: number; total: number }
   | { status: "generating" }
+  /** Picture-only document whose pages haven't been read yet: the guide is built once enough page notes exist. */
+  | { status: "waiting" }
   | { status: "done"; data: DocumentOverview }
   | { status: "error"; error: string };
 
 interface OverviewPanelProps {
   state: OverviewState;
   numPages: number;
+  /** Pages that have notes so far (background reading progress). */
+  pagesDone: number;
   onGoToPage: (page: number) => void;
   onRegenerate: () => void;
 }
@@ -127,7 +131,23 @@ function PyqGroup({ group, defaultOpen }: { group: DocumentOverview["pyqs"][numb
   );
 }
 
-export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerate }: OverviewPanelProps) {
+export default function OverviewPanel({ state, numPages, pagesDone, onGoToPage, onRegenerate }: OverviewPanelProps) {
+  if (state.status === "waiting") {
+    return (
+      <div className="rounded-card border border-line bg-sheet px-6 py-16 text-center">
+        <Sparkles className="w-7 h-7 text-pen mx-auto mb-4" />
+        <p className="text-ink font-medium">Reading your slides first</p>
+        <p className="text-sm text-faint mt-1 max-w-sm mx-auto">
+          These pages are pictures, so each one is read before the guide is written. {pagesDone} of {numPages} read so far; the guide appears
+          automatically once enough pages are done.
+        </p>
+        <div className="mt-6 mx-auto max-w-xs h-1.5 rounded-full bg-ink/[0.06] overflow-hidden">
+          <div className="h-full rounded-full bg-pen transition-[width] duration-500" style={{ width: `${Math.round((pagesDone / Math.max(1, numPages)) * 100)}%` }} />
+        </div>
+      </div>
+    );
+  }
+
   if (state.status === "idle" || state.status === "preparing" || state.status === "generating") {
     const pct = state.status === "preparing" ? Math.round((state.done / Math.max(1, state.total)) * 60) : state.status === "generating" ? 75 : 0;
     return (
@@ -193,6 +213,11 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
             <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/[0.06] px-2.5 py-1 text-[11px] font-medium text-pen-deep">
               <FileStack className="w-3.5 h-3.5" /> Whole-document guide · {numPages} pages
             </span>
+            {d.coverage && d.coverage.pages < numPages - 2 && (
+              <span className="text-[11px] text-faint" title="The guide is rebuilt automatically as more pages are read">
+                Covers {d.coverage.pages} of {numPages} pages · updating
+              </span>
+            )}
             <button onClick={onRegenerate} className="text-faint hover:text-ink/80 p-1" title="Regenerate">
               <RotateCw className="w-3.5 h-3.5" />
             </button>

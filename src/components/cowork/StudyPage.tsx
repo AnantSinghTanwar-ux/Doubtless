@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { memo, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { AlertCircle, BookOpen, Check, ImageOff, Lightbulb, RotateCw, Sigma, Target, X } from "lucide-react";
 import type { PageAnalysis } from "@/types/cowork";
@@ -16,8 +16,9 @@ interface StudyPageProps {
   state: AnalysisState | undefined;
   isActive: boolean;
   minHeight: number;
-  onRetry: () => void;
-  onJumpToPdf: () => void;
+  /** Called with this page's number (stable callbacks let unchanged pages skip re-rendering). */
+  onRetry: (page: number) => void;
+  onJumpToPdf: (page: number) => void;
 }
 
 const markdown: Components = {
@@ -125,7 +126,7 @@ export function FormulaCard({ name, formula, note, page, onPage }: { name: strin
   );
 }
 
-export default function StudyPage({ pageNumber, totalPages, state, isActive, minHeight, onRetry, onJumpToPdf }: StudyPageProps) {
+function StudyPage({ pageNumber, totalPages, state, isActive, minHeight, onRetry, onJumpToPdf }: StudyPageProps) {
   const data = state?.status === "done" ? state.data : null;
   const isBlank = data && !data.hasContent;
 
@@ -144,7 +145,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
 
       <header className="flex items-center justify-between gap-3 px-6 sm:px-8 pt-6">
         <button
-          onClick={onJumpToPdf}
+          onClick={() => onJumpToPdf(pageNumber)}
           className="text-xs font-semibold text-faint hover:text-pen transition-colors"
           title="Show this page in the PDF"
         >
@@ -152,7 +153,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
         </button>
         {data && data.highlights.length > 0 && (
           <button
-            onClick={onJumpToPdf}
+            onClick={() => onJumpToPdf(pageNumber)}
             className="flex items-center gap-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 px-3 py-1 text-xs text-rose-200 hover:bg-rose-500/15 transition-colors"
             title="See the highlights on the PDF"
           >
@@ -180,7 +181,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
               <p className="text-sm text-faint mt-1 max-w-sm line-clamp-3">{state.error}</p>
             </div>
             <button
-              onClick={onRetry}
+              onClick={() => onRetry(pageNumber)}
               className="flex items-center gap-2 rounded-lg bg-ink/[0.06] hover:bg-ink/10 border border-line px-4 py-2 text-sm text-ink transition-colors"
             >
               <RotateCw className="w-4 h-4" /> Try again
@@ -246,3 +247,6 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
     </article>
   );
 }
+
+/** Memoised: the notes pane holds one of these per PDF page, and only the pages whose data changed should re-render. */
+export default memo(StudyPage);

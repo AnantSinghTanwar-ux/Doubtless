@@ -278,7 +278,7 @@ export default function VoiceTutorPage() {
         <TopBar title="Voice Tutor" />
         <main className="mx-auto grid max-w-6xl gap-6 p-4 pb-24 md:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:pb-8">
           {/* Call panel */}
-          <section className="flex flex-col items-center rounded-card border border-line bg-sheet p-8 text-center shadow-sheet">
+          <section className="flex flex-col items-center overflow-hidden rounded-card border border-line bg-sheet p-8 text-center shadow-sheet">
             {!configured ? (
               <div className="w-full py-2 text-left">
                 <Callout tone="warning" icon={Settings2} title="Voice tutor isn't set up yet">
@@ -291,15 +291,15 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
               </div>
             ) : (
               <>
-                {/* The orb pulses with the voice level while someone is talking. */}
-                <div className="relative mt-4 flex h-52 w-52 items-center justify-center">
+                {/* The orb pulses with the voice level while someone is talking; the growth is capped so it stays inside the card. */}
+                <div className="relative my-6 flex h-52 w-52 items-center justify-center">
                   <span
                     className="absolute inset-0 rounded-full bg-pen/10 transition-transform duration-150"
-                    style={{ transform: `scale(${live ? 1 + volume * 0.9 : 1})` }}
+                    style={{ transform: `scale(${live ? 1 + Math.min(1, volume) * 0.2 : 1})` }}
                   />
                   <span
                     className="absolute inset-6 rounded-full bg-pen/15 transition-transform duration-150"
-                    style={{ transform: `scale(${live ? 1 + volume * 0.5 : 1})` }}
+                    style={{ transform: `scale(${live ? 1 + Math.min(1, volume) * 0.14 : 1})` }}
                   />
                   <button
                     onClick={live ? end : start}

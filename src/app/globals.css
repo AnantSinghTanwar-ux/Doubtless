@@ -612,3 +612,39 @@
   --color-zinc-900: #18181b;
   --color-zinc-950: #09090b;
 }
+
+/* CoWork voice orb (Siri-style): a slowly turning colour field that breathes while idle and listens/speaks live. */
+@keyframes orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+.voice-orb-field {
+  background: conic-gradient(from 0deg, #c2410c, #e11d48, #7c3aed, #2563eb, #0d9488, #f59e0b, #c2410c);
+  animation: orb-spin 6s linear infinite;
+  filter: blur(6px) saturate(1.2);
+}
+.voice-orb-field[data-state="connecting"] {
+  animation-duration: 1.4s;
+}
+.voice-orb-field[data-state="speaking"] {
+  animation-duration: 2.4s;
+}
+.voice-orb-idle {
+  animation: orb-breathe 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-orb-field,
+  .voice-orb-idle {
+    animation: none;
+  }
+}

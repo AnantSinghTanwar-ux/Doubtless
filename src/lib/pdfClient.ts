@@ -115,6 +115,21 @@ export async function locateQuote(page: PDFPageProxy, quote: string): Promise<[n
   ];
 }
 
+/** Where each run of text sits on the page ([ymin, xmin, ymax, xmax], 0-1000), so callouts can avoid covering words. */
+export async function textBoxes(page: PDFPageProxy): Promise<[number, number, number, number][]> {
+  const content = await page.getTextContent();
+  const viewport = page.getViewport({ scale: 1 });
+  const n = (v: number, size: number) => Math.min(1000, Math.max(0, Math.round((v / size) * 1000)));
+  const out: [number, number, number, number][] = [];
+  for (const item of content.items) {
+    if (!("str" in item) || !item.str.trim()) continue;
+    const h = item.height || Math.abs(item.transform[3]);
+    const [ax, ay, bx, by] = viewport.convertToViewportRectangle([item.transform[4], item.transform[5] - h * 0.2, item.transform[4] + item.width, item.transform[5] + h * 0.95]);
+    out.push([n(Math.min(ay, by), viewport.height), n(Math.min(ax, bx), viewport.width), n(Math.max(ay, by), viewport.height), n(Math.max(ax, bx), viewport.width)]);
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ */
 /* OCR for pages with no text layer (scanned PDFs, slides exported as   */
 /* pictures). Gives the words AND where they sit, so highlights can be  */

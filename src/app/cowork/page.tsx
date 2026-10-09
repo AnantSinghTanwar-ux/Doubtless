@@ -19,13 +19,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firebase";
-import { pageCacheId, readCowork, writeCowork } from "@/lib/coworkCache";
+import { pageCacheId, readAllPages, writeCowork } from "@/lib/coworkCache";
 import { getVaultFolders, getVaultDocuments } from "@/lib/firestore";
 import type { VaultFolder, VaultDocument } from "@/types";
 import type { PDFDocumentProxy } from "@/lib/pdfClient";
 import type { DocumentOverview, OverviewPageInput, PageAnalysis, PageHighlight } from "@/types/cowork";
 import PdfPageView from "@/components/cowork/PdfPageView";
 import StudyPage, { type AnalysisState } from "@/components/cowork/StudyPage";
+import CoworkVoice, { type PageContext } from "@/components/cowork/CoworkVoice";
 import OverviewPanel, { type OverviewState } from "@/components/cowork/OverviewPanel";
 
 export default function CoWorkPage() {
@@ -166,10 +167,32 @@ const overlapArea = (a: number[], b: number[]) =>
 
 const CACHE_PREFIX = "cowork:v5"; // v5: better local page reading and OCR highlights; older saved results are dropped
 const MAX_PARALLEL = 3;
-// Pages with at least this much text-layer text are sent to the overview as text; others as an image.
-const TEXT_PAGE_MIN_CHARS = 120;
 
 const NO_HIGHLIGHTS: never[] = [];
+/** Background reading waits this long after the last scroll, so it never competes with scrolling for the main thread. */
+const SCROLL_QUIET_MS = 1200;
+
+/** Resolves when the browser is idle (or after `timeout`), so heavy work like drawing a page waits for a gap between frames. */
+const idle = (timeout = 400) =>
+  new Promise<void>((resolve) => {
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    if (ric) ric(() => resolve(), { timeout });
+    else setTimeout(resolve, 16);
+  });
+
+/** Compact notes for one analysed page, used to build the whole-document study guide from what has been read. */
+function pageNotes(a: PageAnalysis): string {
+  if (!a.hasContent) return "Page has no study content (title, index or closing slide).";
+  return [
+    a.title,
+    a.summary,
+    a.keyPoints.length ? `Key points: ${a.keyPoints.join("; ")}` : "",
+    a.formulas.length ? `Formulas: ${a.formulas.map((f) => `${f.name}: ${f.formula}`).join("; ")}` : "",
+    a.examTip ? `Exam tip: ${a.examTip}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 
 function contentOffset(container: HTMLElement, el: HTMLElement) {
   return el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
@@ -178,11 +201,15 @@ function contentOffset(container: HTMLElement, el: HTMLElement) {
 function readPos(container: HTMLElement, els: HTMLElement[]): ScrollPos | null {
   if (!els.length || container.clientHeight === 0) return null;
   const line = container.scrollTop + container.clientHeight * ANCHOR;
-  let index = 0;
-  for (let i = 0; i < els.length; i++) {
-    if (contentOffset(container, els[i]) <= line) index = i;
-    else break;
+  // Pages are in order, so binary-search the one under the reading line (a scroll frame reads ~7 positions, not all of them).
+  let lo = 0;
+  let hi = els.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (contentOffset(container, els[mid]) <= line) lo = mid;
+    else hi = mid - 1;
   }
+  const index = lo;
   const top = contentOffset(container, els[index]);
   const h = els[index].offsetHeight || 1;
   return {
@@ -246,6 +273,16 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
   const inFlight = useRef<Set<number>>(new Set());
   const notesTabRef = useRef(notesTab);
   const pdfLib = useRef<typeof import("@/lib/pdfClient") | null>(null);
+  const lastScrollAt = useRef(0);
+  const analysesRef = useRef(analyses);
+  const currentPageRef = useRef(currentPage);
+  const ocrTexts = useRef<Map<number, string>>(new Map());
+  const bgFailed = useRef<Set<number>>(new Set());
+  const [savedLoaded, setSavedLoaded] = useState(false);
+  useEffect(() => {
+    analysesRef.current = analyses;
+    currentPageRef.current = currentPage;
+  });
 
   const numPages = aspects.length;
 
@@ -324,6 +361,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
   const onScroll = (side: Side) => () => {
     // Only the pane the user is interacting with drives; the follower's own scroll events are ignored.
     if (driver.current !== side) return;
+    lastScrollAt.current = Date.now();
     if (frame.current) cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => syncFrom(side));
   };
@@ -416,8 +454,13 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
     [pdf]
   );
 
+  /**
+   * Notes + highlights for one page. `background` pages are read while the student is elsewhere in the document: they
+   * use OCR text instead of a picture when there is enough of it (much faster on a local model) and run one at a time.
+   */
   const analyze = useCallback(
-    async (page: number, force = false) => {
+    async (page: number, opts: { force?: boolean; background?: boolean } = {}) => {
+      const { force = false, background = false } = opts;
       if (!pdf || page < 1 || page > numPages || inFlight.current.has(page)) return;
       const cacheKey = `${CACHE_PREFIX}:${vault.id}:${page}`;
       if (!force) {
@@ -427,38 +470,42 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
           return;
         }
       }
-      if (inFlight.current.size >= MAX_PARALLEL) return;
+      if (inFlight.current.size >= (background ? 1 : MAX_PARALLEL)) return;
 
       inFlight.current.add(page);
       setAnalyses((a) => ({ ...a, [page]: { status: "loading" } }));
       try {
-        // Analysed before (on any device)? Reuse it instead of asking the AI again.
-        if (!force) {
-          const saved = await readCowork<PageAnalysis>(pageCacheId(vault.id, page));
-          if (saved) {
-            writeCache(cacheKey, saved);
-            setAnalyses((a) => ({ ...a, [page]: { status: "done", data: saved } }));
-            return;
+        const lib = pdfLib.current!;
+        const pdfPage = await pdf.getPage(page);
+        const text = await getPageText(page);
+        // Pages with a text layer need no picture at all. Picture-only pages are OCR'd here (for exact highlight
+        // positions); the picture itself is only drawn when the model has to look at it.
+        let image: string | undefined;
+        let ocr: Awaited<ReturnType<typeof lib.ocrPage>> | null = null;
+        if (text.trim().length < 120) {
+          await idle();
+          ocr = await lib.ocrPage(pdfPage).catch((e) => (console.warn("OCR failed:", e), null));
+          if (ocr?.text) ocrTexts.current.set(page, ocr.text);
+          if (!(background && (ocr?.text.length ?? 0) >= 200)) {
+            await idle();
+            image = await lib.renderPageImage(pdfPage, 1100, 0.82);
           }
         }
-        // Send the rendered page: many slide decks draw text as vector shapes with no text layer.
-        const pdfPage = await pdf.getPage(page);
-        const [image, text] = await Promise.all([pdfLib.current!.renderPageImage(pdfPage, 1100, 0.82), getPageText(page)]);
-        // Scanned page (no text layer): OCR it here so highlights can land on the actual words.
-        const ocr = text.trim().length < 120 ? await pdfLib.current!.ocrPage(pdfPage).catch((e) => (console.warn("OCR failed:", e), null)) : null;
         const res = await fetch("/api/cowork/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image, text, ...(ocr?.text ? { ocrText: ocr.text } : {}) }),
+          body: JSON.stringify({ text, ...(image ? { image } : {}), ...(ocr?.text ? { ocrText: ocr.text } : {}), ...(background ? { fast: true } : {}) }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-        data.highlights = await resolveHighlights(pdfLib.current!, pdfPage, data.highlights, ocr?.words);
+        data.highlights = await resolveHighlights(lib, pdfPage, data.highlights, ocr?.words);
         writeCache(cacheKey, data);
-        void writeCowork(pageCacheId(vault.id, page), data);
+        void writeCowork(pageCacheId(vault.id, page), data, { vaultId: vault.id, page });
         setAnalyses((a) => ({ ...a, [page]: { status: "done", data } }));
       } catch (err) {
-        console.error(err);
+        // An AI failure is shown on the page with a retry button; it isn't an app error.
+        console.warn(`CoWork: page ${page} could not be analysed:`, err instanceof Error ? err.message : err);
+        if (background) bgFailed.current.add(page);
         setAnalyses((a) => ({ ...a, [page]: { status: "error", error: err instanceof Error ? err.message : "Unknown error" } }));
       } finally {
         inFlight.current.delete(page);
@@ -467,17 +514,73 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
     [pdf, numPages, vault.id, getPageText]
   );
 
-  // Analyze the page being read and prefetch the next two, so highlights are ready as you scroll.
+  // Everything already analysed for this document (on any device) arrives in one query, before any page is read again.
   useEffect(() => {
     if (!pdf) return;
+    let alive = true;
+    readAllPages<PageAnalysis>(vault.id).then((saved) => {
+      if (!alive) return;
+      if (saved.size) {
+        for (const [page, data] of saved) writeCache(`${CACHE_PREFIX}:${vault.id}:${page}`, data);
+        setAnalyses((a) => {
+          const next = { ...a };
+          for (const [page, data] of saved) if (next[page]?.status !== "done") next[page] = { status: "done", data };
+          return next;
+        });
+      }
+      setSavedLoaded(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [pdf, vault.id]);
+
+  // Read the rest of the document in the background, one page at a time, starting from where the student is and only
+  // while they aren't scrolling, so that after a while every page has notes and the study guide covers everything.
+  useEffect(() => {
+    if (!pdf || !numPages || !savedLoaded) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const next = () => {
+      const start = currentPageRef.current;
+      for (let k = 0; k < numPages; k++) {
+        const p = ((start - 1 + k) % numPages) + 1;
+        if (!analysesRef.current[p] && !bgFailed.current.has(p)) return p;
+      }
+      return null;
+    };
+    const tick = () => {
+      const quiet = Date.now() - lastScrollAt.current > SCROLL_QUIET_MS;
+      if (quiet && !document.hidden && inFlight.current.size === 0) {
+        const p = next();
+        if (p === null) return; // every page is done
+        void analyze(p, { background: true });
+      }
+      timer = setTimeout(tick, 1500);
+    };
+    timer = setTimeout(tick, 3000);
+    return () => clearTimeout(timer);
+  }, [pdf, numPages, savedLoaded, analyze]);
+
+  // Analyze the page being read and prefetch the next two, so highlights are ready as you scroll.
+  useEffect(() => {
+    if (!pdf || !savedLoaded) return; // saved notes first: no point re-reading a page that is already done
     for (const p of [currentPage, currentPage + 1, currentPage + 2]) {
       if (!analyses[p]) analyze(p);
     }
-  }, [pdf, currentPage, analyses, analyze]);
+  }, [pdf, savedLoaded, currentPage, analyses, analyze]);
 
+  /**
+   * The whole-document study guide. First built from the text the document already has (text layers, plus text read
+   * from picture pages at upload); then rebuilt from the page notes as background reading covers more of the document.
+   * No pictures are drawn for it, so opening a large deck stays smooth.
+   */
+  const overviewBuilding = useRef(false);
+  const lastOverviewAt = useRef(0);
   const buildOverview = useCallback(
     async (force = false) => {
-      if (!pdf) return;
+      if (!pdf || overviewBuilding.current) return;
+      overviewBuilding.current = true;
+      lastOverviewAt.current = Date.now();
       try {
         if (!force) {
           const cached = await fetch(`/api/cowork/overview?vaultId=${vault.id}`);
@@ -488,33 +591,58 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
         }
         const pages: OverviewPageInput[] = [];
         for (let p = 1; p <= numPages; p++) {
-          setOverview({ status: "preparing", done: p, total: numPages });
-          const text = await getPageText(p);
-          if (text.replace(/\s/g, "").length >= TEXT_PAGE_MIN_CHARS) pages.push({ page: p, text });
-          else pages.push({ page: p, image: await pdfLib.current!.renderPageImage(await pdf.getPage(p), 640, 0.6) });
+          if (p % 10 === 1) {
+            setOverview((o) => (o.status === "done" ? o : { status: "preparing", done: p, total: numPages }));
+            await idle(); // text extraction is cheap, but give scrolling the main thread between batches
+          }
+          const a = analysesRef.current[p];
+          const text = a?.status === "done" ? pageNotes(a.data) : (await getPageText(p)) || ocrTexts.current.get(p) || "";
+          pages.push({ page: p, text });
         }
-        setOverview({ status: "generating" });
+        setOverview((o) => (o.status === "done" ? o : { status: "generating" }));
         const res = await fetch("/api/cowork/overview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ vaultId: vault.id, folderId: vault.folderId || null, pages, force }),
+          body: JSON.stringify({ vaultId: vault.id, folderId: vault.folderId || null, pages, force, totalPages: numPages }),
         });
         const data = await res.json().catch(() => ({}));
+        if (res.status === 422 && data.waiting) {
+          setOverview((o) => (o.status === "done" ? o : { status: "waiting" }));
+          return;
+        }
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
         setOverview({ status: "done", data });
       } catch (err) {
-        console.error(err);
-        setOverview({ status: "error", error: err instanceof Error ? err.message : "Unknown error" });
+        console.warn("CoWork: study guide failed:", err instanceof Error ? err.message : err);
+        // Keep an existing guide on screen if a rebuild fails.
+        setOverview((o) => (o.status === "done" ? o : { status: "error", error: err instanceof Error ? err.message : "Unknown error" }));
+      } finally {
+        overviewBuilding.current = false;
       }
     },
     [pdf, numPages, vault.id, vault.folderId, getPageText]
   );
 
   useEffect(() => {
-    if (!pdf || overviewStarted.current) return;
+    if (!pdf || !savedLoaded || overviewStarted.current) return;
     overviewStarted.current = true;
     buildOverview();
-  }, [pdf, buildOverview]);
+  }, [pdf, savedLoaded, buildOverview]);
+
+  // Rebuild the guide as background reading covers more pages: when notes exist for many more pages than the guide
+  // was built from, and once more when every page is done. At most once every 90 seconds.
+  const pagesDone = Object.values(analyses).filter((a) => a.status === "done").length;
+  useEffect(() => {
+    if (!numPages || overviewBuilding.current || Date.now() - lastOverviewAt.current < 90_000) return;
+    const covered = overview.status === "done" ? overview.data.coverage?.pages ?? numPages : overview.status === "waiting" ? 0 : null;
+    if (covered === null) return;
+    const textPages = [...pageTexts.current.values()].filter((t) => t.trim().length >= 120).length;
+    const usable = Math.max(pagesDone, textPages);
+    const allDone = pagesDone >= numPages;
+    if (usable - covered >= Math.max(6, Math.round(numPages * 0.2)) || (allDone && covered < numPages - 2) || (overview.status === "waiting" && pagesDone >= Math.min(numPages, 8))) {
+      void buildOverview(true);
+    }
+  }, [pagesDone, numPages, overview, buildOverview]);
 
   // Page notes are laid out fresh when that tab opens; line them up with the PDF.
   useEffect(() => {
@@ -529,9 +657,47 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
     if (pos) requestAnimationFrame(() => writePos(notes, notePageEls.current, pos));
   }, [notesTab]);
 
+  /** What the voice tutor is told about a page: its text (or OCR text) and the notes made for it. */
+  const pageContext = useCallback(
+    async (page: number): Promise<PageContext> => {
+      const a = analysesRef.current[page];
+      const notes = a?.status === "done" ? pageNotes(a.data) : "";
+      let text = (await getPageText(page)).trim() || ocrTexts.current.get(page) || "";
+      // A picture page nobody has read yet: read it now, so the tutor isn't talking blind.
+      if (!text && !notes && pdf && pdfLib.current) {
+        text = (await pdfLib.current.ocrPage(await pdf.getPage(page)).catch(() => null))?.text ?? "";
+        if (text) ocrTexts.current.set(page, text);
+      }
+      const content = [text && `Text on the page:\n${text.slice(0, 3500)}`, notes && `Study notes for this page:\n${notes}`].filter(Boolean).join("\n\n");
+      return { title: a?.status === "done" ? a.data.title : "", content: content || "(This page has no readable text.)" };
+    },
+    [getPageText, pdf]
+  );
+  const documentSummary =
+    overview.status === "done"
+      ? `${overview.data.subject ? `${overview.data.subject}. ` : ""}${overview.data.overview.slice(0, 600)} Topics: ${overview.data.topics
+          .slice(0, 15)
+          .map((t) => `${t.name} (p.${t.pages.join(",")})`)
+          .join("; ")}`
+      : "";
+
+  const isMobile = () => window.matchMedia("(max-width: 1023px)").matches;
+  const retryPage = useCallback((page: number) => void analyze(page, { force: true }), [analyze]);
+  const jumpToPdf = useCallback(
+    (page: number) => {
+      if (isMobile()) {
+        // The PDF pane is hidden on mobile; switching views restores lastPos.
+        lastPos.current = { index: page - 1, frac: 0, atStart: false, atEnd: false };
+        setMobileView("pdf");
+      } else {
+        goToPage(page, "pdf");
+      }
+    },
+    [goToPage]
+  );
+
   const zoom = ZOOMS[zoomIdx];
   const pageWidth = Math.max(0, Math.min(pdfPaneWidth - 48, 860) * zoom);
-  const done = Object.values(analyses).filter((a) => a.status === "done").length;
 
   return (
     <div className="h-[100dvh] flex flex-col bg-transparent text-ink">
@@ -547,7 +713,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-medium text-ink truncate">{vault.fileName || "Untitled document"}</h1>
           <p className="text-[11px] text-faint">
-            {numPages ? `${done} of ${numPages} pages analyzed` : "Loading…"}
+            {numPages ? `${pagesDone} of ${numPages} pages analyzed${pagesDone < numPages ? " · reading the rest in the background" : ""}` : "Loading…"}
           </p>
         </div>
 
@@ -732,6 +898,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
                 <OverviewPanel
                   state={overview}
                   numPages={numPages}
+                  pagesDone={pagesDone}
                   onGoToPage={(p) => {
                     if (window.matchMedia("(max-width: 1023px)").matches) {
                       lastPos.current = { index: p - 1, frac: 0, atStart: false, atEnd: false };
@@ -757,16 +924,8 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
                         state={analyses[i + 1]}
                         isActive={currentPage === i + 1}
                         minHeight={Math.max(320, notesPaneHeight - 120)}
-                        onRetry={() => analyze(i + 1, true)}
-                        onJumpToPdf={() => {
-                          if (window.matchMedia("(max-width: 1023px)").matches) {
-                            // The PDF pane is hidden on mobile; switching views restores lastPos.
-                            lastPos.current = { index: i, frac: 0, atStart: false, atEnd: false };
-                            setMobileView("pdf");
-                          } else {
-                            goToPage(i + 1, "pdf");
-                          }
-                        }}
+                        onRetry={retryPage}
+                        onJumpToPdf={jumpToPdf}
                       />
                     </div>
                   ))}
@@ -775,6 +934,9 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
             </div>
           </div>
         </div>
+      )}
+      {numPages > 0 && (
+        <CoworkVoice fileName={vault.fileName || "this document"} page={currentPage} numPages={numPages} getPageContext={pageContext} documentSummary={documentSummary} />
       )}
     </div>
   );

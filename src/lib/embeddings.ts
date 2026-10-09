@@ -42,6 +42,8 @@ export async function searchVault(
   return retrieveByModel(query, chunks, fileName, topK);
 }
 
+const MIN_SCORE: Record<number, number> = { 768: 0.55, 2048: 0.25 };
+
 /**
  * Searches all of a student's uploaded notes, not just the open one: the selected document plus their most recent
  * uploads (capped, to bound reads). Results from the selected document get a small boost so it stays the main source.
@@ -51,7 +53,7 @@ export async function searchUserVaults(
   userId: string,
   opts: { preferVaultId?: string; topK?: number; maxVaults?: number; minScore?: number } = {}
 ): Promise<RetrievedChunk[]> {
-  const { preferVaultId, topK = 5, maxVaults = 6, minScore = 0.3 } = opts;
+  const { preferVaultId, topK = 5, maxVaults = 6 } = opts;
   const docs = (await getVaultDocuments(userId)).sort((a, b) => (b.uploadedAt ?? 0) - (a.uploadedAt ?? 0));
   const chosen = [...docs.filter((d) => d.id === preferVaultId), ...docs.filter((d) => d.id !== preferVaultId)].slice(0, maxVaults);
   if (!chosen.length) return [];
@@ -65,10 +67,12 @@ export async function searchUserVaults(
       const q = queries.get(c.embedding?.length ?? 0);
       if (!q) return [];
       const [hit] = retrieveTopChunks(q, [c], d.fileName, 1);
-      return [{ ...hit, score: hit.score + (d.id === preferVaultId ? 0.05 : 0) }];
+      return [{ ...hit, dim: q.length, score: hit.score + (d.id === preferVaultId ? 0.05 : 0) }];
     })
   );
-  return scored.filter((c) => c.score >= minScore).sort((a, b) => b.score - a.score).slice(0, topK);
+  // Each embedding model scores on its own scale; below these a passage is usually off-topic (measured on study notes).
+  const minFor = (c: RetrievedChunk & { dim?: number }) => opts.minScore ?? MIN_SCORE[c.dim ?? 0] ?? 0.3;
+  return scored.filter((c) => c.score >= minFor(c)).sort((a, b) => b.score - a.score).slice(0, topK).map((c) => ({ text: c.text, pageNumber: c.pageNumber, fileName: c.fileName, score: c.score }));
 }
 
 export async function searchFolderPastPapers(

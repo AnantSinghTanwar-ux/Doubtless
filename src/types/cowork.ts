@@ -38,6 +38,8 @@ export interface DocumentOverview {
   importantQuestions: { question: string; answer: string; topic: string; pages: number[]; priority: "high" | "medium" }[];
   pyqs: { topic: string; questions: { question: string; marks?: number; source: "past_paper" | "common" }[] }[];
   hasPastPapers: boolean;
+  /** How many of the document's pages the guide was built from (it is rebuilt as more pages are read). */
+  coverage?: { pages: number; total: number };
 }
 
 /** One page sent to the overview endpoint: its text if it has a text layer, else a small image. */

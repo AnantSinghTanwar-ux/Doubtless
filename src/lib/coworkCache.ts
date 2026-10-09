@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { db } from "./firebase";
 
 /**
@@ -26,9 +26,25 @@ export async function readCowork<T>(id: string): Promise<T | null> {
   }
 }
 
-export async function writeCowork(id: string, data: unknown): Promise<void> {
+/** Every saved page of a document in one query (one read per page), so reopening a document shows all its notes at once. */
+export async function readAllPages<T>(vaultId: string): Promise<Map<number, T>> {
+  const out = new Map<number, T>();
   try {
-    await setDoc(doc(db, COLLECTION, id), { data, createdAt: Date.now(), version: COWORK_CACHE_VERSION });
+    const snap = await getDocs(query(collection(db, COLLECTION), where("vaultId", "==", vaultId)));
+    for (const d of snap.docs) {
+      const v = d.data() as { data: T; createdAt: number; version: number; page?: number };
+      if (typeof v.page === "number" && v.version === COWORK_CACHE_VERSION && Date.now() - v.createdAt <= TTL_MS) out.set(v.page, v.data);
+    }
+  } catch {
+    /* fall back to per-page reads */
+  }
+  return out;
+}
+
+/** `where` (vaultId, page) is stored for page entries so readAllPages can find them. */
+export async function writeCowork(id: string, data: unknown, where_?: { vaultId: string; page?: number }): Promise<void> {
+  try {
+    await setDoc(doc(db, COLLECTION, id), { data, createdAt: Date.now(), version: COWORK_CACHE_VERSION, ...(where_ ?? {}) });
   } catch (err) {
     console.warn("[coworkCache] could not save:", err instanceof Error ? err.message : err);
   }
