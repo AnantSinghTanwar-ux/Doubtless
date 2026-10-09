@@ -28,23 +28,22 @@ export default function WeakTopics({ profile }: WeakTopicsProps) {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-red-500/10 to-orange-600/10 border-red-500/20">
-      <CardTitle className="text-sm mb-4 text-red-400 flex items-center gap-2">
-        <span className="text-red-400">🎯</span> Focus Areas
+    <Card>
+      <CardTitle className="text-sm mb-4 text-gray-800">
+        Focus Areas
       </CardTitle>
 
       {weakTopics.length === 0 && frequentMistakes.length === 0 ? (
         <div className="text-center py-6">
-          <span className="text-2xl mb-2 block">🌟</span>
-          <p className="text-sm text-emerald-400">You're doing great! No weak areas identified yet.</p>
+          <p className="text-sm text-gray-500">You're doing great! No weak areas identified yet.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {weakTopics.map(([topic, score]) => (
-            <div key={topic} className="flex items-center justify-between bg-white/[0.05] p-3 rounded-xl border border-white/[0.03]">
+            <div key={topic} className="flex items-center justify-between bg-white/[0.04] p-3 rounded-xl border border-white/[0.06] shadow-sm">
               <div>
                 <p className="text-sm font-medium text-white">{topic}</p>
-                <p className="text-xs text-red-400">Mastery: {score}%</p>
+                <p className="text-xs text-gray-500">Mastery: {score}%</p>
               </div>
               <Button size="sm" variant="secondary" onClick={() => handlePractice(topic)} className="text-xs py-1.5 h-auto">
                 Practice
@@ -56,10 +55,10 @@ export default function WeakTopics({ profile }: WeakTopicsProps) {
             <div className="pt-2">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Frequent Mistakes</p>
               {frequentMistakes.map(([mistake, count]) => (
-                <div key={mistake} className="flex items-center justify-between bg-white/[0.05] p-3 rounded-xl border border-white/[0.03] mb-2">
+                <div key={mistake} className="flex items-center justify-between bg-white/[0.04] p-3 rounded-xl border border-white/[0.06] shadow-sm mb-2">
                   <div>
                     <p className="text-sm font-medium text-white capitalize">{mistake.replace(/_/g, " ")}</p>
-                    <p className="text-xs text-amber-400">Occurred {count} times</p>
+                    <p className="text-xs text-gray-500">Occurred {count} times</p>
                   </div>
                 </div>
               ))}

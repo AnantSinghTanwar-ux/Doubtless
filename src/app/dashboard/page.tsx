@@ -7,7 +7,6 @@ import Sidebar from "@/components/layout/Sidebar";
 import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
-import ScoreTrend from "@/components/dashboard/ScoreTrend";
 import MasteryHeatmap from "@/components/dashboard/MasteryHeatmap";
 import WeakTopics from "@/components/dashboard/WeakTopics";
 import Card from "@/components/ui/Card";
@@ -78,30 +77,27 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-[#fffdf8]/50 border-white/[0.04]">
-              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Doubts</div>
+            <Card>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-semibold">Total Doubts</div>
               <div className="text-3xl font-bold text-white">{learnerProfile.totalDoubtsResolved}</div>
             </Card>
-            <Card className="bg-blue-500/10 border-blue-500/20">
-              <div className="text-xs text-blue-400 uppercase tracking-wider mb-1">AI Resolved</div>
-              <div className="text-3xl font-bold text-blue-400">{learnerProfile.aiResolved}</div>
+            <Card>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-semibold">AI Resolved</div>
+              <div className="text-3xl font-bold text-white">{learnerProfile.aiResolved}</div>
             </Card>
-            <Card className="bg-emerald-500/10 border-emerald-500/20">
-              <div className="text-xs text-emerald-400 uppercase tracking-wider mb-1">Practice Resolved</div>
-              <div className="text-3xl font-bold text-emerald-400">{learnerProfile.practiceResolved}</div>
+            <Card>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-semibold">Practice Resolved</div>
+              <div className="text-3xl font-bold text-white">{learnerProfile.practiceResolved}</div>
             </Card>
-            <Card className="bg-amber-500/10 border-amber-500/20">
-              <div className="text-xs text-amber-400 uppercase tracking-wider mb-1">Teacher Resolved</div>
-              <div className="text-3xl font-bold text-amber-400">{learnerProfile.teacherResolved}</div>
+            <Card>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-semibold">Teacher Resolved</div>
+              <div className="text-3xl font-bold text-white">{learnerProfile.teacherResolved}</div>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ScoreTrend profile={learnerProfile} />
-            <div className="space-y-6">
-              <WeakTopics profile={learnerProfile} />
-              <MasteryHeatmap profile={learnerProfile} />
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <WeakTopics profile={learnerProfile} />
+            <MasteryHeatmap profile={learnerProfile} />
           </div>
 
         </main>
