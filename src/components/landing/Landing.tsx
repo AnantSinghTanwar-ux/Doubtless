@@ -6,6 +6,8 @@ import LandingNav from "./LandingNav";
 import HeroPreview from "./HeroPreview";
 import { Features, FinalCta, Footer, HowItWorks, Teachers } from "./Sections";
 import { WordReveal } from "./Reveal";
+import PaperSolution from "./PaperSolution";
+import PaperNote from "@/components/paper/PaperNote";
 
 export default function Landing() {
   return (
@@ -20,6 +22,14 @@ export default function Landing() {
         <section id="top" className="relative px-6 pb-16 pt-40 text-center sm:pt-48">
           <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-[44rem]" />
           <div className="lp-glow pointer-events-none absolute left-1/2 top-24 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[120px]" />
+
+          {/* scraps of notebook paper pinned around the headline */}
+          <div className="lp-rise pointer-events-none absolute left-[3%] top-[30%] hidden 2xl:block" style={{ animationDelay: "1.2s" }}>
+            <PaperNote rotate={-6}>why is a ≠ 0 at the top?? 🤔</PaperNote>
+          </div>
+          <div className="lp-rise pointer-events-none absolute right-[3%] top-[44%] hidden 2xl:block" style={{ animationDelay: "1.5s" }}>
+            <PaperNote rotate={5} ink="red">g = 9.8 m/s² always ✓</PaperNote>
+          </div>
 
           <div className="relative mx-auto max-w-4xl">
             <div className="lp-rise mx-auto mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-zinc-300 backdrop-blur" style={{ animationDelay: "0.1s" }}>
@@ -64,6 +74,7 @@ export default function Landing() {
           <HeroPreview />
         </section>
 
+        <PaperSolution />
         <Features />
         <HowItWorks />
         <Teachers />

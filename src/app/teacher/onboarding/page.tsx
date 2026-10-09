@@ -23,6 +23,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getTeacherApplication } from "@/lib/firestore";
 import { authedJSON } from "@/lib/apiClient";
+import { chunkCount, uploadMedia } from "@/lib/mediaStore";
+import { compressImage } from "@/lib/imageUtils";
 import { dataUrlToBlob, type CameraStatus } from "@/hooks/useCamera";
 import LiveSelfie, { type SelfieResult } from "@/components/teacher/LiveSelfie";
 import VideoIntro, { type VideoResult } from "@/components/teacher/VideoIntro";
@@ -103,6 +105,7 @@ export default function TeacherOnboarding() {
   const [errors, setErrors] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -180,10 +183,23 @@ export default function TeacherOnboarding() {
     setSubmitting(true);
     setErrors([]);
     try {
-      const body = new FormData();
-      body.append(
-        "details",
-        JSON.stringify({
+      // Files go straight from the browser to storage (in pieces); the API call below only carries the details.
+      const uploads: { key: string; blob: Blob }[] = [];
+      if (idDocument) uploads.push({ key: "idDocument", blob: await compressImage(idDocument) });
+      if (certificate) uploads.push({ key: "certificate", blob: await compressImage(certificate) });
+      if (!skipLive) {
+        uploads.push({ key: "selfie", blob: dataUrlToBlob(selfie!.dataUrl) });
+        uploads.push({ key: "video", blob: video!.blob });
+      }
+      const totalChunks = uploads.reduce((n, u) => n + chunkCount(u.blob.size), 0);
+      let done = 0;
+      setUploadPct(0);
+      for (const u of uploads) {
+        await uploadMedia(user!.uid, u.key, u.blob, () => setUploadPct(Math.round((++done / totalChunks) * 100)));
+      }
+
+      const body = JSON.stringify({
+        details: {
           personal: { fullName: form.fullName, phone: form.phone, city: form.city, headline: form.headline, bio: form.bio },
           professional: {
             degree: form.degree,
@@ -203,17 +219,10 @@ export default function TeacherOnboarding() {
                 videoPrompt: video!.prompt,
                 videoDurationSec: video!.durationSec,
               },
-        })
-      );
-      if (idDocument) body.append("idDocument", idDocument);
-      if (certificate) body.append("certificate", certificate);
-      if (!skipLive) {
-        body.append("selfie", new File([dataUrlToBlob(selfie!.dataUrl)], "selfie.jpg", { type: "image/jpeg" }));
-        const ext = video!.blob.type.includes("mp4") ? "mp4" : "webm";
-        body.append("video", new File([video!.blob], `intro.${ext}`, { type: video!.blob.type }));
-        video!.frames.forEach((f) => body.append("videoFrames", f));
-      }
-      await authedJSON("/api/teacher/application", { method: "POST", body });
+        },
+        videoFrames: skipLive ? [] : video!.frames,
+      });
+      await authedJSON("/api/teacher/application", { method: "POST", headers: { "Content-Type": "application/json" }, body });
       addToast(skipLive ? "Registered. Complete live verification any time to get verified." : "Application submitted for review.", "success");
       await refreshProfile();
       router.replace("/teacher-dashboard");
@@ -548,7 +557,7 @@ export default function TeacherOnboarding() {
                 >
                   {submitting ? (
                     <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Uploading securely…
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> {uploadPct < 100 ? `Uploading securely… ${uploadPct}%` : "Finishing up…"}
                     </>
                   ) : (
                     <>

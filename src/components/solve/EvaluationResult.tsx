@@ -1,10 +1,11 @@
 "use client";
 
 import Card, { CardTitle } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
 import { getVerdictColor, getScoreColor } from "@/lib/utils";
 import ReactMarkdown from 'react-markdown';
 import type { SolutionEvaluation } from "@/types";
+import { Cross, ScoreCircle, Tick } from "@/components/paper/Pen";
+import { useInView } from "@/components/landing/Reveal";
 
 interface EvaluationResultProps {
   evaluation: SolutionEvaluation;
@@ -86,52 +87,15 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         </Card>
       </div>
 
-      <Card className="bg-[#0e0e12]/80 p-0 overflow-hidden border-white/[0.06]">
-        <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
-          <h3 className="font-semibold text-white">Step-by-Step Analysis</h3>
-        </div>
-        <div className="divide-y divide-white/[0.06]">
-          {evaluation.steps.map((step, idx) => (
-            <div key={idx} className="p-5 flex gap-4">
-              <div className="flex-none">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm border ${getVerdictColor(step.verdict)}`}>
-                  {step.step}
-                </div>
-              </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge className={`${getVerdictColor(step.verdict)} bg-transparent border-current`}>
-                    {getVerdictIcon(step.verdict)} {getVerdictLabel(step.verdict)}
-                  </Badge>
-                  {step.error_type && (
-                    <Badge variant="warning">{step.error_type}</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  <ReactMarkdown>{step.explanation}</ReactMarkdown>
-                </p>
-                {step.fix && (
-                  <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <p className="text-sm text-blue-300">
-                      <span className="font-semibold text-blue-400">Fix:</span> <span className="inline"><ReactMarkdown>{step.fix}</ReactMarkdown></span>
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <MarkedSteps evaluation={evaluation} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-[#0e0e12]/50 border-emerald-500/20">
-          <CardTitle className="text-sm mb-3 text-emerald-400 flex items-center gap-2">
-            <span>✨</span> Model Solution
-          </CardTitle>
-          <div className="prose prose-sm prose-invert prose-emerald max-w-none">
+        <div className="paper paper-plain slide-up px-6 pb-6 pt-6">
+          <p className="hand ink-blue mb-2 text-3xl leading-none">Model solution</p>
+          <div className="serif text-[15px] leading-7 text-[#1b2440] [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_strong]:font-semibold">
             <ReactMarkdown>{evaluation.model_solution}</ReactMarkdown>
           </div>
-        </Card>
+        </div>
 
         {evaluation.source_citations.length > 0 && (
           <Card className="bg-[#0e0e12]/50 border-blue-500/20">
@@ -151,6 +115,51 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         )}
       </div>
 
+    </div>
+  );
+}
+
+/** The student's steps on ruled paper, marked in red pen with the teacher's notes written beside them. */
+function MarkedSteps({ evaluation }: { evaluation: SolutionEvaluation }) {
+  const { ref, inView: on } = useInView<HTMLDivElement>(0.1);
+  const first = evaluation.first_error_step;
+
+  return (
+    <div ref={ref} className="paper slide-up pb-8 pl-[4.6rem] pr-14 pt-[2.1rem]">
+      <p className="serif paper-line text-sm font-semibold uppercase tracking-wider text-[#1b2440]/70">Marked step by step</p>
+
+      {evaluation.steps.map((step, idx) => (
+        <div key={idx} className="relative mb-[2.1rem]">
+          <span className="hand ink-red absolute -left-[3.7rem] top-0 w-[2.4rem] text-center text-[1.7rem] leading-[2.1rem]">{step.step}</span>
+          <span className="absolute -right-11 top-0.5">
+            {step.verdict === "correct" ? (
+              <Tick on={on} delay={0.3 + idx * 0.25} />
+            ) : step.verdict === "error" ? (
+              <Cross on={on} delay={0.3 + idx * 0.25} />
+            ) : (
+              <span className="hand ink-red text-3xl leading-[2.1rem]">{step.verdict === "unclear" ? "?" : "~"}</span>
+            )}
+          </span>
+          {step.explanation && (
+            <div className="serif paper-line text-[15px] text-[#1b2440] [&_p]:leading-[2.1rem] [&_strong]:font-semibold">
+              <ReactMarkdown>{step.explanation}</ReactMarkdown>
+            </div>
+          )}
+          {step.error_type && <p className="hand ink-red paper-line text-[1.4rem]">⟵ {step.error_type}</p>}
+          {step.fix && (
+            <div className="hand ink-red text-[1.45rem] [&_p]:leading-[2.1rem]">
+              <ReactMarkdown>{step.fix}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="flex items-end justify-between gap-4">
+        <p className="hand ink-red text-2xl leading-tight">
+          {first === null ? "Every step holds up. Well done!" : `First slip at step ${first}.`}
+        </p>
+        <ScoreCircle value={evaluation.rubric.total} max={10} on={on} delay={0.4 + evaluation.steps.length * 0.25} className="size-28 shrink-0" />
+      </div>
     </div>
   );
 }

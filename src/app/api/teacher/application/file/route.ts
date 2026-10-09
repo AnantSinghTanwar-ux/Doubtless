@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { authErrorResponse, isAdminEmail, requireUser } from "@/lib/serverAuth";
-import { getTeacherApplication } from "@/lib/firestore";
-import { MIME_BY_EXT, userDir, type VerificationFileKey } from "@/lib/teacherVerification";
+import { getMediaMeta, streamMedia } from "@/lib/mediaStore";
+import type { VerificationFileKey } from "@/lib/teacherVerification";
 
 const KEYS: VerificationFileKey[] = ["idDocument", "certificate", "selfie", "video"];
 
@@ -19,15 +17,13 @@ export async function GET(request: NextRequest) {
     if (!KEYS.includes(key)) return NextResponse.json({ error: "Unknown file" }, { status: 400 });
     if (uid !== user.uid && !isAdminEmail(user.email)) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 
-    const app = await getTeacherApplication(uid);
-    const name = app?.files?.[key];
-    if (!name) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const meta = await getMediaMeta(uid, key);
+    if (!meta) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const filePath = path.join(userDir(uid), path.basename(name));
-    const data = await fs.readFile(filePath);
-    return new NextResponse(new Uint8Array(data), {
+    return new NextResponse(streamMedia(meta), {
       headers: {
-        "Content-Type": MIME_BY_EXT[name.split(".").pop() || ""] || "application/octet-stream",
+        "Content-Type": meta.contentType,
+        "Content-Length": String(meta.size),
         "Cache-Control": "private, no-store",
         "Content-Disposition": "inline",
       },

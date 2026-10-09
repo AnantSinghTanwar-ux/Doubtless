@@ -1,3 +1,4 @@
+import { uploadMedia } from "@/lib/mediaStore";
 import { NextRequest, NextResponse } from "next/server";
 import { chunkPages, extractPagesFromText } from "@/lib/chunker";
 import { embedTexts } from "@/lib/aiProvider";
@@ -61,14 +62,12 @@ async function processPdf(fileBuffer: Buffer, fileName: string, userId: string, 
 
     await saveVaultChunks(vaultId, chunkDocs);
 
-    // Save the actual PDF file for CoWork rendering
-    const fs = require("fs");
-    const path = require("path");
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    // Keep the original PDF so CoWork can render it. Stored in Firestore, not on disk, so it survives serverless hosts.
+    try {
+      await uploadMedia(userId, `pdf-${vaultId}`, new Blob([new Uint8Array(fileBuffer)], { type: "application/pdf" }));
+    } catch (err) {
+      console.error("Could not store PDF for CoWork:", err);
     }
-    fs.writeFileSync(path.join(uploadDir, `${vaultId}.pdf`), fileBuffer);
 
     if (jobId) {
       await updateJob(jobId, { status: "completed", result: { vaultId, chunkCount: chunks.length } });

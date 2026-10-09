@@ -151,7 +151,7 @@ export function Teachers() {
           <WordReveal text="Real teachers, verified for real." className="mt-4 font-display text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl" />
           <Reveal delay={150}>
             <p className="mt-5 max-w-xl text-lg leading-8 text-zinc-400">
-              Every teacher profile shows whether the person has been verified, so students always know who they're learning from. If you teach, you register once, prove who you are with your camera, and start taking live sessions with students who arrive with their doubt already diagnosed.
+              Every teacher profile shows whether the person has been verified, so students always know who they&apos;re learning from. If you teach, you register once, prove who you are with your camera, and start taking live sessions with students who arrive with their doubt already diagnosed.
             </p>
           </Reveal>
           <Reveal delay={250}>

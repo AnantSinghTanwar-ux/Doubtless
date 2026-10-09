@@ -66,7 +66,7 @@ export default function VideoIntro({
     const stream = streamRef.current;
     if (!stream) return;
     const mimeType = pickMime();
-    const rec = new MediaRecorder(stream, { mimeType: mimeType || undefined, videoBitsPerSecond: 1_500_000 });
+    const rec = new MediaRecorder(stream, { mimeType: mimeType || undefined, videoBitsPerSecond: 350_000, audioBitsPerSecond: 48_000 });
     chunks.current = [];
     frames.current = [];
     rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);

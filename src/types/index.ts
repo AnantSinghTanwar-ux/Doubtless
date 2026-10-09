@@ -263,7 +263,10 @@ export interface SessionRecord {
   studentId: string;
   teacherId: string;
   doubtId: string;
-  status: "pending" | "active" | "completed";
+  /** "expired": nobody was in the session for a while and it was never ended. */
+  status: "pending" | "active" | "completed" | "expired";
+  /** Heartbeat written by whoever has the session page open; used to detect abandoned sessions. */
+  lastActivityAt?: number;
   jitsiRoom: string;
   doubtContext: DoubtRouterResult;
   summary?: SessionSummary;

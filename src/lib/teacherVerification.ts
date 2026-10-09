@@ -1,56 +1,21 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { openRouterJSON, type OpenRouterContent } from "./aiProvider";
 import { updateTeacherApplication } from "./firestore";
+import { readMedia } from "./mediaStore";
 import type { TeacherApplication, TeacherScreening } from "@/types";
-
-/** Verification files live outside /public so they are never served without an auth check. */
-export const VERIFICATION_ROOT = path.join(process.cwd(), "private-uploads", "teacher-verification");
 
 export const FILE_RULES = {
   idDocument: { types: ["image/jpeg", "image/png", "image/webp", "application/pdf"], maxMB: 8 },
   certificate: { types: ["image/jpeg", "image/png", "image/webp", "application/pdf"], maxMB: 8 },
   selfie: { types: ["image/jpeg"], maxMB: 5 },
-  video: { types: ["video/webm", "video/mp4"], maxMB: 80 },
+  video: { types: ["video/webm", "video/mp4"], maxMB: 20 },
 } as const;
 
 export type VerificationFileKey = keyof typeof FILE_RULES;
 
-const EXT: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
-  "video/webm": "webm",
-  "video/mp4": "mp4",
-};
-
-export const MIME_BY_EXT: Record<string, string> = Object.fromEntries(Object.entries(EXT).map(([m, e]) => [e, m]));
-
-export function userDir(uid: string) {
-  if (!/^[A-Za-z0-9_-]{1,128}$/.test(uid)) throw new Error("Invalid uid");
-  return path.join(VERIFICATION_ROOT, uid);
-}
-
-export async function storeFile(uid: string, key: VerificationFileKey, file: File): Promise<string> {
-  const rule = FILE_RULES[key];
-  const type = file.type.split(";")[0];
-  if (!(rule.types as readonly string[]).includes(type)) throw new Error(`${key}: unsupported file type ${type || "unknown"}`);
-  if (file.size > rule.maxMB * 1024 * 1024) throw new Error(`${key}: file is larger than ${rule.maxMB} MB`);
-  if (file.size === 0) throw new Error(`${key}: file is empty`);
-  const dir = userDir(uid);
-  await fs.mkdir(dir, { recursive: true });
-  const name = `${key}-${Date.now()}.${EXT[type]}`;
-  await fs.writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
-  return name;
-}
-
-async function asDataUrl(uid: string, name: string): Promise<string | null> {
-  const ext = name.split(".").pop() || "";
-  const mime = MIME_BY_EXT[ext];
-  if (!mime?.startsWith("image/")) return null;
-  const buf = await fs.readFile(path.join(userDir(uid), name));
-  return `data:${mime};base64,${buf.toString("base64")}`;
+async function asDataUrl(uid: string, key: VerificationFileKey): Promise<string | null> {
+  const media = await readMedia(uid, key);
+  if (!media?.contentType.startsWith("image/")) return null;
+  return `data:${media.contentType};base64,${Buffer.from(media.bytes).toString("base64")}`;
 }
 
 const screeningPrompt = `You are a trust & safety assistant helping a human reviewer verify a tutor applying to teach on an education platform. You receive the applicant's claimed details and evidence images. Compare them carefully and conservatively. You do not make the final decision; a human admin does.
@@ -82,14 +47,14 @@ export async function runScreening(app: TeacherApplication, videoFrames: string[
         text: `Applicant claims:\n${JSON.stringify({ personal: app.personal, professional: app.professional }, null, 2)}`,
       },
     ];
-    const add = async (label: string, name: string) => {
-      const url = await asDataUrl(app.uid, name);
+    const add = async (label: string, key: VerificationFileKey) => {
+      const url = await asDataUrl(app.uid, key);
       content.push({ type: "text", text: url ? `${label}:` : `${label}: (uploaded as PDF, not shown)` });
       if (url) content.push({ type: "image_url", image_url: { url } });
     };
-    await add("Government ID", app.files.idDocument);
-    await add("Qualification certificate", app.files.certificate);
-    if (app.files.selfie) await add(`Live selfie (challenge: "${app.liveness.selfieChallenge}")`, app.files.selfie);
+    await add("Government ID", "idDocument");
+    await add("Qualification certificate", "certificate");
+    if (app.files.selfie) await add(`Live selfie (challenge: "${app.liveness.selfieChallenge}")`, "selfie");
     videoFrames.slice(0, 3).forEach((url, i) => {
       content.push({ type: "text", text: `Frame ${i + 1} from the recorded introduction video:` });
       content.push({ type: "image_url", image_url: { url } });

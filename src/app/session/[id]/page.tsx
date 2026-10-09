@@ -7,7 +7,7 @@ import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
 import SessionChat from "@/components/teachers/SessionChat";
 import VideoCall from "@/components/session/VideoCall";
-import { getSession, updateSession } from "@/lib/firestore";
+import { getSession, touchSession, updateSession } from "@/lib/firestore";
 import type { SessionRecord } from "@/types";
 
 export default function SessionPage() {
@@ -32,7 +32,7 @@ export default function SessionPage() {
           setSession(s);
           // If teacher joins, mark as active
           if (profile?.role === "teacher" && s.status === "pending") {
-             await updateSession(s.id, { status: "active" });
+             await updateSession(s.id, { status: "active", lastActivityAt: Date.now() });
              setSession({ ...s, status: "active" });
           }
         }
@@ -44,6 +44,16 @@ export default function SessionPage() {
     };
     if (user && profile) fetchSession();
   }, [params.id, user, profile]);
+
+  // Heartbeat: dashboards use this to tell a live session from one that was simply abandoned.
+  const sessionId = session?.id;
+  const open = session?.status === "pending" || session?.status === "active";
+  useEffect(() => {
+    if (!sessionId || !open) return;
+    void touchSession(sessionId).catch(() => {});
+    const timer = setInterval(() => void touchSession(sessionId).catch(() => {}), 30_000);
+    return () => clearInterval(timer);
+  }, [sessionId, open]);
 
   const handleEndSession = async () => {
     if (!session || profile?.role !== "teacher") return;
@@ -76,7 +86,21 @@ export default function SessionPage() {
   }
 
   if (!session) {
-    return <div className="text-white">Session not found.</div>;
+    return <div className="text-white p-8">Session not found.</div>;
+  }
+
+  if (session.status === "completed" || session.status === "expired") {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="font-display text-2xl font-semibold text-white">This session has ended</h1>
+        <p className="max-w-sm text-sm text-zinc-400">
+          {session.status === "completed" ? "The teacher wrapped it up and a summary was saved." : "Nobody was in the room for a while, so it was closed."}
+        </p>
+        <Button onClick={() => router.push(profile?.role === "teacher" ? "/teacher-dashboard" : "/teachers")}>
+          {profile?.role === "teacher" ? "Back to dashboard" : "Find a teacher"}
+        </Button>
+      </div>
+    );
   }
 
   return (

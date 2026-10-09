@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
 import { openRouterJSON, type OpenRouterContent } from "@/lib/aiProvider";
 import { getFolderPastPaperText } from "@/lib/embeddings";
 import type { DocumentOverview, OverviewPageInput } from "@/types/cowork";
 
-const CACHE_DIR = path.join(process.cwd(), ".cowork-cache");
+// The cache is an optimisation only. Serverless hosts have a read-only app dir, so use the temp dir there.
+const CACHE_DIR = process.env.VERCEL ? path.join(os.tmpdir(), ".cowork-cache") : path.join(process.cwd(), ".cowork-cache");
 const inFlight = new Map<string, Promise<DocumentOverview>>();
 
 const systemPrompt = `You are an expert university tutor. You receive EVERY page of a lecture PDF (as text, or as an image when the page has no text layer), each tagged with its page number. Build an exam-focused study guide for the WHOLE document.
@@ -121,8 +123,12 @@ export async function POST(request: NextRequest) {
     }
     const overview = await job;
 
-    await fs.mkdir(CACHE_DIR, { recursive: true });
-    await fs.writeFile(cachePath(vaultId), JSON.stringify(overview));
+    try {
+      await fs.mkdir(CACHE_DIR, { recursive: true });
+      await fs.writeFile(cachePath(vaultId), JSON.stringify(overview));
+    } catch {
+      /* caching is best-effort */
+    }
     return NextResponse.json(overview);
   } catch (error) {
     console.error("CoWork overview error:", error);

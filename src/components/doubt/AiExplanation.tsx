@@ -29,26 +29,27 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         </div>
       )}
 
-      <Card className="bg-[#0e0e12]/80">
-        <div className="prose prose-invert prose-blue max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10">
+      <div className="paper paper-plain slide-up px-7 pb-8 pt-7 sm:px-10">
+        <p className="hand ink-blue mb-3 text-3xl leading-none">Here&apos;s how I&apos;d explain it</p>
+        <div className="serif text-[16px] leading-[1.85] text-[#1b2440] [&_code]:rounded [&_code]:bg-[#1b2440]/10 [&_code]:px-1 [&_h1]:mb-2 [&_h1]:mt-4 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-[#1b2440]/10 [&_pre]:p-3 [&_strong]:font-semibold">
           <ReactMarkdown>{explanation.explanation}</ReactMarkdown>
         </div>
-      </Card>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {explanation.key_concepts.length > 0 && (
-          <Card className="bg-[#0e0e12]/50">
-            <CardTitle className="text-sm mb-3 text-blue-400 flex items-center gap-2">
-              <span>🔑</span> Key Concepts
-            </CardTitle>
-            <ul className="space-y-2">
+          <div className="paper paper-plain slide-up rotate-[-0.6deg] px-6 py-6">
+            <p className="hand ink-red mb-2 text-2xl leading-none">Key ideas to remember</p>
+            <ul className="space-y-2.5">
               {explanation.key_concepts.map((concept, i) => (
-                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                  <span className="text-blue-500 mt-0.5">•</span> {concept}
+                <li key={i} className="serif text-[15px] leading-7 text-[#1b2440]">
+                  <span className="rounded-sm px-0.5" style={{ background: "linear-gradient(transparent 52%, rgba(251,191,36,0.55) 52%)" }}>
+                    {concept}
+                  </span>
                 </li>
               ))}
             </ul>
-          </Card>
+          </div>
         )}
 
         {explanation.analogies && explanation.analogies.length > 0 && (

@@ -27,10 +27,11 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
-import { subscribeTeacher, subscribeTeacherApplication, subscribeTeacherSessions, updateTeacher, updateUserProfile } from "@/lib/firestore";
+import { subscribeTeacher, subscribeTeacherApplication, subscribeTeacherSessions, updateSession, updateTeacher, updateUserProfile } from "@/lib/firestore";
 import { cn } from "@/lib/utils";
 import type { SessionRecord, TeacherApplication, TeacherProfile } from "@/types";
 
+const STALE_MS = 3 * 60 * 1000;
 const ago = (t: number) => formatDistanceToNow(t, { addSuffix: true });
 
 export default function TeacherDashboard() {
@@ -44,6 +45,20 @@ export default function TeacherDashboard() {
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [toggling, setToggling] = useState(false);
   const seenPending = useRef<Set<string> | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  // Re-evaluate staleness as time passes, without needing new data.
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 20_000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Close sessions nobody is in any more so they stop showing as joinable.
+  useEffect(() => {
+    sessions
+      .filter((s) => (s.status === "pending" || s.status === "active") && now - (s.lastActivityAt ?? s.createdAt) > STALE_MS)
+      .forEach((s) => void updateSession(s.id, { status: "expired" }).catch(() => {}));
+  }, [sessions, now]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -91,8 +106,10 @@ export default function TeacherDashboard() {
     );
   }
 
-  const pending = sessions.filter((s) => s.status === "pending");
-  const active = sessions.filter((s) => s.status === "active");
+  // A session is live only while someone has its page open (heartbeat every 30s). Otherwise it was abandoned.
+  const isStale = (s: SessionRecord) => now - (s.lastActivityAt ?? s.createdAt) > STALE_MS;
+  const pending = sessions.filter((s) => s.status === "pending" && !isStale(s));
+  const active = sessions.filter((s) => s.status === "active" && !isStale(s));
   const past = sessions.filter((s) => s.status === "completed");
   const online = !!teacher?.availability;
   const firstName = (app.personal.fullName || profile?.displayName || "").split(" ")[0];

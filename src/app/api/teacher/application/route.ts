@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/serverAuth";
 import { getTeacherApplication, getTeacherByUid, getUserProfile, saveTeacherApplication, updateUserProfile, upsertTeacher } from "@/lib/firestore";
-import { runScreening, storeFile, type VerificationFileKey } from "@/lib/teacherVerification";
+import { FILE_RULES, runScreening, type VerificationFileKey } from "@/lib/teacherVerification";
+import { getMediaMeta } from "@/lib/mediaStore";
 import type { TeacherApplication } from "@/types";
 
 export const maxDuration = 120;
@@ -21,8 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Your teacher account is already verified." }, { status: 409 });
     }
 
-    const form = await request.formData();
-    const details = JSON.parse(str(form.get("details"), 20000) || "{}");
+    // Files were uploaded straight from the browser to storage; this request only carries the details.
+    const body = await request.json();
+    const details = body?.details ?? {};
     const personal = {
       fullName: str(details.personal?.fullName, 100),
       phone: str(details.personal?.phone, 30),
@@ -65,27 +67,24 @@ export async function POST(request: NextRequest) {
 
     const files = {} as TeacherApplication["files"];
     for (const key of [...DOCUMENT_KEYS, ...(skipped ? [] : LIVE_KEYS)]) {
-      const file = form.get(key);
-      if (!(file instanceof File)) {
+      const meta = await getMediaMeta(user.uid, key);
+      if (!meta) {
         // Resubmissions may keep previously uploaded documents.
-        const previous = DOCUMENT_KEYS.includes(key) ? existing?.files?.[key] : undefined;
-        if (previous) {
-          files[key] = previous;
-          continue;
-        }
-        return NextResponse.json({ error: `Missing ${key}` }, { status: 400 });
+        return NextResponse.json({ error: `Missing ${key}. Please upload it again.` }, { status: 400 });
       }
-      try {
-        files[key] = await storeFile(user.uid, key, file);
-      } catch (err) {
-        return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid file" }, { status: 400 });
+      const rule = FILE_RULES[key];
+      if (!(rule.types as readonly string[]).includes(meta.contentType.split(";")[0])) {
+        return NextResponse.json({ error: `${key}: unsupported file type` }, { status: 400 });
       }
+      if (meta.size > rule.maxMB * 1024 * 1024 || meta.size === 0) {
+        return NextResponse.json({ error: `${key}: file must be under ${rule.maxMB} MB` }, { status: 400 });
+      }
+      files[key] = key;
     }
-    const videoFrames = form
-      .getAll("videoFrames")
-      .map((f) => (typeof f === "string" && f.startsWith("data:image/jpeg;base64,") ? f : ""))
+    const videoFrames = (Array.isArray(body?.videoFrames) ? body.videoFrames : [])
+      .map((f: unknown) => (typeof f === "string" && f.startsWith("data:image/jpeg;base64,") && f.length < 400_000 ? f : ""))
       .filter(Boolean)
-      .slice(0, 3);
+      .slice(0, 3) as string[];
 
     const app: TeacherApplication = {
       uid: user.uid,

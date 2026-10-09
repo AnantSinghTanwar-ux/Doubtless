@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Urbanist } from "next/font/google";
+import { Caveat, Fraunces, Inter, JetBrains_Mono, Urbanist } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VaultProvider } from "@/contexts/VaultContext";
@@ -9,6 +9,8 @@ import StarField from "@/components/ui/StarField";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const urbanist = Urbanist({ subsets: ["latin"], variable: "--font-urbanist" });
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
@@ -30,7 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${urbanist.variable} ${jetbrains.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${urbanist.variable} ${jetbrains.variable} ${caveat.variable} ${fraunces.variable}`}>
       <body className="font-sans antialiased">
         <StarField />
         <ErrorBoundary>

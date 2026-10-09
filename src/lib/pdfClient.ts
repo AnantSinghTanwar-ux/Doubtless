@@ -7,8 +7,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.m
 
 export type { PDFDocumentProxy, PDFPageProxy };
 
-export function loadPdf(url: string): Promise<PDFDocumentProxy> {
-  return pdfjs.getDocument({ url }).promise;
+export function loadPdf(url: string, httpHeaders?: Record<string, string>): Promise<PDFDocumentProxy> {
+  return pdfjs.getDocument({ url, httpHeaders }).promise;
 }
 
 /** The page's text layer, one line per visual line. Empty for scanned or outlined-text PDFs. */

@@ -288,6 +288,10 @@ export function subscribeTeacherSessions(teacherId: string, callback: (sessions:
   );
 }
 
+export async function touchSession(sessionId: string): Promise<void> {
+  await updateDoc(doc(db, "sessions", sessionId), { lastActivityAt: Date.now() });
+}
+
 export function subscribeSession(sessionId: string, callback: (session: SessionRecord | null) => void): Unsubscribe {
   return onSnapshot(doc(db, "sessions", sessionId), (snap) =>
     callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as SessionRecord) : null)

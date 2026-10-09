@@ -18,6 +18,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/lib/firebase";
 import { getVaultFolders, getVaultDocuments } from "@/lib/firestore";
 import type { VaultFolder, VaultDocument } from "@/types";
 import type { PDFDocumentProxy } from "@/lib/pdfClient";
@@ -239,7 +240,13 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
       try {
         const lib = await import("@/lib/pdfClient");
         pdfLib.current = lib;
-        doc = await lib.loadPdf(`/uploads/${vault.id}.pdf`);
+        // Stored PDFs come from the API; PDFs uploaded before that existed live under /uploads.
+        const token = await auth.currentUser?.getIdToken();
+        try {
+          doc = await lib.loadPdf(`/api/vault/file?vaultId=${encodeURIComponent(vault.id)}`, token ? { Authorization: `Bearer ${token}` } : undefined);
+        } catch {
+          doc = await lib.loadPdf(`/uploads/${vault.id}.pdf`);
+        }
         const pages = await Promise.all(Array.from({ length: doc.numPages }, (_, i) => doc!.getPage(i + 1)));
         if (cancelled) return;
         setAspects(pages.map((p) => {
