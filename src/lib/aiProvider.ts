@@ -122,7 +122,15 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
       console.warn("[aiProvider] gateway failed, falling back:", err instanceof Error ? err.message : err);
     }
   }
-  const nvidiaJSON = async () => parseJSON<T>(await nvidiaChat({ system: withJsonInstruction(systemPrompt), user: prompt, maxTokens: 3000 }), "NVIDIA");
+  // A model occasionally returns malformed or cut-off JSON; one more attempt (with more room) usually fixes it.
+  const nvidiaJSON = async () => {
+    try {
+      return parseJSON<T>(await nvidiaChat({ system: withJsonInstruction(systemPrompt), user: prompt, maxTokens: 3000 }), "NVIDIA");
+    } catch (err) {
+      if (!(err instanceof Error && /invalid JSON/i.test(err.message))) throw err;
+      return parseJSON<T>(await nvidiaChat({ system: withJsonInstruction(systemPrompt), user: prompt, maxTokens: 4500, temperature: 0.2 }), "NVIDIA");
+    }
+  };
   if (preferNvidia && nvidiaConfigured()) {
     try {
       return await nvidiaJSON();
