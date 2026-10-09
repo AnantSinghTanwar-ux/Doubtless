@@ -69,7 +69,7 @@ export default function SamplePaperPage() {
       </header>
 
       {!paper ? (
-        <div className="bg-[#0f1629] border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
+        <div className="bg-[#0e0e12] border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
           <h2 className="text-xl font-semibold text-white">Select Reference Material</h2>
           {loading ? (
             <div className="flex items-center justify-center p-12">
@@ -97,7 +97,7 @@ export default function SamplePaperPage() {
                     {selectedVaults.includes(vault.id!) && <span className="text-white text-xs">✓</span>}
                   </div>
                   <div>
-                    <h3 className="text-white font-medium line-clamp-1">{vault.title}</h3>
+                    <h3 className="text-white font-medium line-clamp-1">{vault.fileName}</h3>
                     <p className="text-xs text-gray-400 mt-1">{vault.pageCount} pages • {vault.chunkCount} chunks</p>
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export default function SamplePaperPage() {
               Generate Another
             </button>
           </div>
-          <div className="bg-[#0f1629] border border-white/5 rounded-2xl p-8 shadow-xl prose prose-invert max-w-none">
+          <div className="bg-[#0e0e12] border border-white/5 rounded-2xl p-8 shadow-xl prose prose-invert max-w-none">
             <ReactMarkdown>{paper}</ReactMarkdown>
           </div>
         </div>

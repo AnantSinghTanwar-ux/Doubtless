@@ -2,8 +2,8 @@
   "name": "Doubtless AI",
   "short_name": "Doubtless",
   "description": "AI-Native Education OS",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0f1e",
-  "theme_color": "#0a0f1e"
+  "background_color": "#08080b",
+  "theme_color": "#08080b"
 }

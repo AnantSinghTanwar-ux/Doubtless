@@ -22,7 +22,7 @@ export default function VivaReportDisplay({ report }: VivaReportProps) {
     <div className="space-y-6">
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1 bg-[#0f1628]/80 text-center flex flex-col justify-center items-center py-10">
+        <Card className="md:col-span-1 bg-[#0e0e12]/80 text-center flex flex-col justify-center items-center py-10">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Overall Score</div>
           <div className={`text-6xl font-bold ${getScoreColor(report.overall_score)} mb-2`}>
             {report.overall_score.toFixed(1)}<span className="text-2xl font-normal text-gray-500">/10</span>
@@ -30,7 +30,7 @@ export default function VivaReportDisplay({ report }: VivaReportProps) {
           <p className="text-sm text-gray-400">Oral Examination Performance</p>
         </Card>
 
-        <Card className="md:col-span-2 bg-[#0f1628]/80">
+        <Card className="md:col-span-2 bg-[#0e0e12]/80">
           <CardTitle className="text-sm mb-4 text-blue-400 flex items-center gap-2">
             <span>📈</span> Performance & Confidence Trend
           </CardTitle>
@@ -40,11 +40,11 @@ export default function VivaReportDisplay({ report }: VivaReportProps) {
                 <XAxis dataKey="question" stroke="rgba(255,255,255,0.2)" fontSize={12} />
                 <YAxis stroke="rgba(255,255,255,0.2)" fontSize={12} domain={[0, 10]} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0a0f1e', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: '#08080b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
                 />
                 <Line type="monotone" name="Confidence" dataKey="confidence" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" name="Score" dataKey="score" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" name="Score" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -82,7 +82,7 @@ export default function VivaReportDisplay({ report }: VivaReportProps) {
         </Card>
       </div>
 
-      <Card className="bg-[#0f1628]/80 p-0 overflow-hidden border-white/[0.06]">
+      <Card className="bg-[#0e0e12]/80 p-0 overflow-hidden border-white/[0.06]">
         <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
           <h3 className="font-semibold text-white">Detailed Q&A Breakdown</h3>
         </div>

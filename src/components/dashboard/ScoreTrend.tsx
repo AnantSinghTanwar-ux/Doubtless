@@ -38,7 +38,7 @@ export default function ScoreTrend({ profile }: DashboardChartsProps) {
   }, [profile.recentInteractions]);
 
   return (
-    <Card className="bg-[#0f1628]/80 col-span-2">
+    <Card className="bg-[#0e0e12]/80 col-span-2">
       <CardTitle className="text-sm mb-6 flex items-center gap-2">
         <span className="text-blue-400">📈</span> Overall Score Trend
       </CardTitle>
@@ -48,22 +48,22 @@ export default function ScoreTrend({ profile }: DashboardChartsProps) {
           <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis dataKey="date" stroke="rgba(255,255,255,0.2)" fontSize={12} tickMargin={10} />
             <YAxis stroke="rgba(255,255,255,0.2)" fontSize={12} domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#0a0f1e', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+              contentStyle={{ backgroundColor: '#08080b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
               itemStyle={{ color: '#fff' }}
               labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}
             />
             <Area 
               type="monotone" 
               dataKey="score" 
-              stroke="#3b82f6" 
+              stroke="#8b5cf6" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorScore)" 

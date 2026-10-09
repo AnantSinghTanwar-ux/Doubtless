@@ -15,8 +15,11 @@ import {
   Dumbbell, 
   FileText, 
   Users, 
-  Briefcase 
+  Briefcase,
+  ShieldCheck,
+  BadgeCheck,
 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const studentLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,18 +36,21 @@ const studentLinks = [
 
 const teacherLinks = [
   { href: "/teacher-dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/teachers", label: "Teachers", icon: Users },
+  { href: "/teacher/onboarding", label: "Verification", icon: BadgeCheck },
 ];
+
+const adminLink = { href: "/admin/teachers", label: "Review Teachers", icon: ShieldCheck };
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { profile, logout } = useAuth();
-  const links = profile?.role === "teacher" ? teacherLinks : studentLinks;
+  const { user, profile, logout } = useAuth();
+  const isAdmin = useIsAdmin();
+  const links = isAdmin && !profile ? [adminLink] : [...(profile?.role === "teacher" ? teacherLinks : studentLinks), ...(isAdmin ? [adminLink] : [])];
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#060b18]/80 border-r border-white/[0.06] backdrop-blur-xl fixed left-0 top-0 z-40">
+    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#060608]/80 border-r border-white/[0.06] backdrop-blur-xl fixed left-0 top-0 z-40">
       <div className="p-6 border-b border-white/[0.06]">
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href={profile?.role === "teacher" ? "/teacher-dashboard" : "/dashboard"} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
             D
           </div>
@@ -56,12 +62,13 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {links.map((link) => (
+        {links.map((link, i) => (
           <Link
             key={link.href}
             href={link.href}
+            style={{ animationDelay: `${i * 45}ms` }}
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+              "lp-rise flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-0.5",
               pathname === link.href
                 ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -79,12 +86,12 @@ export default function Sidebar() {
             <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-full" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-              {profile?.displayName?.charAt(0) ?? "?"}
+              {profile?.displayName?.charAt(0) ?? user?.email?.charAt(0).toUpperCase() ?? "?"}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white truncate">{profile?.displayName}</p>
-            <p className="text-xs text-gray-500 capitalize">{profile?.role}</p>
+            <p className="text-sm text-white truncate">{profile?.displayName ?? user?.email}</p>
+            <p className="text-xs text-gray-500 capitalize">{profile?.role ?? (isAdmin ? "admin" : "")}</p>
           </div>
         </div>
         <button

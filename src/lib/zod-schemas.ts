@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+/*
+ * AI output is validated leniently: secondary fields fall back to safe defaults so a model that omits
+ * or nulls one field (common with small local models) doesn't fail the whole feature. Core content
+ * fields stay required.
+ */
+const text = z.preprocess((v) => (v == null ? "" : typeof v === "string" ? v : String(v)), z.string());
+const optText = z.preprocess((v) => (v == null || v === "" ? undefined : String(v)), z.string().optional());
+const textList = z.preprocess(
+  (v) => (v == null ? [] : Array.isArray(v) ? v : [v]),
+  z.array(z.preprocess((x) => (typeof x === "string" ? x : JSON.stringify(x)), z.string()))
+);
+const scale = (min: number, max: number, fallback: number) =>
+  z.coerce.number().catch(fallback).transform((n) => Math.min(max, Math.max(min, n)));
+const score10 = scale(0, 10, 0);
+
 export const doubtRouterSchema = z.object({
   topic: z.string(),
   subtopic: z.string(),
@@ -11,87 +26,89 @@ export const doubtRouterSchema = z.object({
 });
 
 export const aiExplanationSchema = z.object({
-  explanation: z.string(),
-  key_concepts: z.array(z.string()),
-  analogies: z.array(z.string()).optional(),
-  follow_up_questions: z.array(z.string()).optional(),
+  explanation: z.string().min(1),
+  key_concepts: textList,
+  analogies: textList.optional(),
+  follow_up_questions: textList.optional(),
   based_on_past_session: z.boolean().optional(),
 });
 
 export const stepEvaluationSchema = z.object({
-  step: z.number(),
-  verdict: z.enum(["correct", "error", "redundant", "unclear"]),
-  error_type: z.string().optional(),
-  explanation: z.string(),
-  fix: z.string().optional(),
+  step: z.coerce.number(),
+  verdict: z.preprocess((v) => String(v ?? "").toLowerCase(), z.enum(["correct", "error", "redundant", "unclear"]).catch("unclear")),
+  error_type: optText,
+  explanation: text,
+  fix: optText,
 });
 
 export const solutionEvaluationSchema = z.object({
   steps: z.array(stepEvaluationSchema),
-  first_error_step: z.number().nullable(),
+  first_error_step: z.coerce.number().nullable().catch(null),
   rubric: z.object({
-    correctness: z.number().min(0).max(10),
-    method: z.number().min(0).max(10),
-    clarity_notation: z.number().min(0).max(10),
-    total: z.number().min(0).max(10),
+    correctness: score10,
+    method: score10,
+    clarity_notation: score10,
+    total: score10,
   }),
-  model_solution: z.string(),
-  source_citations: z.array(
-    z.object({
-      pdf_name: z.string(),
-      page: z.number(),
-    })
-  ),
+  model_solution: text,
+  source_citations: z
+    .array(
+      z.object({
+        pdf_name: text,
+        page: z.coerce.number().catch(0),
+      })
+    )
+    .catch([]),
 });
 
 export const voiceEvaluationSchema = z.object({
-  content_accuracy: z.number().min(0).max(10),
-  structure: z.number().min(0).max(10),
-  clarity: z.number().min(0).max(10),
-  confidence_score: z.number().min(0).max(10),
-  filler_analysis: z.string(),
-  where_they_hesitated: z.array(z.string()),
-  missing_concepts: z.array(z.string()),
-  better_explanation: z.string(),
-  one_sentence_tip: z.string(),
+  content_accuracy: score10,
+  structure: score10,
+  clarity: score10,
+  confidence_score: score10,
+  filler_analysis: text,
+  where_they_hesitated: textList,
+  missing_concepts: textList,
+  better_explanation: text,
+  one_sentence_tip: text,
 });
 
 export const vivaQuestionSchema = z.object({
-  question: z.string(),
-  difficulty: z.number().min(1).max(5),
-  topic: z.string(),
+  question: z.string().min(1),
+  difficulty: scale(1, 5, 3),
+  topic: text,
 });
 
 export const vivaAnswerEvalSchema = z.object({
-  score: z.number().min(0).max(10),
-  feedback: z.string(),
-  confidence: z.number().min(0).max(10),
-  follow_up_topic: z.string().optional(),
+  score: score10,
+  feedback: text,
+  confidence: score10,
+  follow_up_topic: optText,
 });
 
 export const vivaReportSchema = z.object({
   answers: z.array(
     z.object({
-      question: z.string(),
-      answer: z.string(),
-      score: z.number(),
-      feedback: z.string(),
-      confidence: z.number(),
+      question: text,
+      answer: text,
+      score: score10,
+      feedback: text,
+      confidence: score10,
     })
   ),
-  confidence_trend: z.array(z.number()),
-  weak_topics: z.array(z.string()),
-  study_plan: z.array(z.string()),
-  overall_score: z.number(),
+  confidence_trend: z.array(z.coerce.number()).catch([]),
+  weak_topics: textList,
+  study_plan: textList,
+  overall_score: score10,
 });
 
 export const practiceQuestionSchema = z.object({
-  question: z.string(),
-  difficulty: z.number().min(1).max(5),
-  topic: z.string(),
-  subtopic: z.string(),
-  expected_answer: z.string(),
-  hints: z.array(z.string()),
+  question: z.string().min(1),
+  difficulty: scale(1, 5, 3),
+  topic: text,
+  subtopic: text,
+  expected_answer: text,
+  hints: textList,
 });
 
 export const practiceSetSchema = z.object({
@@ -99,15 +116,15 @@ export const practiceSetSchema = z.object({
 });
 
 export const practiceEvalSchema = z.object({
-  correct: z.boolean(),
-  feedback: z.string(),
-  score: z.number().min(0).max(10),
+  correct: z.preprocess((v) => v === true || v === "true", z.boolean()),
+  feedback: text,
+  score: score10,
 });
 
 export const sessionSummarySchema = z.object({
-  doubt: z.string(),
-  root_cause: z.string(),
-  explanation_that_worked: z.string(),
+  doubt: text,
+  root_cause: text,
+  explanation_that_worked: text,
 });
 
 export const teacherMatchSchema = z.object({

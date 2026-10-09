@@ -11,6 +11,7 @@ import TeacherCard from "@/components/teachers/TeacherCard";
 import type { TeacherMatch, TeacherProfile } from "@/types";
 import { createSession } from "@/lib/firestore";
 import { generateJitsiRoom } from "@/lib/utils";
+import { Users } from "lucide-react";
 
 function TeachersContent() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -51,7 +52,7 @@ function TeachersContent() {
           });
           if (res.ok) {
              const data = await res.json();
-             setAllTeachers(data.matches.map((m: any) => m.teacher));
+             setAllTeachers(data.matches.map((m: TeacherMatch) => m.teacher));
           }
         }
       } catch (err) {
@@ -96,7 +97,7 @@ function TeachersContent() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e]">
+    <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title={topic ? `Teachers for ${topic}` : "Expert Teachers"} />
@@ -122,6 +123,17 @@ function TeachersContent() {
                   />
                 ))}
               </div>
+            ) : allTeachers.length === 0 && matches.length === 0 ? (
+              <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/[0.08] px-6 py-16 text-center">
+                <Users className="mb-3 h-8 w-8 text-gray-600" />
+                <p className="font-medium text-gray-200">No teachers are online right now</p>
+                <p className="mt-1 max-w-sm text-sm text-gray-500">
+                  Verified teachers appear here the moment they go online. Meanwhile, the AI tutor can explain your doubt step by step.
+                </p>
+                <button onClick={() => router.push("/ask")} className="mt-5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white">
+                  Ask the AI tutor
+                </button>
+              </div>
             ) : (
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Available Teachers</h3>
@@ -145,7 +157,7 @@ function TeachersContent() {
 
 export default function TeachersPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-transparent flex items-center justify-center">Loading...</div>}>
       <TeachersContent />
     </Suspense>
   );

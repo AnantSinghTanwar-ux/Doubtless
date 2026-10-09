@@ -30,11 +30,15 @@ import type {
   TeacherProfile,
   SessionRecord,
   SessionMessage,
+  CallSignal,
   PracticeSet,
   KnowledgeBaseEntry,
   RecentInteraction,
   JobRecord,
+  TeacherApplication,
 } from "@/types";
+
+const byNewest = <T extends { createdAt: number }>(a: T, b: T) => b.createdAt - a.createdAt;
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, "users", uid));
@@ -111,14 +115,12 @@ export async function saveDoubt(data: Omit<DoubtRecord, "id">): Promise<string> 
 }
 
 export async function getUserDoubts(userId: string, maxResults = 20): Promise<DoubtRecord[]> {
-  const q = query(
-    collection(db, "doubts"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-    limit(maxResults)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as DoubtRecord));
+  // Sorted in memory: where + orderBy on different fields needs a composite index.
+  const snap = await getDocs(query(collection(db, "doubts"), where("userId", "==", userId)));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as DoubtRecord))
+    .sort(byNewest)
+    .slice(0, maxResults);
 }
 
 export async function saveEvaluation(data: Omit<EvaluationRecord, "id">): Promise<string> {
@@ -127,14 +129,12 @@ export async function saveEvaluation(data: Omit<EvaluationRecord, "id">): Promis
 }
 
 export async function getUserEvaluations(userId: string): Promise<EvaluationRecord[]> {
-  const q = query(
-    collection(db, "evaluations"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-    limit(20)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as EvaluationRecord));
+  // Sorted in memory: where + orderBy on different fields needs a composite index.
+  const snap = await getDocs(query(collection(db, "evaluations"), where("userId", "==", userId)));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as EvaluationRecord))
+    .sort(byNewest)
+    .slice(0, 20);
 }
 
 export async function saveVoiceSession(data: Omit<VoiceSession, "id">): Promise<string> {
@@ -143,14 +143,12 @@ export async function saveVoiceSession(data: Omit<VoiceSession, "id">): Promise<
 }
 
 export async function getUserVoiceSessions(userId: string): Promise<VoiceSession[]> {
-  const q = query(
-    collection(db, "voiceSessions"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-    limit(20)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as VoiceSession));
+  // Sorted in memory: where + orderBy on different fields needs a composite index.
+  const snap = await getDocs(query(collection(db, "voiceSessions"), where("userId", "==", userId)));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as VoiceSession))
+    .sort(byNewest)
+    .slice(0, 20);
 }
 
 export async function saveVivaRecord(data: Omit<VivaRecord, "id">): Promise<string> {
@@ -209,18 +207,54 @@ export async function getTeachers(): Promise<TeacherProfile[]> {
 }
 
 export async function getAvailableTeachers(subject?: string): Promise<TeacherProfile[]> {
-  let q;
-  if (subject) {
-    q = query(
-      collection(db, "teachers"),
-      where("availability", "==", true),
-      where("subjects", "array-contains", subject)
-    );
-  } else {
-    q = query(collection(db, "teachers"), where("availability", "==", true));
-  }
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TeacherProfile));
+  // Filtered in memory: availability + array-contains would need a composite index.
+  const all = (await getTeachers()).filter((t) => t.availability);
+  if (!subject) return all;
+  const s = subject.toLowerCase();
+  return all.filter((t) => t.subjects.some((x) => x.toLowerCase() === s));
+}
+
+export async function getTeacher(teacherId: string): Promise<TeacherProfile | null> {
+  const snap = await getDoc(doc(db, "teachers", teacherId));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as TeacherProfile) : null;
+}
+
+export function subscribeTeacher(teacherId: string, callback: (teacher: TeacherProfile | null) => void): Unsubscribe {
+  return onSnapshot(doc(db, "teachers", teacherId), (snap) =>
+    callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as TeacherProfile) : null)
+  );
+}
+
+export async function updateTeacher(teacherId: string, data: Partial<TeacherProfile>): Promise<void> {
+  await updateDoc(doc(db, "teachers", teacherId), data as DocumentData);
+}
+
+export async function upsertTeacher(teacherId: string, data: Partial<Omit<TeacherProfile, "id">>): Promise<void> {
+  await setDoc(doc(db, "teachers", teacherId), data, { merge: true });
+}
+
+export async function getTeacherApplication(uid: string): Promise<TeacherApplication | null> {
+  const snap = await getDoc(doc(db, "teacherApplications", uid));
+  return snap.exists() ? (snap.data() as TeacherApplication) : null;
+}
+
+export function subscribeTeacherApplication(uid: string, callback: (app: TeacherApplication | null) => void): Unsubscribe {
+  return onSnapshot(doc(db, "teacherApplications", uid), (snap) =>
+    callback(snap.exists() ? (snap.data() as TeacherApplication) : null)
+  );
+}
+
+export async function saveTeacherApplication(app: TeacherApplication): Promise<void> {
+  await setDoc(doc(db, "teacherApplications", app.uid), app);
+}
+
+export async function updateTeacherApplication(uid: string, data: Partial<TeacherApplication>): Promise<void> {
+  await updateDoc(doc(db, "teacherApplications", uid), data as DocumentData);
+}
+
+export async function listTeacherApplications(): Promise<TeacherApplication[]> {
+  const snap = await getDocs(collection(db, "teacherApplications"));
+  return snap.docs.map((d) => d.data() as TeacherApplication).sort((a, b) => b.submittedAt - a.submittedAt);
 }
 
 export async function createSession(data: Omit<SessionRecord, "id">): Promise<string> {
@@ -238,27 +272,35 @@ export async function updateSession(sessionId: string, data: Partial<SessionReco
 }
 
 export async function getTeacherSessions(teacherId: string): Promise<SessionRecord[]> {
-  const q = query(
-    collection(db, "sessions"),
-    where("teacherId", "==", teacherId),
-    orderBy("createdAt", "desc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionRecord));
+  const snap = await getDocs(query(collection(db, "sessions"), where("teacherId", "==", teacherId)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionRecord)).sort(byNewest);
 }
 
 export async function getStudentSessions(studentId: string): Promise<SessionRecord[]> {
-  const q = query(
-    collection(db, "sessions"),
-    where("studentId", "==", studentId),
-    orderBy("createdAt", "desc")
+  const snap = await getDocs(query(collection(db, "sessions"), where("studentId", "==", studentId)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionRecord)).sort(byNewest);
+}
+
+/** Live list of a teacher's sessions, newest first. */
+export function subscribeTeacherSessions(teacherId: string, callback: (sessions: SessionRecord[]) => void): Unsubscribe {
+  return onSnapshot(query(collection(db, "sessions"), where("teacherId", "==", teacherId)), (snap) =>
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionRecord)).sort(byNewest))
   );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionRecord));
+}
+
+export function subscribeSession(sessionId: string, callback: (session: SessionRecord | null) => void): Unsubscribe {
+  return onSnapshot(doc(db, "sessions", sessionId), (snap) =>
+    callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as SessionRecord) : null)
+  );
 }
 
 export async function sendMessage(sessionId: string, message: Omit<SessionMessage, "id">): Promise<void> {
   await addDoc(collection(db, "sessions", sessionId, "messages"), message);
+}
+
+export async function getSessionMessages(sessionId: string): Promise<SessionMessage[]> {
+  const snap = await getDocs(query(collection(db, "sessions", sessionId, "messages"), orderBy("timestamp", "asc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionMessage));
 }
 
 export function subscribeToMessages(
@@ -272,6 +314,21 @@ export function subscribeToMessages(
   return onSnapshot(q, (snap) => {
     const messages = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SessionMessage));
     callback(messages);
+  });
+}
+
+export async function sendSignal(sessionId: string, signal: Omit<CallSignal, "id">): Promise<void> {
+  // Firestore rejects undefined fields.
+  await addDoc(collection(db, "sessions", sessionId, "signals"), JSON.parse(JSON.stringify(signal)));
+}
+
+/** Streams newly added signalling messages; `initial` is true for the batch of already-existing ones. */
+export function subscribeSignals(sessionId: string, callback: (signals: CallSignal[], initial: boolean) => void): Unsubscribe {
+  let first = true;
+  return onSnapshot(query(collection(db, "sessions", sessionId, "signals"), orderBy("ts", "asc")), (snap) => {
+    const added = snap.docChanges().filter((c) => c.type === "added").map((c) => ({ id: c.doc.id, ...c.doc.data() } as CallSignal));
+    callback(added, first);
+    first = false;
   });
 }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { sessionSummarySchema } from "@/lib/zod-schemas";
-import { updateSession, saveKnowledgeBase, getSession } from "@/lib/firestore";
+import { updateSession, saveKnowledgeBase, getSession, getSessionMessages, getTeacher, updateTeacher } from "@/lib/firestore";
 import type { SessionSummary } from "@/types";
 
 export async function POST(request: NextRequest) {
@@ -12,9 +12,19 @@ export async function POST(request: NextRequest) {
       doubtContext: string;
     };
 
-    if (!sessionId || !chatHistory) {
-      return NextResponse.json({ error: "sessionId and chatHistory are required" }, { status: 400 });
+    if (!sessionId) {
+      return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
     }
+
+    const before = await getSession(sessionId);
+    if (!before) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    if (before.status === "completed" && before.summary) return NextResponse.json(before.summary);
+
+    // Summarize what was actually said in the session chat; the client-sent history is only a fallback.
+    const messages = await getSessionMessages(sessionId);
+    const transcript = messages.length
+      ? messages.map((m) => `${m.senderName}: ${m.text}`).join("\n").slice(-12000)
+      : chatHistory || "(No chat messages were exchanged; the session happened over video.)";
 
     const systemPrompt = `You are a session summarizer in the Doubtless AI Education system.
 
@@ -28,7 +38,7 @@ Return JSON with:
     const prompt = `DOUBT CONTEXT: ${doubtContext}
 
 CHAT HISTORY:
-${chatHistory}
+${transcript}
 
 Summarize this session. Return JSON only.`;
 
@@ -41,18 +51,18 @@ Summarize this session. Return JSON only.`;
       completedAt: Date.now(),
     });
 
-    const session = await getSession(sessionId);
-    if (session) {
-      await saveKnowledgeBase({
-        sessionId,
-        teacherId: session.teacherId,
-        studentId: session.studentId,
-        topic: session.doubtContext.topic,
-        subtopic: session.doubtContext.subtopic,
-        summary: validated,
-        createdAt: Date.now(),
-      });
-    }
+    // Credit the teacher once per completed session.
+    const teacher = await getTeacher(before.teacherId);
+    if (teacher) await updateTeacher(teacher.id, { doubtsResolved: (teacher.doubtsResolved || 0) + 1 });
+    await saveKnowledgeBase({
+      sessionId,
+      teacherId: before.teacherId,
+      studentId: before.studentId,
+      topic: before.doubtContext.topic,
+      subtopic: before.doubtContext.subtopic,
+      summary: validated,
+      createdAt: Date.now(),
+    });
 
     return NextResponse.json(validated);
   } catch (error) {

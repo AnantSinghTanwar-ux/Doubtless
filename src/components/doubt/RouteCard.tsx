@@ -22,7 +22,7 @@ export default function RouteCard({ result }: RouteCardProps) {
   if (result.route === "teacher") routeName = "Live Teacher Session";
 
   return (
-    <Card glow className="border-blue-500/20 bg-gradient-to-br from-[#0f1628] to-[#0a0f1e]">
+    <Card glow className="border-blue-500/20 bg-gradient-to-br from-[#0e0e12] to-[#08080b]">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">

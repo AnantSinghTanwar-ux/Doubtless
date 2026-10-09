@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const matches: TeacherMatch[] = allTeachers.map((teacher) => {
       let score = 0;
-      let reasons: string[] = [];
+      const reasons: string[] = [];
 
       const subjectMatch = teacher.subjects.some(
         (s) => s.toLowerCase() === routerResult.topic.toLowerCase()
@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
       if (teacher.availability) {
         score += 15;
         reasons.push("Available now");
+      }
+
+      // Identity-verified teachers rank above unverified ones with otherwise similar scores.
+      if (teacher.verified) {
+        score += 10;
+        reasons.push("Verified");
       }
 
       const successScore = Math.min(teacher.doubtsResolved / 10, 15);

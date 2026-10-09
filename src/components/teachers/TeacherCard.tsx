@@ -3,6 +3,7 @@
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { BadgeCheck } from "lucide-react";
 import type { TeacherMatch, TeacherProfile } from "@/types";
 
 interface TeacherCardProps {
@@ -17,7 +18,7 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
   if (!teacher) return null;
 
   return (
-    <Card className="bg-[#0f1628]/80 hover:bg-[#0f1628] transition-colors border-white/[0.06]">
+    <Card className="bg-[#0e0e12]/80 hover:bg-[#0e0e12] transition-colors border-white/[0.06]">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-none flex flex-col items-center gap-3">
           {teacher.photoURL ? (
@@ -28,14 +29,22 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
             </div>
           )}
           <div className="flex items-center gap-1 text-amber-400 font-medium">
-            <span>⭐</span> {teacher.rating.toFixed(1)}
+            <span>⭐</span> {teacher.ratingCount === 0 ? "New" : teacher.rating.toFixed(1)}
           </div>
         </div>
 
         <div className="flex-1">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="text-lg font-semibold text-white">{teacher.name}</h3>
+              <h3 className="flex items-center gap-1.5 text-lg font-semibold text-white">
+                {teacher.name}
+                {teacher.verified ? (
+                  <BadgeCheck className="h-5 w-5 fill-blue-500 text-[#0e0e12]" aria-label="Verified teacher" />
+                ) : (
+                  <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-200">Unverified</span>
+                )}
+              </h3>
+              {teacher.headline && <p className="text-sm text-gray-300">{teacher.headline}</p>}
               <p className="text-sm text-gray-400">{teacher.subjects.join(" · ")}</p>
             </div>
             {match && (

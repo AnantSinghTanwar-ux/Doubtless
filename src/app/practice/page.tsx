@@ -180,7 +180,7 @@ function PracticeContent() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e]">
+    <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Adaptive Practice" />
@@ -232,7 +232,7 @@ function PracticeContent() {
                   <Badge variant="info">Difficulty: {questions[currentIndex].difficulty}/5</Badge>
                 </div>
 
-                <Card className="bg-[#0f1628]/80 mb-6">
+                <Card className="bg-[#0e0e12]/80 mb-6">
                   <p className="text-lg text-white font-medium mb-4">{questions[currentIndex].question}</p>
                   
                   <div className="space-y-2 mt-6">
@@ -313,7 +313,7 @@ function PracticeContent() {
 
 export default function PracticePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-transparent flex items-center justify-center">Loading...</div>}>
       <PracticeContent />
     </Suspense>
   );

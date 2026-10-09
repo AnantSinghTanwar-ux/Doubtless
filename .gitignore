@@ -42,3 +42,8 @@ next-env.d.ts
 
 # User uploads
 public/uploads/
+/.cowork-cache/
+/private-uploads/
+
+# keep the template for new contributors
+!.env.example

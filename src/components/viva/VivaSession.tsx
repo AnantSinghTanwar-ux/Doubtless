@@ -19,7 +19,7 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
   const [sessionActive, setSessionActive] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
   
-  const { transcript, isListening, startListening, stopListening } = useSpeechRecognition();
+  const { transcript, isListening, startListening, stopListening, metrics } = useSpeechRecognition();
   
   // Use a synth ref to stop speech if component unmounts or skips
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -146,7 +146,7 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
       ) : nextQuestion ? (
         <div className="space-y-8">
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 relative">
-             <div className="absolute -top-3 left-6 bg-[#0a0f1e] px-2 text-xs text-blue-400 font-bold uppercase tracking-wider">AI Examiner</div>
+             <div className="absolute -top-3 left-6 bg-transparent px-2 text-xs text-blue-400 font-bold uppercase tracking-wider">AI Examiner</div>
              <p className="text-lg text-white font-medium leading-relaxed">{nextQuestion.question}</p>
              <button onClick={() => speakText(nextQuestion.question)} className="mt-3 text-xs text-gray-500 hover:text-white flex items-center gap-1">
                <span>🔊</span> Replay Audio

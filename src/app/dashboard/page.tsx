@@ -47,7 +47,7 @@ export default function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <Loader size="lg" />
       </div>
     );
@@ -56,7 +56,7 @@ export default function DashboardPage() {
   if (!learnerProfile) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e]">
+    <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Dashboard" />
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-[#0f1628]/50 border-white/[0.04]">
+            <Card className="bg-[#0e0e12]/50 border-white/[0.04]">
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Doubts</div>
               <div className="text-3xl font-bold text-white">{learnerProfile.totalDoubtsResolved}</div>
             </Card>

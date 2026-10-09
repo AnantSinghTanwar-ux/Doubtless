@@ -18,40 +18,57 @@ const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2";
 const ollamaEmbedModel = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
 const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
 
+export function parseJSON<T>(raw: string | undefined, source: string): T {
+  // Models sometimes wrap JSON in ```json fences or add prose around it.
+  const text = (raw ?? "").trim();
+  const candidates = [text, text.replace(/^```(?:json)?\s*|\s*```$/g, "")];
+  const first = text.indexOf("{");
+  const last = text.lastIndexOf("}");
+  if (first !== -1 && last > first) candidates.push(text.slice(first, last + 1));
+  for (const c of candidates) {
+    try {
+      return JSON.parse(c) as T;
+    } catch {}
+  }
+  console.error(`${source} JSON Parse Error:`, text);
+  throw new Error(`${source} returned invalid JSON`);
+}
+
 export async function generateJSON<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
   const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-sonnet";
+  const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
 
   if (useHighEnd && openRouterKey) {
     console.log(`[aiProvider] Routing to OpenRouter API (${openRouterModel}) for high-end task`);
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openRouterKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: openRouterModel,
-        messages: [
-          ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
-          { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
-    
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`OpenRouter error ${res.status}: ${errorText}`);
-    }
-    
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content;
     try {
-      return JSON.parse(content) as T;
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openRouterKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: openRouterModel,
+          // Without a cap OpenRouter reserves the model's full output window, which fails on low-credit keys.
+          max_tokens: Number(process.env.OPENROUTER_MAX_TOKENS) || 2000,
+          messages: [
+            ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" }
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`OpenRouter error ${res.status}: ${errorText}`);
+      }
+
+      const data = await res.json();
+      return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
     } catch (err) {
-      console.error("OpenRouter JSON Parse Error:", content);
-      throw new Error("OpenRouter returned invalid JSON");
+      // Fall through to the local / Gemini provider instead of failing the request.
+      console.warn("[aiProvider] OpenRouter failed, falling back:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -74,12 +91,7 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
       throw new Error(`Ollama error ${res.status}: ${errorText}`);
     }
     const data = await res.json();
-    try {
-      return JSON.parse(data.response) as T;
-    } catch (err) {
-      console.error("Ollama JSON Parse Error:", data.response);
-      throw new Error("Ollama returned invalid JSON");
-    }
+    return parseJSON<T>(data.response, "Ollama");
   }
 
   const model = getModel();
@@ -91,13 +103,7 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
       responseMimeType: "application/json",
     },
   });
-  const text = response.text ?? "";
-  try {
-    return JSON.parse(text) as T;
-  } catch (err) {
-    console.error("AI JSON Parse Error:", text);
-    throw new Error("AI returned invalid JSON");
-  }
+  return parseJSON<T>(response.text, "Gemini");
 }
 
 export async function generateText(prompt: string, systemPrompt?: string): Promise<string> {
@@ -210,4 +216,48 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     results.push(embedding);
   }
   return results;
+}
+
+export type OpenRouterContent =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
+/** Multimodal JSON call through OpenRouter (used by CoWork, which needs vision). */
+export async function openRouterJSON<T>(opts: {
+  model?: string;
+  system: string;
+  content: OpenRouterContent[];
+  maxTokens: number;
+}): Promise<T> {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) throw new Error("OPENROUTER_API_KEY is not set");
+  const model = opts.model || process.env.COWORK_MODEL || "google/gemini-2.5-flash";
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      max_tokens: opts.maxTokens,
+      messages: [
+        { role: "system", content: opts.system },
+        { role: "user", content: opts.content },
+      ],
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    let message = body;
+    try {
+      message = JSON.parse(body).error?.message || body;
+    } catch {}
+    if (res.status === 402) {
+      throw new Error("Your OpenRouter balance is too low for this request. Add credits at openrouter.ai/settings/credits and try again.");
+    }
+    throw new Error(`OpenRouter ${res.status}: ${message}`);
+  }
+  const data = await res.json();
+  return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
 }

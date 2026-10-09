@@ -30,7 +30,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         className={cn(
-          "relative bg-[#0f1628] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200",
+          "relative bg-[#0e0e12] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200",
           className
         )}
       >

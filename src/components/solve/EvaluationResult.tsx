@@ -60,25 +60,25 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-[#0f1628]/80 text-center p-4">
+        <Card className="bg-[#0e0e12]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Score</div>
           <div className={`text-3xl font-bold ${getScoreColor(evaluation.rubric.total)}`}>
             {evaluation.rubric.total}<span className="text-base font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0f1628]/80 text-center p-4">
+        <Card className="bg-[#0e0e12]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Correctness</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.correctness)}`}>
             {evaluation.rubric.correctness}<span className="text-sm font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0f1628]/80 text-center p-4">
+        <Card className="bg-[#0e0e12]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Method</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.method)}`}>
             {evaluation.rubric.method}<span className="text-sm font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0f1628]/80 text-center p-4">
+        <Card className="bg-[#0e0e12]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Clarity</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.clarity_notation)}`}>
             {evaluation.rubric.clarity_notation}<span className="text-sm font-normal text-gray-500">/10</span>
@@ -86,7 +86,7 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         </Card>
       </div>
 
-      <Card className="bg-[#0f1628]/80 p-0 overflow-hidden border-white/[0.06]">
+      <Card className="bg-[#0e0e12]/80 p-0 overflow-hidden border-white/[0.06]">
         <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
           <h3 className="font-semibold text-white">Step-by-Step Analysis</h3>
         </div>
@@ -124,7 +124,7 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-[#0f1628]/50 border-emerald-500/20">
+        <Card className="bg-[#0e0e12]/50 border-emerald-500/20">
           <CardTitle className="text-sm mb-3 text-emerald-400 flex items-center gap-2">
             <span>✨</span> Model Solution
           </CardTitle>
@@ -134,7 +134,7 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         </Card>
 
         {evaluation.source_citations.length > 0 && (
-          <Card className="bg-[#0f1628]/50 border-blue-500/20">
+          <Card className="bg-[#0e0e12]/50 border-blue-500/20">
             <CardTitle className="text-sm mb-3 text-blue-400 flex items-center gap-2">
               <span>📚</span> Sources Used
             </CardTitle>

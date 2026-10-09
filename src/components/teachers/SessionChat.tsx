@@ -45,7 +45,7 @@ export default function SessionChat({ sessionId }: SessionChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0f1e] border border-white/[0.06] rounded-2xl overflow-hidden relative">
+    <div className="flex flex-col h-full bg-transparent border border-white/[0.06] rounded-2xl overflow-hidden relative">
       <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
         <h3 className="font-semibold text-white flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

@@ -29,7 +29,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         </div>
       )}
 
-      <Card className="bg-[#0f1628]/80">
+      <Card className="bg-[#0e0e12]/80">
         <div className="prose prose-invert prose-blue max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10">
           <ReactMarkdown>{explanation.explanation}</ReactMarkdown>
         </div>
@@ -37,7 +37,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {explanation.key_concepts.length > 0 && (
-          <Card className="bg-[#0f1628]/50">
+          <Card className="bg-[#0e0e12]/50">
             <CardTitle className="text-sm mb-3 text-blue-400 flex items-center gap-2">
               <span>🔑</span> Key Concepts
             </CardTitle>
@@ -52,7 +52,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         )}
 
         {explanation.analogies && explanation.analogies.length > 0 && (
-          <Card className="bg-[#0f1628]/50">
+          <Card className="bg-[#0e0e12]/50">
             <CardTitle className="text-sm mb-3 text-emerald-400 flex items-center gap-2">
               <span>🧠</span> Helpful Analogies
             </CardTitle>

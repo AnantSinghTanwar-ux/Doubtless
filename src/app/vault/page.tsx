@@ -69,7 +69,7 @@ export default function VaultPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e]">
+    <div className="min-h-screen bg-transparent">
       <Sidebar />
       <div className="lg:ml-64">
         <TopBar title="Study Vault" />

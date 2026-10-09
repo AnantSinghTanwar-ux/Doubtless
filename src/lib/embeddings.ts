@@ -56,6 +56,20 @@ export async function searchFolderPastPapers(
   });
 }
 
+/** Raw text of every past paper in a folder, for topic-level PYQ generation. */
+export async function getFolderPastPaperText(folderId: string, maxChars = 20000): Promise<string> {
+  const snap = await getDocs(
+    query(collection(db, "vaults"), where("folderId", "==", folderId), where("type", "==", "paper"))
+  );
+  let out = "";
+  for (const d of snap.docs) {
+    const chunks = (await getVaultChunks(d.id)).sort((a, b) => (a.chunkIndex ?? 0) - (b.chunkIndex ?? 0));
+    out += `\n\n=== ${(d.data() as VaultDocument).fileName} ===\n` + chunks.map((c) => c.text).join("\n");
+    if (out.length >= maxChars) break;
+  }
+  return out.slice(0, maxChars).trim();
+}
+
 export function formatChunksForPrompt(chunks: RetrievedChunk[]): string {
   if (chunks.length === 0) return "No reference material available. Use general knowledge.";
 

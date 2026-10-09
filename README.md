@@ -11,7 +11,7 @@ Built for **The Industry Games 2026, District 03**.
 - **Voice Explain (Feynman Mode)**: Explain concepts aloud. AI analyzes speech metrics (filler words, pauses) and gives a Feynman score.
 - **AI Viva Mode**: Adaptive oral examination using Web Speech API and Gemini.
 - **Teacher Matching**: Algorithm connects students with the best teacher for their specific doubt.
-- **Live Sessions**: Real-time chat (Firestore) and Video (Jitsi) for human tutoring.
+- **Live Sessions**: Real-time chat (Firestore) and peer-to-peer video (WebRTC, signalled through Firestore) for human tutoring. No video server or moderator needed.
 
 ## Setup Instructions
 
@@ -55,19 +55,29 @@ service cloud.firestore {
     match /teachers/{teacherId} { allow read: if request.auth != null; allow write: if false; }
     match /sessions/{sessionId} { allow read, write: if request.auth != null; }
     match /sessions/{sessionId}/messages/{messageId} { allow read, write: if request.auth != null; }
+    match /sessions/{sessionId}/signals/{signalId} { allow read, create: if request.auth != null; } // video call setup
     match /knowledgeBase/{kbId} { allow read, write: if request.auth != null; }
   }
 }
 ```
 
-### 4. Seed the Database
-Start the dev server:
-```bash
-npm run dev
-```
-Navigate to `http://localhost:3000/login` and click the **"🌱 Seed Database (Run Once)"** button to populate the dummy teachers.
+### 4. Teacher Verification
+Teachers register through a guided flow at `/teacher/onboarding`: profile, qualifications, ID and certificate upload, a live-camera selfie with a random gesture challenge, and a recorded video introduction. Teachers without a camera can still register but are labelled **Unverified** until they complete the live checks.
+
+Add reviewer emails to `ADMIN_EMAILS` in `.env.local`; those accounts can approve or reject applications at `/admin/teachers`.
 
 ### 5. Running the App
 - Sign in with Google.
 - Choose **Student** to explore the RAG vault, ask doubts, and take vivas.
-- Choose **Teacher** to accept session requests.
+- Choose **Teacher** to register, verify your identity, and accept live session requests.
+
+
+## Deploying
+Video calls need no extra infrastructure, but the rest of the app has a few production requirements:
+
+1. **Hosting must have a persistent disk.** Teacher ID documents, selfies and videos are written to `private-uploads/`, and PDF uploads to `public/uploads/`. Serverless hosts such as Vercel have a read-only, ephemeral filesystem, so use a container/VM host with a volume (Railway, Fly.io, Render, a VPS), or move these files to object storage (Firebase Storage, S3).
+2. **AI provider.** `AI_PROVIDER=ollama` only works on your own machine. Set `AI_PROVIDER` to Gemini/OpenRouter and provide the keys.
+3. **Firestore rules.** The API routes read Firestore through the client SDK without a signed-in user, so locking rules down will break them until they use the Firebase Admin SDK with a service account.
+4. **Firebase Auth.** Add your production domain under Authentication → Settings → Authorized domains. Camera access requires HTTPS.
+5. **Admin account.** Remove or change the demo admin password, and set `ADMIN_EMAILS` to real reviewer emails.
+6. **TURN relay (recommended).** Set `NEXT_PUBLIC_TURN_*` so video works on strict networks.

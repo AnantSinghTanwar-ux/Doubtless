@@ -176,6 +176,72 @@ export interface TeacherProfile {
   availability: boolean;
   doubtsResolved: number;
   specialties: string[];
+  /** Set when an admin approves the teacher's verification application. */
+  verified?: boolean;
+  headline?: string;
+  bio?: string;
+  experienceYears?: number;
+  institution?: string;
+  ratingCount?: number;
+}
+
+/**
+ * - "unverified": submitted without live camera checks; may teach but is labelled unverified.
+ * - "pending": full live verification submitted, awaiting admin review.
+ */
+export type TeacherApplicationStatus = "unverified" | "pending" | "approved" | "rejected";
+
+export interface TeacherApplication {
+  uid: string;
+  email: string;
+  status: TeacherApplicationStatus;
+  personal: {
+    fullName: string;
+    phone: string;
+    city: string;
+    headline: string;
+    bio: string;
+  };
+  professional: {
+    degree: string;
+    institution: string;
+    graduationYear: number;
+    experienceYears: number;
+    currentRole: string;
+    linkedinUrl: string;
+    subjects: string[];
+    specialties: string[];
+  };
+  /** Stored file names under the applicant's private verification folder. */
+  files: {
+    idDocument: string;
+    certificate: string;
+    /** Absent when the applicant had no camera. */
+    selfie?: string;
+    video?: string;
+  };
+  liveness: {
+    selfieChallenge: string;
+    selfieCapturedAt: number;
+    videoPrompt: string;
+    videoDurationSec: number;
+    /** True when the applicant registered without a working camera. */
+    skipped?: boolean;
+  };
+  screening?: TeacherScreening;
+  submittedAt: number;
+  reviewedAt?: number;
+  reviewedBy?: string;
+  reviewNote?: string;
+}
+
+export interface TeacherScreening {
+  status: "running" | "done" | "failed";
+  recommendation?: "approve" | "review" | "reject";
+  checks?: { label: string; result: "pass" | "warn" | "fail"; detail: string }[];
+  summary?: string;
+  error?: string;
+  completedAt?: number;
 }
 
 export interface TeacherMatch {
@@ -279,4 +345,18 @@ export interface JobRecord {
   error?: string;
   createdAt: number;
   updatedAt: number;
+}
+
+/** One WebRTC signalling message exchanged through sessions/{id}/signals. */
+export interface CallSignal {
+  id: string;
+  from: string;
+  /** Random per page-load, so a refreshed tab is treated as a new peer and stale messages are ignored. */
+  fromJoin: string;
+  /** Target peer's join id; absent for "hello" broadcasts. */
+  to?: string;
+  type: "hello" | "offer" | "answer" | "candidate";
+  /** JSON-encoded session description or ICE candidate. */
+  data?: string;
+  ts: number;
 }

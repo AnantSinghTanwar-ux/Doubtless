@@ -6,7 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
 import SessionChat from "@/components/teachers/SessionChat";
-import { getSession, getTeacherByUid, updateSession } from "@/lib/firestore";
+import VideoCall from "@/components/session/VideoCall";
+import { getSession, updateSession } from "@/lib/firestore";
 import type { SessionRecord } from "@/types";
 
 export default function SessionPage() {
@@ -16,7 +17,6 @@ export default function SessionPage() {
   
   const [session, setSession] = useState<SessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [jitsiLoaded, setJitsiLoaded] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
 
   useEffect(() => {
@@ -45,43 +45,15 @@ export default function SessionPage() {
     if (user && profile) fetchSession();
   }, [params.id, user, profile]);
 
-  useEffect(() => {
-    if (session && !jitsiLoaded) {
-      const script = document.createElement("script");
-      script.src = "https://meet.jit.si/external_api.js";
-      script.async = true;
-      script.onload = () => {
-        setJitsiLoaded(true);
-        if ((window as any).JitsiMeetExternalAPI) {
-          new (window as any).JitsiMeetExternalAPI("meet.jit.si", {
-            roomName: session.jitsiRoom,
-            width: "100%",
-            height: "100%",
-            parentNode: document.querySelector('#jitsi-container'),
-            userInfo: {
-              displayName: profile?.displayName || "User"
-            },
-            configOverwrite: { prejoinPageEnabled: false }
-          });
-        }
-      };
-      document.body.appendChild(script);
-    }
-  }, [session, jitsiLoaded, profile]);
-
   const handleEndSession = async () => {
     if (!session || profile?.role !== "teacher") return;
     setSummarizing(true);
     try {
-      // Create a mock chat history string for summarization
-      const chatStr = "Teacher and student discussed the topic. Student grasped the concept."; 
-      
       const res = await fetch("/api/session/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: session.id,
-          chatHistory: chatStr,
           doubtContext: JSON.stringify(session.doubtContext)
         })
       });
@@ -100,7 +72,7 @@ export default function SessionPage() {
   };
 
   if (authLoading || loading) {
-    return <div className="h-screen bg-[#0a0f1e] flex items-center justify-center"><Loader size="lg" /></div>;
+    return <div className="h-screen bg-transparent flex items-center justify-center"><Loader size="lg" /></div>;
   }
 
   if (!session) {
@@ -108,7 +80,7 @@ export default function SessionPage() {
   }
 
   return (
-    <div className="h-screen bg-[#0a0f1e] flex flex-col overflow-hidden">
+    <div className="h-screen bg-transparent flex flex-col overflow-hidden">
       <header className="h-16 flex-none bg-white/[0.02] border-b border-white/[0.06] px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">D</div>
@@ -135,8 +107,8 @@ export default function SessionPage() {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left column: Jitsi & Context */}
         <div className="flex-1 flex flex-col h-full border-r border-white/[0.06]">
-          <div className="flex-1 bg-black relative" id="jitsi-container">
-            {!jitsiLoaded && <div className="absolute inset-0 flex items-center justify-center"><Loader /></div>}
+          <div className="flex-1 bg-black relative min-h-[240px]">
+            {user && <VideoCall sessionId={session.id} uid={user.uid} />}
           </div>
           <div className="h-1/3 min-h-[200px] p-4 bg-white/[0.02] overflow-y-auto">
             <h3 className="text-sm font-semibold text-white mb-3">AI Diagnostic Context</h3>

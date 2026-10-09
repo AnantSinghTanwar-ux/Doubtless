@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, User } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { getUserProfile, createUserProfile, initLearnerProfile } from "@/lib/firestore";
 import type { UserProfile, UserRole } from "@/types";
@@ -11,7 +11,9 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   setRole: (role: UserRole) => Promise<void>;
 }
 
@@ -20,7 +22,9 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signInWithGoogle: async () => {},
+  signInWithEmail: async () => {},
   logout: async () => {},
+  refreshProfile: async () => {},
   setRole: async () => {},
 });
 
@@ -80,6 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+  };
+
+  const refreshProfile = async () => {
+    if (user) setProfile(await getUserProfile(user.uid));
+  };
+
   const logout = async () => {
     if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
       await signOut(auth);
@@ -106,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, logout, setRole }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, logout, refreshProfile, setRole }}>
       {children}
     </AuthContext.Provider>
   );
