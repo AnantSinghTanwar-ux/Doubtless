@@ -19,9 +19,11 @@ const preferNvidia = process.env.AI_PROVIDER === "nvidia";
 // Comma-separated list: several machines can host the models and the first one that answers is used.
 const ollamaUrls = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").split(",").map((u) => u.trim().replace(/\/$/, "")).filter(Boolean);
 
-const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2";
-const ollamaEmbedModel = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
-const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
+// Model names never contain spaces, and a typo like "llama 3.2" makes Ollama answer 400 "invalid model name", so strip them.
+const cleanModel = (value: string | undefined, fallback: string) => (value || fallback).replace(/\s+/g, "");
+const ollamaModel = cleanModel(process.env.OLLAMA_MODEL, "llama3.2");
+const ollamaEmbedModel = cleanModel(process.env.OLLAMA_EMBED_MODEL, "nomic-embed-text");
+const ollamaVisionModel = cleanModel(process.env.OLLAMA_VISION_MODEL, "llava");
 
 /** POST to Ollama, trying each configured host in turn. OLLAMA_API_KEY is sent as a bearer token for hosts behind an auth proxy. */
 async function ollamaPost(path: string, body: unknown, timeoutMs?: number): Promise<Response> {
