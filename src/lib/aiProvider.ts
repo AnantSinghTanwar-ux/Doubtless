@@ -27,7 +27,7 @@ const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
 async function ollamaPost(path: string, body: unknown): Promise<Response> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (process.env.OLLAMA_API_KEY) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
-  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || 120000;
+  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (process.env.VERCEL ? 40000 : 120000);
   const failures: string[] = [];
   for (const base of ollamaUrls) {
     try {
@@ -38,7 +38,58 @@ async function ollamaPost(path: string, body: unknown): Promise<Response> {
       failures.push(`${base} -> ${err instanceof Error ? err.message : err}`);
     }
   }
+  ollamaPausedUntil = Date.now() + 30_000;
   throw new Error(`Ollama error: ${failures.join(" | ")}`);
+}
+
+/** After every Ollama host failed, skip Ollama for a short while so a switched-off laptop does not slow every request. */
+let ollamaPausedUntil = 0;
+
+/** Ollama is the main provider when AI_PROVIDER=ollama. Returns undefined when it is off, paused or failed, so the caller falls back. */
+async function tryOllama<T>(run: () => Promise<T>): Promise<T | undefined> {
+  if (!useLocalProvider || Date.now() < ollamaPausedUntil) return undefined;
+  try {
+    return await run();
+  } catch (err) {
+    console.warn("[aiProvider] Ollama failed, falling back:", err instanceof Error ? err.message : err);
+    return undefined;
+  }
+}
+
+async function ollamaJSON<T>(prompt: string, systemPrompt?: string): Promise<T> {
+  console.log(`[aiProvider] Routing to Ollama (${ollamaModel}) at ${ollamaUrls.join(", ")}`);
+  const res = await ollamaPost("/api/generate", { model: ollamaModel, prompt, system: systemPrompt, format: "json", stream: false, options: { num_ctx: 16384 } });
+  return parseJSON<T>((await res.json()).response, "Ollama");
+}
+
+async function ollamaText(prompt: string, systemPrompt?: string): Promise<string> {
+  const res = await ollamaPost("/api/generate", { model: ollamaModel, prompt, system: systemPrompt, stream: false, options: { num_ctx: 16384 } });
+  return (await res.json()).response ?? "";
+}
+
+async function ollamaVision(prompt: string, imageBase64: string, systemPrompt?: string): Promise<string> {
+  const images = [imageBase64.replace(/^data:image\/\w+;base64,/, "")];
+  const res = await ollamaPost("/api/generate", { model: ollamaVisionModel, prompt, system: systemPrompt, images, stream: false, format: "json" });
+  return (await res.json()).response ?? "";
+}
+
+async function ollamaEmbed(text: string): Promise<number[]> {
+  const res = await ollamaPost("/api/embeddings", { model: ollamaEmbedModel, prompt: text });
+  const embedding: number[] = (await res.json()).embedding ?? [];
+  if (embedding.length === 0) throw new Error("Ollama returned an empty embedding");
+  return embedding;
+}
+
+/** Embeds every text with one function, a handful in flight at once. */
+async function embedAll(texts: string[], embed: (text: string) => Promise<number[]>): Promise<number[][]> {
+  // Sequential calls make a 100-chunk document exceed serverless time limits.
+  const results: number[][] = new Array(texts.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < texts.length; i = next++) results[i] = await embed(texts[i]);
+  };
+  await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
+  return results;
 }
 
 export function parseJSON<T>(raw: string | undefined, source: string): T {
@@ -62,6 +113,8 @@ export function parseJSON<T>(raw: string | undefined, source: string): T {
  * or a bad/missing Gemini key), falls back to OpenRouter when a key is available, so features degrade gracefully.
  */
 export async function generateJSON<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
+  const local = await tryOllama(() => ollamaJSON<T>(prompt, systemPrompt));
+  if (local !== undefined) return local;
   if (gatewayEnabled()) {
     try {
       return parseJSON<T>(await gatewayChat({ system: withJsonInstruction(systemPrompt), user: prompt, json: true, maxTokens: 3000 }), "Gateway");
@@ -148,24 +201,6 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
     }
   }
 
-  if (useLocalProvider) {
-    console.log(`[aiProvider] Routing to local Ollama API (${ollamaModel}) at ${ollamaUrls.join(", ")}`);
-    const res = await ollamaPost("/api/generate", {
-        model: ollamaModel,
-        prompt,
-        system: systemPrompt,
-        format: "json",
-        stream: false,
-        options: { num_ctx: 16384 },
-      });
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Ollama error ${res.status}: ${errorText}`);
-    }
-    const data = await res.json();
-    return parseJSON<T>(data.response, "Ollama");
-  }
-
   const model = getModel();
   const response = await genai.models.generateContent({
     model,
@@ -179,6 +214,8 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
 }
 
 export async function generateText(prompt: string, systemPrompt?: string): Promise<string> {
+  const localText = await tryOllama(() => ollamaText(prompt, systemPrompt));
+  if (localText !== undefined) return localText;
   if (gatewayEnabled()) {
     try {
       return await gatewayChat({ system: systemPrompt, user: prompt, maxTokens: 3000 });
@@ -205,19 +242,6 @@ export async function generateText(prompt: string, systemPrompt?: string): Promi
 }
 
 async function generateTextPrimary(prompt: string, systemPrompt?: string): Promise<string> {
-  if (useLocalProvider) {
-    const res = await ollamaPost("/api/generate", {
-        model: ollamaModel,
-        prompt,
-        system: systemPrompt,
-        stream: false,
-        options: { num_ctx: 16384 },
-      });
-    if (!res.ok) throw new Error(`Ollama error: ${res.statusText}`);
-    const data = await res.json();
-    return data.response;
-  }
-
   const model = getModel();
   const response = await genai.models.generateContent({
     model,
@@ -235,6 +259,8 @@ export async function generateWithImage(
   mimeType: string,
   systemPrompt?: string
 ): Promise<string> {
+  const localVision = await tryOllama(() => ollamaVision(prompt, imageBase64, systemPrompt));
+  if (localVision !== undefined) return localVision;
   if (gatewayEnabled()) {
     try {
       const url = imageBase64.startsWith("data:") ? imageBase64 : `data:${mimeType};base64,${imageBase64}`;
@@ -282,21 +308,6 @@ async function generateWithImagePrimary(
   mimeType: string,
   systemPrompt?: string
 ): Promise<string> {
-  if (useLocalProvider) {
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-    const res = await ollamaPost("/api/generate", {
-        model: ollamaVisionModel,
-        prompt,
-        system: systemPrompt,
-        images: [base64Data],
-        stream: false,
-        format: "json",
-      });
-    if (!res.ok) throw new Error(`Ollama error: ${res.statusText}`);
-    const data = await res.json();
-    return data.response;
-  }
-
   const model = getModel();
   const response = await genai.models.generateContent({
     model,
@@ -323,13 +334,6 @@ async function generateWithImagePrimary(
 }
 
 async function embedTextPrimary(text: string): Promise<number[]> {
-  if (useLocalProvider) {
-    const res = await ollamaPost("/api/embeddings", { model: ollamaEmbedModel, prompt: text });
-    if (!res.ok) throw new Error(`Ollama embedding error: ${res.statusText}`);
-    const data = await res.json();
-    return data.embedding;
-  }
-
   const model = getEmbedModel();
   const response = await genai.models.embedContent({ model, contents: text });
   const values = response.embeddings?.[0]?.values ?? [];
@@ -343,6 +347,13 @@ async function embedTextPrimary(text: string): Promise<number[]> {
  */
 export async function embedText(text: string, dim?: number): Promise<number[]> {
   if (dim === NVIDIA_EMBED_DIM && nvidiaConfigured()) return (await nvidiaEmbed([text], "query"))[0];
+  const localVec = await tryOllama(async () => {
+    const v = await ollamaEmbed(text);
+    // A document must be searched with the model that indexed it; a vector of another length cannot match.
+    if (dim && v.length !== dim) throw new Error(`Ollama embedding has ${v.length} dimensions, expected ${dim}`);
+    return v;
+  });
+  if (localVec) return localVec;
   if (preferNvidia && nvidiaConfigured() && !dim) {
     try {
       return (await nvidiaEmbed([text], "query"))[0];
@@ -361,16 +372,9 @@ export async function embedText(text: string, dim?: number): Promise<number[]> {
 /** Embeds document chunks. The whole batch uses ONE model, so a document's vectors are always comparable. */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  const viaPrimary = async () => {
-    // A handful in flight at once: sequential calls make a 100-chunk document exceed serverless time limits.
-    const results: number[][] = new Array(texts.length);
-    let next = 0;
-    const worker = async () => {
-      for (let i = next++; i < texts.length; i = next++) results[i] = await embedTextPrimary(texts[i]);
-    };
-    await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
-    return results;
-  };
+  const localVecs = await tryOllama(() => embedAll(texts, ollamaEmbed));
+  if (localVecs) return localVecs;
+  const viaPrimary = () => embedAll(texts, embedTextPrimary);
   if (preferNvidia && nvidiaConfigured()) {
     try {
       return await nvidiaEmbed(texts, "passage");
@@ -402,6 +406,10 @@ export async function openRouterJSON<T>(opts: {
   maxTokens: number;
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
+  const hasImages = opts.content.some((c) => c.type === "image_url");
+  // llama3.2 cannot see images, so Ollama only goes first for text-only requests; with images it stays the last resort.
+  const ollamaFirst = useLocalProvider && !hasImages && Date.now() >= ollamaPausedUntil;
+  if (ollamaFirst) attempts.push(["Ollama", () => ollamaTextJSON<T>(opts)]);
   if (gatewayEnabled()) {
     attempts.push([
       "Gateway",
@@ -423,7 +431,7 @@ export async function openRouterJSON<T>(opts: {
   if (process.env.OPENROUTER_API_KEY) attempts.push(["OpenRouter", () => openRouterRequest<T>(opts)]);
   if (process.env.GEMINI_API_KEY) attempts.push(["Gemini", () => geminiMultimodalJSON<T>(opts)]);
   if (!preferNvidia && nvidiaConfigured()) attempts.push(nvidiaAttempt);
-  if (useLocalProvider) attempts.push(["Ollama (text only)", () => ollamaTextJSON<T>(opts)]);
+  if (useLocalProvider && !ollamaFirst) attempts.push(["Ollama (text only)", () => ollamaTextJSON<T>(opts)]);
   if (attempts.length === 0) throw new Error("No AI provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY.");
 
   const failures: string[] = [];
