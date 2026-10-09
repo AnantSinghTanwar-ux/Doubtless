@@ -5,7 +5,7 @@ import { embedTexts } from "@/lib/aiProvider";
 import { createVaultDocument, saveVaultChunks } from "@/lib/firestore";
 
 /** Embedding a full document can take a while; give it room on serverless hosts. */
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 interface IngestBody {
   fileName?: unknown;

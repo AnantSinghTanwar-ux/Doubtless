@@ -5,7 +5,7 @@ import { formatChunksForPrompt } from "@/lib/embeddings";
 import type { RetrievedChunk, LearnerProfile, PracticeQuestion } from "@/types";
 
 /** AI calls can take a while; give them room on serverless hosts. */
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   try {
