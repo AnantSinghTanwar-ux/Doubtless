@@ -613,7 +613,7 @@
   --color-zinc-950: #09090b;
 }
 
-/* CoWork voice orb (Siri-style): a slowly turning colour field that breathes while idle and listens/speaks live. */
+/* CoWork voice orb (Siri-style): a slowly turning single-hue field that breathes while idle and listens/speaks live. */
 @keyframes orb-spin {
   to {
     transform: rotate(360deg);
@@ -629,9 +629,10 @@
   }
 }
 .voice-orb-field {
-  background: conic-gradient(from 0deg, #c2410c, #e11d48, #7c3aed, #2563eb, #0d9488, #f59e0b, #c2410c);
-  animation: orb-spin 6s linear infinite;
-  filter: blur(6px) saturate(1.2);
+  /* One plain palette, the app's orange accent in light and deep tones. */
+  background: conic-gradient(from 0deg, #c2410c, #ea7a3c, #9a3412, #d9622b, #c2410c);
+  animation: orb-spin 8s linear infinite;
+  filter: blur(4px);
 }
 .voice-orb-field[data-state="connecting"] {
   animation-duration: 1.4s;
