@@ -24,10 +24,10 @@ const ollamaEmbedModel = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
 const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
 
 /** POST to Ollama, trying each configured host in turn. OLLAMA_API_KEY is sent as a bearer token for hosts behind an auth proxy. */
-async function ollamaPost(path: string, body: unknown): Promise<Response> {
+async function ollamaPost(path: string, body: unknown, timeoutMs?: number): Promise<Response> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (process.env.OLLAMA_API_KEY) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
-  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (process.env.VERCEL ? 25000 : 120000);
+  const timeout = timeoutMs ?? (Number(process.env.OLLAMA_TIMEOUT_MS) || 120000);
   const failures: string[] = [];
   for (const base of ollamaUrls) {
     try {
@@ -418,9 +418,8 @@ export async function openRouterJSON<T>(opts: {
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
   const hasImages = opts.content.some((c) => c.type === "image_url");
-  // llama3.2 cannot see images, and a laptop model is too slow for long outputs (CoWork study guides ask for 8000 tokens and
-  // overran Vercel's 60 s limit), so Ollama only goes first for short text-only requests; otherwise it stays the last resort.
-  const ollamaFirst = useLocalProvider && !hasImages && opts.maxTokens <= 2000 && Date.now() >= ollamaPausedUntil;
+  // llama3.2 cannot see images, so Ollama goes first for text-only requests; with images it stays the last resort.
+  const ollamaFirst = useLocalProvider && !hasImages && Date.now() >= ollamaPausedUntil;
   if (ollamaFirst) attempts.push(["Ollama", () => ollamaTextJSON<T>(opts)]);
   if (gatewayEnabled()) {
     attempts.push([
@@ -449,7 +448,9 @@ export async function openRouterJSON<T>(opts: {
   const failures: string[] = [];
   for (const [name, run] of attempts) {
     try {
-      return await run();
+      const out = await run();
+      console.log(`[aiProvider] answered by ${name}`);
+      return out;
     } catch (err) {
       failures.push(`${name}: ${shortError(err)}`);
       console.warn(`[aiProvider] ${name} failed:`, err instanceof Error ? err.message : err);
@@ -499,10 +500,15 @@ async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRout
 }
 
 /** Last resort on a machine with a local model: text parts only, since the default model can't see images. */
-async function ollamaTextJSON<T>(opts: { system: string; content: OpenRouterContent[] }): Promise<T> {
+async function ollamaTextJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens?: number }): Promise<T> {
   const prompt = opts.content.map((c) => (c.type === "text" ? c.text : "")).filter(Boolean).join("\n");
-  const res = await ollamaPost("/api/generate", { model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384 } });
-  if (!res.ok) throw new Error(`Ollama error ${res.status}`);
+  // A long answer (a CoWork study guide asks for 8000 tokens) takes a laptop model minutes, so it gets a longer wait and a token cap.
+  const long = (opts.maxTokens ?? 0) > 2000;
+  const res = await ollamaPost(
+    "/api/generate",
+    { model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384, ...(opts.maxTokens ? { num_predict: opts.maxTokens } : {}) } },
+    long ? 240_000 : undefined
+  );
   const data = await res.json();
   return parseJSON<T>(data.response, "Ollama");
 }

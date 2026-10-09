@@ -3,8 +3,8 @@ import { getAvailableTeachers } from "@/lib/firestore";
 import type { TeacherMatch, DoubtRouterResult } from "@/types";
 
 
-// Self-hosted models can be slow; give Vercel functions room to wait for them.
-export const maxDuration = 60;
+// A self-hosted model can take minutes; Hobby with Fluid Compute allows up to 300 s.
+export const maxDuration = 300;
 export async function POST(request: NextRequest) {
   try {
     const { routerResult } = (await request.json()) as {
