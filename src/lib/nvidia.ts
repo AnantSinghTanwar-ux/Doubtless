@@ -102,3 +102,20 @@ export async function nvidiaTranscribe(imageBase64: string, mimeType: string): P
     .map((l) => l.replace(/^[\s>*#-]*(?:\d+[.)]\s+)?/, "").replace(/\*\*/g, "").trim())
     .filter((l) => l && !/^(transcri|here is|here are)/i.test(l));
 }
+
+/** Reads a slide or textbook page that has no text layer into plain text (formulas written out, diagrams described). */
+export async function nvidiaDescribePage(imageDataUrl: string): Promise<string> {
+  return nvidiaChat({
+    system: "You read lecture slides and textbook pages for a study tool. Be faithful and complete; never add information.",
+    user: [
+      {
+        type: "text",
+        text: "Write out everything on this page as plain text: all headings and sentences, every formula or equation (use ^ for powers, / for fractions, Unicode symbols like ∑ ∈ ≤), and a one-line description of any diagram or figure. Output only the page content.",
+      },
+      { type: "image_url", image_url: { url: imageDataUrl } },
+    ],
+    vision: true,
+    maxTokens: 1500,
+    temperature: 0,
+  });
+}

@@ -1,8 +1,10 @@
 export type HighlightKind = "important" | "definition" | "formula" | "keyword";
 
 export interface PageHighlight {
-  /** [ymin, xmin, ymax, xmax], normalized 0-1000 relative to the page image. */
+  /** [ymin, xmin, ymax, xmax], normalized 0-1000 relative to the page. [0,0,0,0] until a quote has been located. */
   box: [number, number, number, number];
+  /** Exact words from the page's text layer. The browser finds them in the PDF to get precise positions. */
+  quote?: string;
   kind: HighlightKind;
   /** Short callout text, e.g. "Exam favourite". */
   label: string;

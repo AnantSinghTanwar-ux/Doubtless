@@ -30,8 +30,11 @@ const markdown: Components = {
   code: ({ children }) => <code className="px-1.5 py-0.5 rounded bg-ink/10 text-pen-deep text-[13px] font-mono">{children}</code>,
 };
 
+// Models sometimes emit HTML line breaks; turn them into paragraph breaks instead of showing the raw tags.
+const stripHtml = (s: string) => s.replace(/<br\s*\/?>/gi, "\n\n").replace(/<\/?[a-z][^>]*>/gi, "");
+
 export function Md({ children }: { children: string }) {
-  return <ReactMarkdown components={markdown}>{children}</ReactMarkdown>;
+  return <ReactMarkdown components={markdown}>{stripHtml(children)}</ReactMarkdown>;
 }
 
 function Section({ icon, title, accent, children }: { icon: ReactNode; title: string; accent: string; children: ReactNode }) {

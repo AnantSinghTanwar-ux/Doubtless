@@ -22,7 +22,7 @@ import { auth } from "@/lib/firebase";
 import { getVaultFolders, getVaultDocuments } from "@/lib/firestore";
 import type { VaultFolder, VaultDocument } from "@/types";
 import type { PDFDocumentProxy } from "@/lib/pdfClient";
-import type { DocumentOverview, OverviewPageInput } from "@/types/cowork";
+import type { DocumentOverview, OverviewPageInput, PageHighlight } from "@/types/cowork";
 import PdfPageView from "@/components/cowork/PdfPageView";
 import StudyPage, { type AnalysisState } from "@/components/cowork/StudyPage";
 import OverviewPanel, { type OverviewState } from "@/components/cowork/OverviewPanel";
@@ -149,7 +149,11 @@ type ScrollPos = { index: number; frac: number; atStart: boolean; atEnd: boolean
 // The "reading line" sits this far down the viewport; the page crossing it is the current page.
 const ANCHOR = 0.3;
 const ZOOMS = [0.6, 0.75, 0.9, 1, 1.15, 1.3, 1.5];
-const CACHE_PREFIX = "cowork:v3";
+const area = (b: number[]) => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
+const overlapArea = (a: number[], b: number[]) =>
+  Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1])) * Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0]));
+
+const CACHE_PREFIX = "cowork:v4"; // bumped when highlights moved to exact text-layer positions
 const MAX_PARALLEL = 3;
 // Pages with at least this much text-layer text are sent to the overview as text; others as an image.
 const TEXT_PAGE_MIN_CHARS = 120;
@@ -369,6 +373,25 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
     return () => window.removeEventListener("keydown", onKey);
   }, [currentPage, goToPage]);
 
+  /** Turns the model's quotes into exact on-page boxes (from the PDF's text layer) and drops anything unplaceable or overlapping. */
+  const resolveHighlights = async (lib: typeof import("@/lib/pdfClient"), pdfPage: Awaited<ReturnType<NonNullable<typeof pdf>["getPage"]>>, raw: unknown): Promise<PageHighlight[]> => {
+    if (!Array.isArray(raw)) return [];
+    const out: PageHighlight[] = [];
+    for (const h of raw as PageHighlight[]) {
+      let box = h.box;
+      if (h.quote) {
+        const found = await lib.locateQuote(pdfPage, h.quote).catch(() => null);
+        if (!found) continue; // the words aren't on this page, so don't mark anything rather than mark the wrong spot
+        box = found;
+      }
+      if (!box || box[2] - box[0] < 6 || box[3] - box[1] < 12) continue;
+      if (out.some((o) => overlapArea(o.box, box) > 0.25 * Math.min(area(o.box), area(box)))) continue;
+      out.push({ box, kind: h.kind, label: h.label });
+      if (out.length >= 5) break;
+    }
+    return out;
+  };
+
   const getPageText = useCallback(
     async (page: number) => {
       const cached = pageTexts.current.get(page);
@@ -406,6 +429,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        data.highlights = await resolveHighlights(pdfLib.current!, pdfPage, data.highlights);
         writeCache(cacheKey, data);
         setAnalyses((a) => ({ ...a, [page]: { status: "done", data } }));
       } catch (err) {

@@ -10,7 +10,7 @@ import type { DocumentOverview, OverviewPageInput } from "@/types/cowork";
 const CACHE_DIR = process.env.VERCEL ? path.join(os.tmpdir(), ".cowork-cache") : path.join(process.cwd(), ".cowork-cache");
 const inFlight = new Map<string, Promise<DocumentOverview>>();
 
-const systemPrompt = `You are an expert university tutor. You receive EVERY page of a lecture PDF (as text, or as an image when the page has no text layer), each tagged with its page number. Build an exam-focused study guide for the WHOLE document.
+const systemPrompt = `You are an expert university tutor. You receive EVERY page of a lecture PDF (as text, or as an image when the page has no text layer), each tagged with its page number. Build an exam-focused study guide for the WHOLE document. Use plain text and Markdown only: never HTML tags such as <br>. Do not repeat yourself.
 
 Return ONLY a JSON object:
 {
