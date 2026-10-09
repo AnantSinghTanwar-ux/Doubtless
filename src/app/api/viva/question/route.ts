@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         ? previousAnswers.reduce((sum, a) => sum + a.score, 0) / previousAnswers.length
         : 5;
 
-    const systemPrompt = `You are an AI oral examiner in the ωlvε viva system. Generate adaptive follow-up questions.
+    const systemPrompt = `You are an AI oral examiner in the Ωlvε viva system. Generate adaptive follow-up questions.
 
 Rules:
 - If the student scored well (>7), increase difficulty and probe deeper

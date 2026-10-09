@@ -19,7 +19,7 @@ export default function Sidebar() {
       <div className="px-5 pb-4 pt-6">
         <Link href={profile?.role === "teacher" ? "/teacher-dashboard" : "/dashboard"} className="flex items-center gap-3">
           <Logo size={36} />
-          <span className="font-display text-xl font-semibold tracking-tight text-ink">ωlvε</span>
+          <span className="font-display text-xl font-semibold tracking-tight text-ink">Ωlvε</span>
         </Link>
       </div>
 

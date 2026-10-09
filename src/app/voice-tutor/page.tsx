@@ -239,7 +239,7 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 </div>
 
                 <p className="display mt-6 text-2xl text-ink">
-                  {status === "connecting" ? "Connecting…" : status === "ending" ? "Ending…" : live ? (assistantSpeaking ? "ωlvε is speaking" : "Listening…") : "Tap to talk it through"}
+                  {status === "connecting" ? "Connecting…" : status === "ending" ? "Ending…" : live ? (assistantSpeaking ? "Ωlvε is speaking" : "Listening…") : "Tap to talk it through"}
                 </p>
                 <p className="mt-1 h-5 font-mono text-xs tabular-nums text-muted">{live ? fmt(seconds) : ""}</p>
 
@@ -271,7 +271,7 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
               ) : (
                 lines.map((l, i) => (
                   <div key={i} className={cn(!l.final && "opacity-70")}>
-                    <p className={cn("hand text-xl leading-none", l.role === "user" ? "ink-blue" : "ink-red")}>{l.role === "user" ? "You" : "ωlvε"}</p>
+                    <p className={cn("hand text-xl leading-none", l.role === "user" ? "ink-blue" : "ink-red")}>{l.role === "user" ? "You" : "Ωlvε"}</p>
                     <p className="serif text-[15px] leading-7 text-[#1b2440]">{l.text}</p>
                   </div>
                 ))

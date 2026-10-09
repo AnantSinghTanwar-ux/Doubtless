@@ -1,6 +1,6 @@
-# ωlvε - AI-Native Education OS 🎓
+# Ωlvε - AI-Native Education OS 🎓
 
-ωlvε is an intelligent education platform that analyzes a student's doubt and contextually routes them to the best help: an AI explanation, adaptive practice, or a live session with an expert human teacher.
+Ωlvε is an intelligent education platform that analyzes a student's doubt and contextually routes them to the best help: an AI explanation, adaptive practice, or a live session with an expert human teacher.
 
 Built for **The Industry Games 2026, District 03**.
 

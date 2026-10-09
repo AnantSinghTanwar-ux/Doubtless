@@ -271,7 +271,7 @@ export default function TeacherOnboarding() {
           <Link href="/teacher-dashboard" className="mb-8 flex items-center gap-3">
             <Logo size={40} />
             <div>
-              <p className="font-display text-lg font-semibold leading-tight tracking-tight">ωlvε</p>
+              <p className="font-display text-lg font-semibold leading-tight tracking-tight">Ωlvε</p>
               <p className="text-xs text-muted">Teacher registration</p>
             </div>
           </Link>
@@ -525,7 +525,7 @@ export default function TeacherOnboarding() {
 
                 <label className="flex cursor-pointer items-start gap-3 rounded-card border border-line bg-sheet p-4 text-sm text-ink/80">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-pen p-0" />
-                  I confirm these details and documents are genuine and belong to me, and I consent to ωlvε reviewing them to verify my identity.
+                  I confirm these details and documents are genuine and belong to me, and I consent to Ωlvε reviewing them to verify my identity.
                 </label>
               </div>
             )}

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       const mastery = profile?.topicMastery?.[subtopic] ?? profile?.topicMastery?.[topic] ?? 50;
       const difficulty = mastery > 70 ? "hard" : mastery > 40 ? "medium" : "easy";
 
-      const systemPrompt = `You are a practice question generator in the ωlvε AI Education system.
+      const systemPrompt = `You are a practice question generator in the Ωlvε AI Education system.
 
 Generate 5 practice questions on the given topic/subtopic.
 Difficulty level: ${difficulty} (based on student mastery: ${mastery}%)

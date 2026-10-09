@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Topic and answers are required" }, { status: 400 });
     }
 
-    const systemPrompt = `You are a viva report generator in the ωlvε AI Education system.
+    const systemPrompt = `You are a viva report generator in the Ωlvε AI Education system.
 
 Analyze the complete viva session and generate a comprehensive report.
 

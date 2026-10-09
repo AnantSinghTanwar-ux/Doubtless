@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       ? messages.map((m) => `${m.senderName}: ${m.text}`).join("\n").slice(-12000)
       : chatHistory || "(No chat messages were exchanged; the session happened over video.)";
 
-    const systemPrompt = `You are a session summarizer in the ωlvε AI Education system.
+    const systemPrompt = `You are a session summarizer in the Ωlvε AI Education system.
 
 Summarize the teacher-student session into actionable knowledge.
 
