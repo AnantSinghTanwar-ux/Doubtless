@@ -422,12 +422,12 @@ export async function openRouterJSON<T>(opts: {
   maxTokens: number;
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
-  const hasImages = opts.content.some((c) => c.type === "image_url");
-  // llama3.2 cannot see images, so Ollama goes first for text-only requests; with images it stays the last resort.
-  const ollamaFirst = useLocalProvider && !hasImages && Date.now() >= ollamaPausedUntil;
-  if (ollamaFirst) attempts.push(["Ollama", () => ollamaTextJSON<T>(opts)]);
-  // Pages with no text layer: on your own machine, read them with the local vision model rather than shipping them online.
-  if (useLocalProvider && !process.env.VERCEL && hasImages && Date.now() >= ollamaPausedUntil) attempts.push(["Ollama (llava reads the page)", () => ollamaVisionJSON<T>(opts)]);
+  // Ollama goes first. Pictures are read by llava, but only a few per request, so a request that is mostly pictures
+  // (a scanned PDF) goes to the cloud first and Ollama stays the last resort; the "--- Page N (image) ---" markers are not real text.
+  const imageCount = opts.content.filter((c) => c.type === "image_url").length;
+  const realText = opts.content.reduce((n, c) => (c.type === "text" && !/^--- Page \d+ \(image\) ---$/.test(c.text.trim()) ? n + c.text.length : n), 0);
+  const ollamaFirst = useLocalProvider && (imageCount <= MAX_OLLAMA_IMAGES || realText > 3000) && Date.now() >= ollamaPausedUntil;
+  if (ollamaFirst) attempts.push(["Ollama", () => ollamaRead<T>(opts)]);
   if (gatewayEnabled()) {
     attempts.push([
       "Gateway",
@@ -449,7 +449,7 @@ export async function openRouterJSON<T>(opts: {
   if (process.env.OPENROUTER_API_KEY) attempts.push(["OpenRouter", () => openRouterRequest<T>(opts)]);
   if (process.env.GEMINI_API_KEY) attempts.push(["Gemini", () => geminiMultimodalJSON<T>(opts)]);
   if (!preferNvidia && nvidiaConfigured()) attempts.push(nvidiaAttempt);
-  if (useLocalProvider && !ollamaFirst) attempts.push(["Ollama (text only)", () => ollamaTextJSON<T>(opts)]);
+  if (useLocalProvider && !ollamaFirst) attempts.push(["Ollama (last resort)", () => ollamaRead<T>(opts)]);
   if (attempts.length === 0) throw new Error("No AI provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY.");
 
   const failures: string[] = [];
@@ -506,9 +506,17 @@ async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRout
   return parseJSON<T>(text, "NVIDIA");
 }
 
+/** Pages llava reads per request: each one takes seconds, and a Vercel function has to finish within its time limit. */
+const MAX_OLLAMA_IMAGES = process.env.VERCEL ? 6 : 12;
+
+/** Pictures go through llava first (as text), plain text goes straight to the text model. */
+function ollamaRead<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
+  return opts.content.some((c) => c.type === "image_url") ? ollamaVisionJSON<T>(opts) : ollamaTextJSON<T>(opts);
+}
+
 /** llava reads each page picture into text (one at a time, capped), then the text model does the reasoning. */
 async function ollamaVisionJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
-  const urls = [...new Set(opts.content.flatMap((c) => (c.type === "image_url" ? [c.image_url.url] : [])))].slice(0, 12);
+  const urls = [...new Set(opts.content.flatMap((c) => (c.type === "image_url" ? [c.image_url.url] : [])))].slice(0, MAX_OLLAMA_IMAGES);
   const read = new Map<string, string>();
   for (const url of urls) {
     const res = await ollamaPost("/api/generate", {
