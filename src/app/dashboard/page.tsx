@@ -69,6 +69,9 @@ export default function DashboardPage() {
               <button onClick={() => router.push("/ask")} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition">
                 Ask Doubt
               </button>
+              <button onClick={() => router.push("/voice-tutor")} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition">
+                Talk to Tutor
+              </button>
               <button onClick={() => router.push("/solve")} className="px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-500/30 transition">
                 Solve Problem
               </button>

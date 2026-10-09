@@ -16,6 +16,7 @@ import {
   FileText, 
   Users, 
   Briefcase,
+  Headphones,
   ShieldCheck,
   BadgeCheck,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const studentLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vault", label: "Study Vault", icon: Library },
   { href: "/ask", label: "Ask Doubt", icon: MessageSquare },
+  { href: "/voice-tutor", label: "Voice Tutor", icon: Headphones },
   { href: "/solve", label: "Solve", icon: PenTool },
   { href: "/voice", label: "Voice", icon: Mic },
   { href: "/viva", label: "Viva", icon: Target },
