@@ -27,13 +27,13 @@ const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
 async function ollamaPost(path: string, body: unknown): Promise<Response> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (process.env.OLLAMA_API_KEY) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
-  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (process.env.VERCEL ? 40000 : 120000);
+  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (process.env.VERCEL ? 25000 : 120000);
   const failures: string[] = [];
   for (const base of ollamaUrls) {
     try {
       const res = await fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(timeout) });
       if (res.ok) return res;
-      failures.push(`${base} -> ${res.status} ${(await res.text()).slice(0, 120)}`);
+      failures.push(`${base} -> ${res.status} ${(await res.text()).replace(/\s+/g, " ").slice(0, 200)}`);
     } catch (err) {
       failures.push(`${base} -> ${err instanceof Error ? err.message : err}`);
     }
@@ -48,8 +48,11 @@ let ollamaPausedUntil = 0;
 /** Ollama is the main provider when AI_PROVIDER=ollama. Returns undefined when it is off, paused or failed, so the caller falls back. */
 async function tryOllama<T>(run: () => Promise<T>): Promise<T | undefined> {
   if (!useLocalProvider || Date.now() < ollamaPausedUntil) return undefined;
+  const started = Date.now();
   try {
-    return await run();
+    const out = await run();
+    console.log(`[aiProvider] answered by Ollama in ${Date.now() - started} ms`);
+    return out;
   } catch (err) {
     console.warn("[aiProvider] Ollama failed, falling back:", err instanceof Error ? err.message : err);
     return undefined;
@@ -415,8 +418,9 @@ export async function openRouterJSON<T>(opts: {
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
   const hasImages = opts.content.some((c) => c.type === "image_url");
-  // llama3.2 cannot see images, so Ollama only goes first for text-only requests; with images it stays the last resort.
-  const ollamaFirst = useLocalProvider && !hasImages && Date.now() >= ollamaPausedUntil;
+  // llama3.2 cannot see images, and a laptop model is too slow for long outputs (CoWork study guides ask for 8000 tokens and
+  // overran Vercel's 60 s limit), so Ollama only goes first for short text-only requests; otherwise it stays the last resort.
+  const ollamaFirst = useLocalProvider && !hasImages && opts.maxTokens <= 2000 && Date.now() >= ollamaPausedUntil;
   if (ollamaFirst) attempts.push(["Ollama", () => ollamaTextJSON<T>(opts)]);
   if (gatewayEnabled()) {
     attempts.push([
