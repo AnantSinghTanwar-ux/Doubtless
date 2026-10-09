@@ -7,7 +7,6 @@ import Sidebar from "@/components/layout/Sidebar";
 import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
 import Loader from "@/components/ui/Loader";
-import MasteryHeatmap from "@/components/dashboard/MasteryHeatmap";
 import WeakTopics from "@/components/dashboard/WeakTopics";
 import Card from "@/components/ui/Card";
 import { getLearnerProfile } from "@/lib/firestore";
@@ -95,10 +94,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <WeakTopics profile={learnerProfile} />
-            <MasteryHeatmap profile={learnerProfile} />
-          </div>
+          <WeakTopics profile={learnerProfile} />
 
         </main>
       </div>
