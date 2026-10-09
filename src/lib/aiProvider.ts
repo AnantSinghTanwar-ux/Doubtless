@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { gatewayChat, gatewayEnabled, type GatewayContent } from "./gateway";
 import { NVIDIA_EMBED_DIM, nvidiaChat, nvidiaConfigured, nvidiaDescribePage, nvidiaEmbed, withJsonInstruction, type NvidiaContent } from "./nvidia";
 
 const apiKey = process.env.GEMINI_API_KEY || "placeholder_for_build";
@@ -42,6 +43,13 @@ export function parseJSON<T>(raw: string | undefined, source: string): T {
  * or a bad/missing Gemini key), falls back to OpenRouter when a key is available, so features degrade gracefully.
  */
 export async function generateJSON<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
+  if (gatewayEnabled()) {
+    try {
+      return parseJSON<T>(await gatewayChat({ system: withJsonInstruction(systemPrompt), user: prompt, json: true, maxTokens: 3000 }), "Gateway");
+    } catch (err) {
+      console.warn("[aiProvider] gateway failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
   const nvidiaJSON = async () => parseJSON<T>(await nvidiaChat({ system: withJsonInstruction(systemPrompt), user: prompt, maxTokens: 3000 }), "NVIDIA");
   if (preferNvidia && nvidiaConfigured()) {
     try {
@@ -156,6 +164,13 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
 }
 
 export async function generateText(prompt: string, systemPrompt?: string): Promise<string> {
+  if (gatewayEnabled()) {
+    try {
+      return await gatewayChat({ system: systemPrompt, user: prompt, maxTokens: 3000 });
+    } catch (err) {
+      console.warn("[aiProvider] gateway failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
   if (preferNvidia && nvidiaConfigured()) {
     try {
       return await nvidiaChat({ system: systemPrompt, user: prompt, maxTokens: 3000 });
@@ -209,6 +224,20 @@ export async function generateWithImage(
   mimeType: string,
   systemPrompt?: string
 ): Promise<string> {
+  if (gatewayEnabled()) {
+    try {
+      const url = imageBase64.startsWith("data:") ? imageBase64 : `data:${mimeType};base64,${imageBase64}`;
+      return await gatewayChat({
+        system: withJsonInstruction(systemPrompt),
+        user: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url } }],
+        json: true,
+        vision: true,
+        maxTokens: 3000,
+      });
+    } catch (err) {
+      console.warn("[aiProvider] gateway vision failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
   const viaNvidia = () => {
     const url = imageBase64.startsWith("data:") ? imageBase64 : `data:${mimeType};base64,${imageBase64}`;
     return nvidiaChat({
@@ -370,6 +399,22 @@ export async function openRouterJSON<T>(opts: {
   maxTokens: number;
 }): Promise<T> {
   const attempts: [string, () => Promise<T>][] = [];
+  if (gatewayEnabled()) {
+    attempts.push([
+      "Gateway",
+      async () =>
+        parseJSON<T>(
+          await gatewayChat({
+            system: withJsonInstruction(opts.system),
+            user: opts.content as GatewayContent,
+            json: true,
+            vision: opts.content.some((c) => c.type === "image_url"),
+            maxTokens: Math.max(opts.maxTokens, 1500),
+          }),
+          "Gateway"
+        ),
+    ]);
+  }
   const nvidiaAttempt: [string, () => Promise<T>] = ["NVIDIA", () => nvidiaMultimodalJSON<T>(opts)];
   if (preferNvidia && nvidiaConfigured()) attempts.push(nvidiaAttempt);
   if (process.env.OPENROUTER_API_KEY) attempts.push(["OpenRouter", () => openRouterRequest<T>(opts)]);
