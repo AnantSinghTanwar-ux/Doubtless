@@ -10,7 +10,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader size="lg" text="Loading Ωlvε..." />
+        <Loader size="lg" text="Loading Sθlvε..." />
       </div>
     );
   }

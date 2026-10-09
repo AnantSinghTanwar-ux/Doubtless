@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       // Knowledge base search is optional
     }
 
-    const systemPrompt = `You are a patient, expert tutor in the Ωlvε AI Education system. Explain concepts clearly and thoroughly.
+    const systemPrompt = `You are a patient, expert tutor in the Sθlvε AI Education system. Explain concepts clearly and thoroughly.
 
 The doubt has been classified as: ${routerResult.doubt_type}
 Topic: ${routerResult.topic}, Subtopic: ${routerResult.subtopic}, Difficulty: ${routerResult.difficulty}

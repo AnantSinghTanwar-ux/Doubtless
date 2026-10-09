@@ -81,7 +81,7 @@ export default function SamplePaperPage() {
           {!paper ? (
             <div className="animate-in">
               <h2 className="display mb-2 text-2xl text-ink">Build a mock paper from your material</h2>
-              <p className="mb-6 text-muted">Choose previous year papers or notes from your vault. Ωlvε writes a paper with the questions most likely to come up.</p>
+              <p className="mb-6 text-muted">Choose previous year papers or notes from your vault. Sθlvε writes a paper with the questions most likely to come up.</p>
 
               <div className="space-y-6 rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6">
                 {loading ? (

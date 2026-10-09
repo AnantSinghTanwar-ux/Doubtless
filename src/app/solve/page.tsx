@@ -131,7 +131,7 @@ export default function SolvePage() {
           <div className="mb-8">
             <h2 className="display text-2xl text-ink mb-2">Check your work</h2>
             <p className="text-sm text-muted mb-6">
-              Write your solution step by step or upload a photo of your notebook. Ωlvε checks your method and points to the first step that goes wrong.
+              Write your solution step by step or upload a photo of your notebook. Sθlvε checks your method and points to the first step that goes wrong.
             </p>
             
             <div className="rounded-card border border-line bg-sheet p-5 shadow-sheet sm:p-6">

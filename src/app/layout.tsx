@@ -13,7 +13,7 @@ const fraunces = localFont({ src: "./fonts/Fraunces.woff2", variable: "--font-fr
 const jetbrains = localFont({ src: "./fonts/JetBrainsMono.woff2", variable: "--font-jetbrains", weight: "100 800", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Ωlvε — AI Education OS",
+  title: "Sθlvε — AI Education OS",
   description:
     "Intelligent doubt resolution powered by AI. Get personalized explanations, practice, and connect with expert teachers.",
   manifest: "/manifest.json",

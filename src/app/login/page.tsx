@@ -105,7 +105,7 @@ export default function LoginPage() {
         <div className="lp-rise hidden lg:block">
           <div className="mb-8 flex items-center gap-3">
             <Logo size={44} />
-            <span className="font-display text-3xl font-semibold tracking-tight text-ink">Ωlvε</span>
+            <span className="font-display text-3xl font-semibold tracking-tight text-ink">Sθlvε</span>
           </div>
           <h1 className="display text-5xl text-ink">Get unstuck, fast.</h1>
           <p className="mt-5 max-w-md text-lg leading-8 text-muted">The AI-native education OS that finds the real reason you&apos;re stuck and sends you to the fastest help.</p>
@@ -127,13 +127,13 @@ export default function LoginPage() {
         <div className="lp-rise mx-auto w-full max-w-md" style={{ animationDelay: "0.15s" }}>
           <div className="mb-8 flex flex-col items-center lg:hidden">
             <Logo size={52} />
-            <p className="mt-4 font-display text-3xl font-semibold text-ink">Ωlvε</p>
+            <p className="mt-4 font-display text-3xl font-semibold text-ink">Sθlvε</p>
           </div>
 
           <div className="rounded-card border border-line bg-sheet p-7 shadow-lift sm:p-8">
             {choosingRole ? (
               <div className="slide-up">
-                <h1 className="text-center font-display text-2xl font-semibold text-ink">How will you use Ωlvε?</h1>
+                <h1 className="text-center font-display text-2xl font-semibold text-ink">How will you use Sθlvε?</h1>
                 <p className="mb-7 mt-2 text-center text-sm text-muted">Pick the one that fits you.</p>
                 <div className="space-y-3">
                   {[
@@ -188,7 +188,7 @@ export default function LoginPage() {
               </form>
             ) : (
               <div className="slide-up">
-                <h1 className="text-center font-display text-2xl font-semibold text-ink">Welcome to Ωlvε</h1>
+                <h1 className="text-center font-display text-2xl font-semibold text-ink">Welcome to Sθlvε</h1>
                 <p className="mb-7 mt-2 text-center text-sm text-muted">Sign in or create your account in one click.</p>
                 <Button onClick={handleSignIn} size="lg" className="w-full">
                   {googleIcon}
