@@ -25,6 +25,9 @@ export function useSpeechRecognition() {
   const startTimeRef = useRef<number>(0);
   const lastSpeechTimeRef = useRef<number>(0);
   const pausesRef = useRef<number[]>([]);
+  // The browser throws if start() is called while recognition is running (or still stopping), so track it ourselves.
+  const runningRef = useRef(false);
+  const restartRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -59,7 +62,22 @@ export function useSpeechRecognition() {
         };
 
         recognitionRef.current.onerror = (event: any) => {
-          console.error("Speech recognition error", event.error);
+          // "no-speech" and "aborted" are normal (silence, or we stopped it); only report real problems.
+          if (event.error !== "no-speech" && event.error !== "aborted") console.warn("Speech recognition error", event.error);
+        };
+
+        recognitionRef.current.onend = () => {
+          runningRef.current = false;
+          // A new question asked for the mic while the last session was still shutting down: start it now.
+          if (restartRef.current) {
+            restartRef.current = false;
+            try {
+              recognitionRef.current.start();
+              runningRef.current = true;
+            } catch {
+              /* nothing more to do: the student can press the mic button */
+            }
+          }
         };
       }
     }
@@ -67,6 +85,7 @@ export function useSpeechRecognition() {
 
   const startListening = useCallback(() => {
     if (recognitionRef.current) {
+      if (runningRef.current) return; // already listening: nothing to do
       setTranscript("");
       setMetrics({
         wordsPerMinute: 0,
@@ -78,7 +97,14 @@ export function useSpeechRecognition() {
       startTimeRef.current = Date.now();
       lastSpeechTimeRef.current = Date.now();
       pausesRef.current = [];
-      recognitionRef.current.start();
+      try {
+        recognitionRef.current.start();
+        runningRef.current = true;
+      } catch (err) {
+        if (!(err instanceof Error && err.name === "InvalidStateError")) throw err;
+        // Still shutting down from the previous answer: start again as soon as it has ended.
+        restartRef.current = true;
+      }
       setIsListening(true);
     } else {
       alert("Speech recognition is not supported in this browser. Please use Chrome.");
@@ -87,7 +113,13 @@ export function useSpeechRecognition() {
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      restartRef.current = false;
+      runningRef.current = false;
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        /* already stopped */
+      }
       setIsListening(false);
       
       // Calculate final metrics

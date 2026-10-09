@@ -90,7 +90,7 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
         </span>
         <h3 className="mb-2 font-display text-2xl font-semibold text-ink">Ready for your viva on {topic}?</h3>
         <p className="text-sm text-muted max-w-md mx-auto mb-8">
-          You will hear 5 questions and answer them with your microphone. The difficulty adapts to how well you answer.
+          You will be asked 5 questions and answer them with your microphone (or by typing). The difficulty adapts to how well you answer.
         </p>
         <Button onClick={handleStart} size="lg" className="px-8">Start the viva</Button>
       </div>
