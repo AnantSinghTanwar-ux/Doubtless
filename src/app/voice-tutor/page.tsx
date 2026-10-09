@@ -13,11 +13,13 @@ import Callout from "@/components/ui/Callout";
 import { cn } from "@/lib/utils";
 
 type CallStatus = "idle" | "connecting" | "live" | "ending";
+/** One uninterrupted stretch of a single speaker: finished sentences plus the one still being recognised. */
 interface Line {
   role: "assistant" | "user";
-  text: string;
-  final: boolean;
+  done: string;
+  partial: string;
 }
+type TalkMode = "open" | "push";
 // Minimal shape of the Vapi client we use (the SDK is imported lazily because it touches browser globals).
 interface VapiClient {
   start: (assistantId: string, overrides?: Record<string, unknown>) => Promise<unknown>;
@@ -57,6 +59,9 @@ export default function VoiceTutorPage() {
   const [assistantSpeaking, setAssistantSpeaking] = useState(false);
   const [volume, setVolume] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [mode, setMode] = useState<TalkMode>("open");
+  const [holding, setHolding] = useState(false);
+  const modeRef = useRef<TalkMode>("open");
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
   // Mirrors of state for event handlers, which would otherwise see stale values.
@@ -64,6 +69,27 @@ export default function VoiceTutorPage() {
   const linesRef = useRef<Line[]>([]);
   const topicRef = useRef("");
   const secondsRef = useRef(0);
+
+  // Remember the chosen mode between visits (storage can be unavailable, so it is optional).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("voiceTutorMode");
+      // Reading storage must wait until after hydration, so this one-time set-state in an effect is intentional.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (saved === "push" || saved === "open") setMode(saved);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    modeRef.current = mode;
+    // In push-to-talk the mic stays closed until the key is held; switching modes applies straight away.
+    if (statusRef.current === "live") {
+      const closed = mode === "push";
+      vapi.current?.setMuted(closed);
+      setMuted(closed);
+      setHolding(false);
+    }
+  }, [mode]);
 
   useEffect(() => {
     statusRef.current = status;
@@ -100,12 +126,15 @@ export default function VoiceTutorPage() {
     if (m?.type !== "transcript" || !m.transcript) return;
     const role = m.role === "assistant" ? "assistant" : "user";
     const final = m.transcriptType === "final";
+    const text = m.transcript!.trim();
     setLines((prev) => {
       const last = prev[prev.length - 1];
-      if (last && last.role === role && !last.final) return [...prev.slice(0, -1), { role, text: m.transcript!, final }];
-      // A new speaker means the previous line is finished.
-      const closed = last && !last.final ? [...prev.slice(0, -1), { ...last, final: true }] : prev;
-      return [...closed, { role, text: m.transcript!, final }];
+      // Same speaker keeps talking: extend their block instead of starting a new one.
+      if (last && last.role === role) {
+        const next = final ? { ...last, done: `${last.done} ${text}`.trim(), partial: "" } : { ...last, partial: text };
+        return [...prev.slice(0, -1), next];
+      }
+      return [...prev, final ? { role, done: text, partial: "" } : { role, done: "", partial: text }];
     });
   }, []);
 
@@ -121,7 +150,13 @@ export default function VoiceTutorPage() {
       const client = new Vapi(PUBLIC_KEY) as unknown as VapiClient;
       vapi.current = client;
 
-      client.on("call-start", (() => setStatus("live")) as () => void);
+      client.on("call-start", (() => {
+        setStatus("live");
+        if (modeRef.current === "push") {
+          client.setMuted(true);
+          setMuted(true);
+        }
+      }) as () => void);
       client.on("call-end", (() => {
         setStatus("idle");
         setAssistantSpeaking(false);
@@ -176,6 +211,45 @@ export default function VoiceTutorPage() {
     await vapi.current?.stop().catch(() => {});
     setStatus("idle");
   };
+
+  const pickMode = (m: TalkMode) => {
+    setMode(m);
+    try {
+      localStorage.setItem("voiceTutorMode", m);
+    } catch {}
+  };
+
+  const talk = useCallback((on: boolean) => {
+    if (statusRef.current !== "live" || modeRef.current !== "push") return;
+    vapi.current?.setMuted(!on);
+    setMuted(!on);
+    setHolding(on);
+  }, []);
+
+  // Hold Space to talk (ignored while typing in a field).
+  useEffect(() => {
+    if (mode !== "push" || status !== "live") return;
+    const typing = (e: KeyboardEvent) => ["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement | null)?.tagName ?? "");
+    const down = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || typing(e)) return;
+      e.preventDefault();
+      if (!e.repeat) talk(true);
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || typing(e)) return;
+      e.preventDefault();
+      talk(false);
+    };
+    const release = () => talk(false);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", release); // never leave the mic open if the tab loses focus
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", release);
+    };
+  }, [mode, status, talk]);
 
   const toggleMute = () => {
     const next = !muted;
@@ -243,7 +317,33 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 </p>
                 <p className="mt-1 h-5 font-mono text-xs tabular-nums text-muted">{live ? fmt(seconds) : ""}</p>
 
-                {live ? (
+                <div role="group" aria-label="Microphone mode" className="mt-5 inline-flex rounded-full border border-line bg-paper p-1 text-sm">
+                  {([["open", "Open mic"], ["push", "Push to talk"]] as const).map(([m, label]) => (
+                    <button
+                      key={m}
+                      onClick={() => pickMode(m)}
+                      aria-pressed={mode === m}
+                      className={cn("rounded-full px-4 py-1.5 transition-colors", mode === m ? "bg-ink text-snow" : "text-muted hover:text-ink")}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {live && mode === "push" ? (
+                  <button
+                    onPointerDown={() => talk(true)}
+                    onPointerUp={() => talk(false)}
+                    onPointerLeave={() => talk(false)}
+                    onPointerCancel={() => talk(false)}
+                    className={cn(
+                      "mt-4 flex w-full max-w-xs select-none touch-none items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors",
+                      holding ? "border-pen bg-pen text-snow" : "border-line bg-sheet text-ink hover:border-pen/50"
+                    )}
+                  >
+                    <Mic className="h-4 w-4" /> {holding ? "Listening… release to send" : "Hold to talk, or hold Space"}
+                  </button>
+                ) : live ? (
                   <button onClick={toggleMute} className="mt-4 flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-ink hover:bg-ink/5">
                     {muted ? <MicOff className="h-4 w-4 text-margin" /> : <Mic className="h-4 w-4" />} {muted ? "Unmute" : "Mute"}
                   </button>
@@ -270,9 +370,12 @@ NEXT_PUBLIC_VAPI_ASSISTANT_ID=...`}
                 </p>
               ) : (
                 lines.map((l, i) => (
-                  <div key={i} className={cn(!l.final && "opacity-70")}>
+                  <div key={i}>
                     <p className={cn("hand text-xl leading-none", l.role === "user" ? "ink-blue" : "ink-red")}>{l.role === "user" ? "You" : "Sθlvε"}</p>
-                    <p className="serif text-[15px] leading-7 text-[#1b2440]">{l.text}</p>
+                    <p className="serif text-[15px] leading-7 text-[#1b2440]">
+                      {l.done}
+                      {l.partial && <span className="opacity-60">{l.done ? " " : ""}{l.partial}</span>}
+                    </p>
                   </div>
                 ))
               )}
