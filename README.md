@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Doubtless - AI-Native Education OS 🎓
 
-## Getting Started
+Doubtless is an intelligent education platform that analyzes a student's doubt and contextually routes them to the best help: an AI explanation, adaptive practice, or a live session with an expert human teacher.
 
-First, run the development server:
+Built for **The Industry Games 2026, District 03**.
 
+## Features
+- **Study Vault (RAG)**: Upload PDFs, chunked and embedded via Gemini for context-aware answers.
+- **Intelligent Doubt Router**: Gemini analyzes the doubt, past history, and learning profile to route the student.
+- **Step-by-Step Solver**: Evaluate math/logic step-by-step or via image upload (Gemini Vision).
+- **Voice Explain (Feynman Mode)**: Explain concepts aloud. AI analyzes speech metrics (filler words, pauses) and gives a Feynman score.
+- **AI Viva Mode**: Adaptive oral examination using Web Speech API and Gemini.
+- **Teacher Matching**: Algorithm connects students with the best teacher for their specific doubt.
+- **Live Sessions**: Real-time chat (Firestore) and Video (Jitsi) for human tutoring.
+
+## Setup Instructions
+
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Variables
+Copy the example env file:
+```bash
+cp .env.example .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You need to fill in:
+1. `GEMINI_API_KEY`: Get from Google AI Studio.
+2. Firebase Configuration variables (see below).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Firebase Setup (Manual Steps Required)
+Since this app uses Firebase Auth and Firestore, you must set up a Firebase project:
+1. Go to [Firebase Console](https://console.firebase.google.com/) and create a project.
+2. Enable **Authentication** (Google Sign-in provider).
+3. Enable **Firestore Database**.
+4. Register a Web App and copy the config keys to your `.env.local`.
 
-## Learn More
+#### Firestore Security Rules
+For a production deployment, apply these rules in the Firebase console:
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} { allow read, write: if request.auth.uid == userId; }
+    match /profiles/{userId} { allow read, write: if request.auth.uid == userId; }
+    match /vaults/{vaultId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /vaults/{vaultId}/chunks/{chunkId} { allow read, write: if request.auth.uid != null; } // simplified for demo
+    match /doubts/{doubtId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /evaluations/{evalId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /voiceSessions/{sessionId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /vivas/{vivaId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /practiceSets/{setId} { allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId; }
+    match /teachers/{teacherId} { allow read: if request.auth != null; allow write: if false; }
+    match /sessions/{sessionId} { allow read, write: if request.auth != null; }
+    match /sessions/{sessionId}/messages/{messageId} { allow read, write: if request.auth != null; }
+    match /knowledgeBase/{kbId} { allow read, write: if request.auth != null; }
+  }
+}
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Seed the Database
+Start the dev server:
+```bash
+npm run dev
+```
+Navigate to `http://localhost:3000/login` and click the **"🌱 Seed Database (Run Once)"** button to populate the dummy teachers.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Running the App
+- Sign in with Google.
+- Choose **Student** to explore the RAG vault, ask doubts, and take vivas.
+- Choose **Teacher** to accept session requests.
