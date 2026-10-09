@@ -28,21 +28,21 @@ export default function HeroPreview() {
       <div className="lp-glow absolute -inset-x-10 -top-10 bottom-0 -z-10 rounded-[3rem] bg-violet-600/[0.09] blur-[90px]" />
 
       {/* floating chips */}
-      <div className="lp-float absolute -left-4 -top-5 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#0e0e12]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex">
+      <div className="lp-float absolute -left-4 -top-5 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#fffdf8]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex">
         <TrendingUp className="h-4 w-4 text-violet-300" />
         <span className="text-zinc-200">Mastery trending up</span>
       </div>
-      <div className="lp-float absolute -bottom-5 -right-4 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#0e0e12]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex" style={{ animationDelay: "-3s" }}>
+      <div className="lp-float absolute -bottom-5 -right-4 z-20 hidden items-center gap-2 rounded-xl border border-white/10 bg-[#fffdf8]/90 px-3.5 py-2.5 text-sm shadow-xl backdrop-blur lg:flex" style={{ animationDelay: "-3s" }}>
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
           <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
         </span>
         <span className="text-zinc-200">Verified teacher online</span>
-        <BadgeCheck className="h-4 w-4 fill-violet-500 text-[#0e0e12]" />
+        <BadgeCheck className="h-4 w-4 fill-violet-500 text-[#fffdf8]" />
       </div>
 
       <div
-        className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f] shadow-[0_40px_120px_-30px_rgba(154, 95, 150,0.5)]"
+        className="overflow-hidden rounded-2xl border border-white/10 bg-[#fffdf8] shadow-[0_40px_120px_-30px_rgba(194, 65, 12,0.5)]"
         style={{ transform: `rotateX(${16 * (1 - p)}deg) scale(${0.92 + 0.08 * p})`, transformOrigin: "50% 0%", transition: "transform 120ms ease-out" }}
       >
         <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
@@ -58,12 +58,12 @@ export default function HeroPreview() {
               Why is acceleration still 9.8 m/s² at the top of a throw, if the ball has stopped?
             </div>
 
-            <div className="lp-rise rounded-2xl border border-white/10 bg-white/[0.03] p-4" style={{ animationDelay: "1.6s" }}>
+            <div className="lp-rise rounded-2xl border border-white/10 bg-[#fffdf8]/75 p-4" style={{ animationDelay: "1.6s" }}>
               <p className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-violet-300">
                 <Sparkles className="h-3.5 w-3.5" /> Doubt router
               </p>
               <div className="mb-3 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-zinc-200">Physics · Kinematics</span>
+                <span className="rounded-lg border border-white/10 bg-[#fffdf8]/75 px-2.5 py-1 text-zinc-200">Physics · Kinematics</span>
                 <span className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-amber-200">concept gap</span>
               </div>
               <div className="mb-1 flex justify-between font-mono text-[11px] text-zinc-500">
@@ -81,7 +81,7 @@ export default function HeroPreview() {
             </div>
           </div>
 
-          <div className="lp-rise rounded-2xl border border-white/10 bg-white/[0.02] p-5" style={{ animationDelay: "3.1s" }}>
+          <div className="lp-rise rounded-2xl border border-white/10 bg-[#fffdf8]/55 p-5" style={{ animationDelay: "3.1s" }}>
             <p className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
               <BookOpen className="h-3.5 w-3.5" /> Explanation
             </p>

@@ -243,7 +243,7 @@ export default function TeacherOnboarding() {
   if (existing?.status === "pending" && !editing) {
     return (
       <div className="min-h-screen bg-transparent text-white flex items-center justify-center px-4">
-        <div className="max-w-md rounded-3xl border border-white/[0.06] bg-[#0c0c10]/80 p-8 text-center slide-up">
+        <div className="max-w-md rounded-3xl border border-white/[0.06] bg-[#fbf8f0]/80 p-8 text-center slide-up">
           <ShieldCheck className="mx-auto mb-4 h-10 w-10 text-indigo-300" />
           <h1 className="text-xl font-semibold">Your application is under review</h1>
           <p className="mt-2 text-sm text-slate-400">
@@ -311,7 +311,7 @@ export default function TeacherOnboarding() {
                             ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
                             : done
                               ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
-                              : "border-white/10 bg-white/[0.02]"
+                              : "border-white/10 bg-[#fffdf8]/55"
                       )}
                     >
                       {skippedLive ? <X className="h-4 w-4" /> : done ? <Check className="h-4 w-4" /> : <s.icon className="h-4 w-4" />}
@@ -323,7 +323,7 @@ export default function TeacherOnboarding() {
             })}
           </ol>
 
-          <div className="mt-8 hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 text-xs leading-5 text-slate-400 lg:block">
+          <div className="mt-8 hidden rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4 text-xs leading-5 text-slate-400 lg:block">
             <p className="mb-2 flex items-center gap-2 font-medium text-slate-200">
               <Lock className="h-3.5 w-3.5 text-emerald-400" /> Why we verify
             </p>
@@ -358,7 +358,7 @@ export default function TeacherOnboarding() {
             </div>
           )}
 
-          <div key={step} className="rounded-3xl border border-white/[0.06] bg-[#0c0c10]/80 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 slide-up">
+          <div key={step} className="rounded-3xl border border-white/[0.06] bg-[#fbf8f0]/80 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 slide-up">
             <StepHeader idx={idx} />
 
             {step === "about" && (
@@ -527,7 +527,7 @@ export default function TeacherOnboarding() {
                   </Summary>
                 </div>
 
-                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 text-sm text-slate-300">
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4 text-sm text-slate-300">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-blue-500 p-0" />
                   I confirm these details and documents are genuine and belong to me, and I consent to Doubtless reviewing them to verify my identity.
                 </label>
@@ -631,7 +631,7 @@ function TagInput({ value, onChange, placeholder, suggestions = [] }: { value: s
   const remaining = useMemo(() => suggestions.filter((s) => !value.includes(s)), [suggestions, value]);
   return (
     <div>
-      <div className="flex min-h-[46px] flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2 py-1.5 focus-within:border-blue-500/50 focus-within:ring-[3px] focus-within:ring-blue-500/10">
+      <div className="flex min-h-[46px] flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-[#fffdf8]/75 px-2 py-1.5 focus-within:border-blue-500/50 focus-within:ring-[3px] focus-within:ring-blue-500/10">
         {value.map((t) => (
           <span key={t} className="flex items-center gap-1 rounded-lg bg-blue-500/15 py-1 pl-2.5 pr-1 text-sm text-blue-100">
             {t}
@@ -694,7 +694,7 @@ function PreviouslyUploaded() {
 
 function Summary({ title, onEdit, children }: { title: string; onEdit: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+    <div className="rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-2 text-sm font-medium text-slate-200">
           <BookOpen className="h-4 w-4 text-slate-500" /> {title}

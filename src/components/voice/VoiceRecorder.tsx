@@ -59,7 +59,7 @@ export default function VoiceRecorder({ onEvaluationRequest, loading }: VoiceRec
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+    <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
       
       {recordingState === "idle" && (
         <div className="text-center py-8">
@@ -89,7 +89,7 @@ export default function VoiceRecorder({ onEvaluationRequest, loading }: VoiceRec
             {formatTime(timer)}
           </div>
           
-          <div className="max-w-lg mx-auto bg-black/30 rounded-xl p-4 min-h-[100px] mb-8 border border-white/5 text-left">
+          <div className="max-w-lg mx-auto bg-white/[0.05] rounded-xl p-4 min-h-[100px] mb-8 border border-[#e2d9c6] text-left">
             <p className="text-sm text-gray-300 italic h-full overflow-y-auto">
               {transcript || "Listening..."}
             </p>
@@ -110,26 +110,26 @@ export default function VoiceRecorder({ onEvaluationRequest, loading }: VoiceRec
             </Button>
           </div>
           
-          <div className="bg-black/30 rounded-xl p-4 min-h-[120px] max-h-60 overflow-y-auto border border-white/5">
+          <div className="bg-white/[0.05] rounded-xl p-4 min-h-[120px] max-h-60 overflow-y-auto border border-[#e2d9c6]">
             <p className="text-sm text-gray-300 leading-relaxed">
               {transcript}
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/[0.03] p-3 rounded-lg text-center">
+            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
               <div className="text-xs text-gray-500 uppercase">Words/Min</div>
               <div className="text-xl font-medium text-white">{metrics.wordsPerMinute}</div>
             </div>
-            <div className="bg-white/[0.03] p-3 rounded-lg text-center">
+            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
               <div className="text-xs text-gray-500 uppercase">Filler Words</div>
               <div className="text-xl font-medium text-white">{metrics.fillerWordCount}</div>
             </div>
-            <div className="bg-white/[0.03] p-3 rounded-lg text-center">
+            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
               <div className="text-xs text-gray-500 uppercase">Long Pauses</div>
               <div className="text-xl font-medium text-white">{metrics.longPauseCount}</div>
             </div>
-            <div className="bg-white/[0.03] p-3 rounded-lg text-center">
+            <div className="bg-[#fffdf8]/75 p-3 rounded-lg text-center">
               <div className="text-xs text-gray-500 uppercase">Max Pause</div>
               <div className="text-xl font-medium text-white">{metrics.longestPause}s</div>
             </div>

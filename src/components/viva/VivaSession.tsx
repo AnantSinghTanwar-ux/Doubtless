@@ -115,7 +115,7 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
 
   if (!sessionActive && questionCount === 0) {
     return (
-      <div className="text-center py-12 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+      <div className="text-center py-12 bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
         <div className="text-5xl mb-4">🤖🗣️</div>
         <h3 className="text-xl font-medium text-white mb-2">Ready for your Viva on {topic}?</h3>
         <p className="text-sm text-gray-400 max-w-md mx-auto mb-8">
@@ -128,13 +128,13 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
   }
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+    <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
       <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/[0.06]">
         <h3 className="text-lg font-medium text-white flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           Live Examination
         </h3>
-        <span className="text-sm text-gray-500 font-medium bg-black/30 px-3 py-1 rounded-full">
+        <span className="text-sm text-gray-500 font-medium bg-white/10 px-3 py-1 rounded-full">
           Question {questionCount + 1} of 5
         </span>
       </div>
@@ -163,7 +163,7 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
               value={currentAnswer}
               onChange={(e) => setCurrentAnswer(e.target.value)}
               placeholder="Speak your answer, or type it here..."
-              className="w-full h-32 p-4 bg-black/30 border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500 transition-all"
+              className="w-full h-32 p-4 border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500 transition-all"
             />
             
             <div className="flex justify-between items-center">

@@ -20,7 +20,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 active:scale-[0.98] hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#08080b] disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 active:scale-[0.98] hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#f7f4ec] disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
     primary:
@@ -29,7 +29,7 @@ export default function Button({
       "bg-white/5 text-white border border-white/10 hover:bg-white/10 focus:ring-white/20",
     ghost: "text-gray-400 hover:text-white hover:bg-white/5 focus:ring-white/20",
     danger:
-      "bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus:ring-red-500",
+      "bg-gradient-to-r from-red-500 to-rose-600 text-snow hover:from-red-600 hover:to-rose-700 focus:ring-red-500",
   };
 
   const sizes = {

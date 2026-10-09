@@ -94,7 +94,7 @@ export default function CoWorkPage() {
             <p className="text-sm text-slate-500 mt-1">Upload a PDF in your Study Vault to start a CoWork session.</p>
             <button
               onClick={() => router.push("/vault")}
-              className="mt-6 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors"
+              className="mt-6 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium text-snow transition-colors"
             >
               Go to Study Vault
             </button>
@@ -111,7 +111,7 @@ export default function CoWorkPage() {
                     <button
                       key={vault.id}
                       onClick={() => setSelectedVault(vault)}
-                      className="group text-left rounded-xl border border-white/[0.07] bg-[#0e0e12] hover:border-blue-500/40 hover:bg-[#101014] p-4 transition-all"
+                      className="group text-left rounded-xl border border-white/[0.07] bg-[#fffdf8] hover:border-blue-500/40 hover:bg-[#f3eee2] p-4 transition-all"
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-12 shrink-0 rounded-md bg-gradient-to-br from-blue-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center">
@@ -485,7 +485,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
   return (
     <div className="h-[100dvh] flex flex-col bg-transparent text-slate-200">
       {/* Top bar */}
-      <header className="shrink-0 h-14 flex items-center gap-3 px-3 sm:px-4 border-b border-white/[0.06] bg-[#08080b]/90 backdrop-blur">
+      <header className="shrink-0 h-14 flex items-center gap-3 px-3 sm:px-4 border-b border-white/[0.06] bg-[#f7f4ec]/90 backdrop-blur">
         <button
           onClick={onExit}
           className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
@@ -502,7 +502,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
 
         {numPages > 0 && (
           <div className="flex items-center gap-1 sm:gap-2">
-            <div className="flex items-center rounded-lg border border-white/[0.08] bg-white/[0.02]">
+            <div className="flex items-center rounded-lg border border-white/[0.08] bg-[#fffdf8]/55">
               <button
                 onClick={() => goToPage(currentPage - 1, driver.current)}
                 disabled={currentPage <= 1}
@@ -524,7 +524,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
               </button>
             </div>
 
-            <div className="hidden md:flex items-center rounded-lg border border-white/[0.08] bg-white/[0.02]">
+            <div className="hidden md:flex items-center rounded-lg border border-white/[0.08] bg-[#fffdf8]/55">
               <button
                 onClick={() => setZoomIdx((z) => Math.max(0, z - 1))}
                 disabled={zoomIdx === 0}
@@ -549,7 +549,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
               className={`hidden lg:flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                 synced
                   ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
-                  : "border-white/[0.08] bg-white/[0.02] text-slate-400 hover:text-white"
+                  : "border-white/[0.08] bg-[#fffdf8]/55 text-slate-400 hover:text-white"
               }`}
               title={synced ? "Scrolling is linked — click to scroll panes independently" : "Link scrolling"}
             >
@@ -561,7 +561,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
       </header>
 
       {/* Reading progress */}
-      <div className="shrink-0 h-0.5 bg-white/[0.04]">
+      <div className="shrink-0 h-0.5 bg-[#fffdf8]/75">
         <div
           className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-[width] duration-300"
           style={{ width: numPages ? `${(currentPage / numPages) * 100}%` : 0 }}
@@ -570,7 +570,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
 
       {/* Mobile pane switcher */}
       <div className="lg:hidden shrink-0 p-2 border-b border-white/[0.06]">
-        <div className="grid grid-cols-2 rounded-lg bg-white/[0.04] p-1 text-sm">
+        <div className="grid grid-cols-2 rounded-lg bg-[#fffdf8]/75 p-1 text-sm">
           {(["pdf", "notes"] as const).map((v) => (
             <button
               key={v}
@@ -604,7 +604,7 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
             onPointerDown={takeControl("pdf")}
             onTouchStart={takeControl("pdf")}
             onWheel={takeControl("pdf")}
-            className={`min-h-0 overflow-auto bg-[#060608] lg:border-r border-white/[0.06] ${
+            className={`min-h-0 overflow-auto bg-[#f3eee2] lg:border-r border-white/[0.06] ${
               mobileView === "pdf" ? "block" : "hidden lg:block"
             }`}
           >
@@ -654,8 +654,8 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
             className={`min-h-0 overflow-y-auto ${mobileView === "notes" ? "block" : "hidden lg:block"}`}
           >
             <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-6">
-              <div className="sticky top-0 z-10 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-4 pb-3 bg-[#08080b]/90 backdrop-blur">
-                <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/[0.04] border border-white/[0.06] p-1">
+              <div className="sticky top-0 z-10 -mx-3 sm:-mx-6 px-3 sm:px-6 pt-4 pb-3 bg-[#f7f4ec]/90 backdrop-blur">
+                <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#fffdf8]/75 border border-white/[0.06] p-1">
                   {(
                     [
                       { id: "overview", label: "Study guide", icon: <Sparkles className="w-4 h-4" />, hint: overview.status === "done" ? null : overview.status === "error" ? "!" : "…" },

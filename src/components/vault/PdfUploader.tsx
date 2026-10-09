@@ -110,7 +110,7 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
         className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 ${
           dragOver
             ? "border-blue-500 bg-blue-500/10"
-            : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
+            : "border-white/10 hover:border-white/20 hover:bg-[#fffdf8]/55"
         }`}
       >
         <div className="text-4xl mb-3">📄</div>

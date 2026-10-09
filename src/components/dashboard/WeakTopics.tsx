@@ -41,7 +41,7 @@ export default function WeakTopics({ profile }: WeakTopicsProps) {
       ) : (
         <div className="space-y-3">
           {weakTopics.map(([topic, score]) => (
-            <div key={topic} className="flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/[0.03]">
+            <div key={topic} className="flex items-center justify-between bg-white/[0.05] p-3 rounded-xl border border-white/[0.03]">
               <div>
                 <p className="text-sm font-medium text-white">{topic}</p>
                 <p className="text-xs text-red-400">Mastery: {score}%</p>
@@ -56,7 +56,7 @@ export default function WeakTopics({ profile }: WeakTopicsProps) {
             <div className="pt-2">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Frequent Mistakes</p>
               {frequentMistakes.map(([mistake, count]) => (
-                <div key={mistake} className="flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/[0.03] mb-2">
+                <div key={mistake} className="flex items-center justify-between bg-white/[0.05] p-3 rounded-xl border border-white/[0.03] mb-2">
                   <div>
                     <p className="text-sm font-medium text-white capitalize">{mistake.replace(/_/g, " ")}</p>
                     <p className="text-xs text-amber-400">Occurred {count} times</p>

@@ -141,7 +141,7 @@ export default function VivaPage() {
                 Test your knowledge under pressure. The AI examiner will ask you 5 questions, adapting to your answers in real-time.
               </p>
               
-              <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+              <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
                 <label className="block text-sm font-medium text-gray-300 mb-2">What topic do you want to be examined on?</label>
                 <div className="flex gap-2">
                   <input
@@ -149,7 +149,7 @@ export default function VivaPage() {
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g., Photosynthesis"
-                    className="flex-1 bg-white/[0.03] border-white/[0.06]"
+                    className="flex-1 bg-[#fffdf8]/75 border-white/[0.06]"
                   />
                   <Button onClick={() => handleNextRequested([])} disabled={!topic.trim()}>
                     Start Viva

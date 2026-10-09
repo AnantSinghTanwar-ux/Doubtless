@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-[#0e0e12]/50 border-white/[0.04]">
+            <Card className="bg-[#fffdf8]/50 border-white/[0.04]">
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Doubts</div>
               <div className="text-3xl font-bold text-white">{learnerProfile.totalDoubtsResolved}</div>
             </Card>

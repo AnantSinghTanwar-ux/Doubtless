@@ -104,7 +104,7 @@ export default function PaperSolution() {
             ))}
           </ul>
           <Reveal delay={550}>
-            <Link href="/login" className="btn-sheen mt-9 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-3 font-medium text-white transition-all hover:border-violet-400/50 hover:bg-violet-500/10">
+            <Link href="/login" className="btn-sheen mt-9 inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#fffdf8]/75 px-6 py-3 font-medium text-white transition-all hover:border-violet-400/50 hover:bg-violet-500/10">
               Try the step solver <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>

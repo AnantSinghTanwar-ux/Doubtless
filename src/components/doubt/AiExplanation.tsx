@@ -53,7 +53,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
         )}
 
         {explanation.analogies && explanation.analogies.length > 0 && (
-          <Card className="bg-[#0e0e12]/50">
+          <Card className="bg-[#fffdf8]/50">
             <CardTitle className="text-sm mb-3 text-emerald-400 flex items-center gap-2">
               <span>🧠</span> Helpful Analogies
             </CardTitle>
@@ -73,7 +73,7 @@ export default function AiExplanation({ explanation }: AiExplanationProps) {
           <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Test your understanding</h4>
           <div className="grid gap-2">
             {explanation.follow_up_questions.map((q, i) => (
-              <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-sm text-gray-300 hover:bg-white/[0.04] transition-colors cursor-pointer">
+              <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-[#fffdf8]/55 text-sm text-gray-300 hover:bg-[#fffdf8]/75 transition-colors cursor-pointer">
                 {q}
               </div>
             ))}

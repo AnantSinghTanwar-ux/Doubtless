@@ -16,7 +16,7 @@ export default function Card({ children, className, hover = false, glow = false,
     <div
       onClick={onClick}
       className={cn(
-        "slide-up bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-6",
+        "slide-up bg-[#fffdf8]/75 backdrop-blur-sm border border-white/[0.06] rounded-2xl p-6",
         hover && "hover:bg-white/[0.06] hover:border-violet-400/30 hover:-translate-y-0.5 cursor-pointer transition-all duration-300",
         glow && "shadow-lg shadow-blue-500/5",
         onClick && "cursor-pointer",

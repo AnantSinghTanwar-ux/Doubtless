@@ -143,7 +143,7 @@ export default function VoicePage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g., How Newton's First Law works"
-                className="w-full bg-white/[0.03] border-white/[0.06]"
+                className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
                 disabled={loading}
               />
             </div>

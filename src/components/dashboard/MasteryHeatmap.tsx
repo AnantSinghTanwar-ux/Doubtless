@@ -19,7 +19,7 @@ export default function MasteryHeatmap({ profile }: MasteryHeatmapProps) {
   };
 
   return (
-    <Card className="bg-[#0e0e12]/80">
+    <Card className="bg-[#fffdf8]/80">
       <CardTitle className="text-sm mb-6 flex items-center gap-2">
         <span className="text-purple-400">🗺️</span> Topic Mastery
       </CardTitle>

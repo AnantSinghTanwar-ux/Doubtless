@@ -46,7 +46,7 @@ export default function SessionChat({ sessionId }: SessionChatProps) {
 
   return (
     <div className="flex flex-col h-full bg-transparent border border-white/[0.06] rounded-2xl overflow-hidden relative">
-      <div className="p-4 border-b border-white/[0.06] bg-white/[0.02]">
+      <div className="p-4 border-b border-white/[0.06] bg-[#fffdf8]/55">
         <h3 className="font-semibold text-white flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           Live Chat
@@ -66,7 +66,7 @@ export default function SessionChat({ sessionId }: SessionChatProps) {
                 </span>
                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
                   isMe 
-                    ? 'bg-blue-600 text-white rounded-tr-sm' 
+                    ? 'bg-blue-600 text-snow rounded-tr-sm' 
                     : 'bg-white/[0.05] text-gray-200 border border-white/[0.06] rounded-tl-sm'
                 }`}>
                   {msg.text}
@@ -78,18 +78,18 @@ export default function SessionChat({ sessionId }: SessionChatProps) {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSend} className="p-3 bg-white/[0.02] border-t border-white/[0.06] flex gap-2">
+      <form onSubmit={handleSend} className="p-3 bg-[#fffdf8]/55 border-t border-white/[0.06] flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-white/[0.03] border-white/[0.06] text-sm"
+          className="flex-1 bg-[#fffdf8]/75 border-white/[0.06] text-sm"
         />
         <button 
           type="submit"
           disabled={!input.trim()}
-          className="w-10 h-10 flex-none rounded-xl bg-blue-500 flex items-center justify-center text-white disabled:opacity-50 disabled:bg-white/10"
+          className="w-10 h-10 flex-none rounded-xl bg-blue-500 flex items-center justify-center text-snow disabled:opacity-50 disabled:bg-white/10"
         >
           <svg className="w-4 h-4 transform rotate-90" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />

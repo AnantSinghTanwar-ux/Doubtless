@@ -61,25 +61,25 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-[#0e0e12]/80 text-center p-4">
+        <Card className="bg-[#fffdf8]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Score</div>
           <div className={`text-3xl font-bold ${getScoreColor(evaluation.rubric.total)}`}>
             {evaluation.rubric.total}<span className="text-base font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0e0e12]/80 text-center p-4">
+        <Card className="bg-[#fffdf8]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Correctness</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.correctness)}`}>
             {evaluation.rubric.correctness}<span className="text-sm font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0e0e12]/80 text-center p-4">
+        <Card className="bg-[#fffdf8]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Method</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.method)}`}>
             {evaluation.rubric.method}<span className="text-sm font-normal text-gray-500">/10</span>
           </div>
         </Card>
-        <Card className="bg-[#0e0e12]/80 text-center p-4">
+        <Card className="bg-[#fffdf8]/80 text-center p-4">
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Clarity</div>
           <div className={`text-2xl font-bold ${getScoreColor(evaluation.rubric.clarity_notation)}`}>
             {evaluation.rubric.clarity_notation}<span className="text-sm font-normal text-gray-500">/10</span>
@@ -98,13 +98,13 @@ export default function EvaluationResult({ evaluation }: EvaluationResultProps) 
         </div>
 
         {evaluation.source_citations.length > 0 && (
-          <Card className="bg-[#0e0e12]/50 border-blue-500/20">
+          <Card className="bg-[#fffdf8]/50 border-blue-500/20">
             <CardTitle className="text-sm mb-3 text-blue-400 flex items-center gap-2">
               <span>📚</span> Sources Used
             </CardTitle>
             <ul className="space-y-2">
               {evaluation.source_citations.map((cite, i) => (
-                <li key={i} className="text-sm text-gray-300 flex items-center gap-2 p-2 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+                <li key={i} className="text-sm text-gray-300 flex items-center gap-2 p-2 rounded-lg bg-[#fffdf8]/55 border border-white/[0.06]">
                   <span className="text-blue-500 text-lg">📄</span> 
                   <span className="font-medium text-white">{cite.pdf_name}</span> 
                   <span className="text-gray-500">· Page {cite.page}</span>

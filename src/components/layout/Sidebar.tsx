@@ -48,10 +48,10 @@ export default function Sidebar() {
   const links = isAdmin && !profile ? [adminLink] : [...(profile?.role === "teacher" ? teacherLinks : studentLinks), ...(isAdmin ? [adminLink] : [])];
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#060608]/80 border-r border-white/[0.06] backdrop-blur-xl fixed left-0 top-0 z-40">
+    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#f3eee2]/80 border-r border-white/[0.06] backdrop-blur-xl fixed left-0 top-0 z-40">
       <div className="p-6 border-b border-white/[0.06]">
         <Link href={profile?.role === "teacher" ? "/teacher-dashboard" : "/dashboard"} className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/30">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow font-bold text-lg shadow-lg shadow-blue-500/30">
             D
           </div>
           <div>
@@ -85,7 +85,7 @@ export default function Sidebar() {
           {profile?.photoURL ? (
             <img src={profile.photoURL} alt="" className="w-8 h-8 rounded-full" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-snow text-sm font-bold">
               {profile?.displayName?.charAt(0) ?? user?.email?.charAt(0).toUpperCase() ?? "?"}
             </div>
           )}

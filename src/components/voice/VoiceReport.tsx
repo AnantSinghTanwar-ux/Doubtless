@@ -28,7 +28,7 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        <Card className="md:col-span-1 bg-[#0e0e12]/80 flex flex-col items-center justify-center min-h-[300px]">
+        <Card className="md:col-span-1 bg-[#fffdf8]/80 flex flex-col items-center justify-center min-h-[300px]">
           <h3 className="text-sm text-gray-400 uppercase tracking-wider mb-2">Feynman Score</h3>
           <div className="text-6xl font-bold text-white mb-6">
             {overallScore}<span className="text-2xl text-gray-500">/10</span>
@@ -39,24 +39,24 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
-                <Radar name="Score" dataKey="A" stroke="#9a5f96" fill="#9a5f96" fillOpacity={0.3} />
+                <Radar name="Score" dataKey="A" stroke="#c2410c" fill="#c2410c" fillOpacity={0.3} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="md:col-span-2 bg-[#0e0e12]/80 space-y-6">
+        <Card className="md:col-span-2 bg-[#fffdf8]/80 space-y-6">
           <div>
             <CardTitle className="text-sm mb-3 flex items-center gap-2">
               <span className="text-blue-400">🗣️</span> Delivery Analysis
             </CardTitle>
-            <p className="text-sm text-gray-300 leading-relaxed bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
+            <p className="text-sm text-gray-300 leading-relaxed bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
               {evaluation.filler_analysis}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
+            <div className="bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
               <h4 className="text-xs text-gray-500 uppercase mb-2">Hesitation Points</h4>
               {evaluation.where_they_hesitated.length > 0 ? (
                 <ul className="space-y-1">
@@ -73,7 +73,7 @@ export default function VoiceReport({ evaluation, metrics }: VoiceReportProps) {
               )}
             </div>
 
-            <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
+            <div className="bg-[#fffdf8]/55 p-4 rounded-xl border border-white/[0.06]">
               <h4 className="text-xs text-gray-500 uppercase mb-2">Missing Concepts</h4>
               {evaluation.missing_concepts.length > 0 ? (
                 <ul className="space-y-1">

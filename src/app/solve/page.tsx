@@ -134,7 +134,7 @@ export default function SolvePage() {
               Write your solution step-by-step or upload a photo of your notebook. Our AI will analyze your method and pinpoint exactly where you went wrong.
             </p>
             
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+            <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6">
               <StepEditor 
                 onSubmitSteps={handleSubmitSteps} 
                 onSubmitImage={handleSubmitImage}

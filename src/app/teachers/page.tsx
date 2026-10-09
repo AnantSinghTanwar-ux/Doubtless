@@ -130,7 +130,7 @@ function TeachersContent() {
                 <p className="mt-1 max-w-sm text-sm text-gray-500">
                   Verified teachers appear here the moment they go online. Meanwhile, the AI tutor can explain your doubt step by step.
                 </p>
-                <button onClick={() => router.push("/ask")} className="mt-5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white">
+                <button onClick={() => router.push("/ask")} className="mt-5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-snow">
                   Ask the AI tutor
                 </button>
               </div>

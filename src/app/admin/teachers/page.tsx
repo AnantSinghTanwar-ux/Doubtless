@@ -213,7 +213,7 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
 
   const s = app.screening;
   return (
-    <div className="space-y-5 rounded-3xl border border-white/[0.06] bg-[#0c0c10]/80 p-5 md:p-6 slide-up">
+    <div className="space-y-5 rounded-3xl border border-white/[0.06] bg-[#fbf8f0]/80 p-5 md:p-6 slide-up">
       <div>
         <h2 className="text-xl font-semibold text-white">{app.personal.fullName}</h2>
         <p className="text-sm text-slate-400">{app.personal.headline}</p>
@@ -308,7 +308,7 @@ function Detail({ app, onReviewed }: { app: TeacherApplication; onReviewed: () =
               onClick={() => review("approve")}
               disabled={!!busy || !app.files.selfie}
               title={!app.files.selfie ? "Needs a live selfie before approval" : undefined}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-snow hover:bg-emerald-500 disabled:opacity-50"
             >
               {busy === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Approve & verify
             </button>

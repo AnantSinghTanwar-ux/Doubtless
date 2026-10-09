@@ -51,7 +51,7 @@ function PracticeQuestion({ q, n }: { q: PageAnalysis["practice"][number]; n: nu
   const answered = picked !== null;
 
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+    <div className="rounded-xl border border-white/[0.07] bg-[#fffdf8]/55 p-4">
       <p className="text-[15px] leading-6 text-slate-100 font-medium">
         <span className="text-violet-300 mr-2">Q{n}.</span>
         {q.question}
@@ -63,7 +63,7 @@ function PracticeQuestion({ q, n }: { q: PageAnalysis["practice"][number]; n: nu
           let cls = "border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 text-slate-300";
           if (answered && isCorrect) cls = "border-emerald-500/60 bg-emerald-500/10 text-emerald-100";
           else if (answered && isPicked) cls = "border-rose-500/60 bg-rose-500/10 text-rose-100";
-          else if (answered) cls = "border-white/5 text-slate-500";
+          else if (answered) cls = "border-[#e2d9c6] text-slate-500";
           return (
             <button
               key={i}
@@ -97,7 +97,7 @@ function Skeleton() {
       </div>
       <div className="space-y-2.5">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-10 rounded-lg bg-white/[0.04]" />
+          <div key={i} className="h-10 rounded-lg bg-[#fffdf8]/75" />
         ))}
       </div>
       <p className="text-xs text-slate-500">Reading this page and building your notes…</p>
@@ -128,7 +128,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
 
   return (
     <article
-      className={`relative rounded-2xl border bg-[#0c0c10] transition-colors duration-300 ${
+      className={`relative rounded-2xl border bg-[#fbf8f0] transition-colors duration-300 ${
         isActive ? "border-blue-500/30" : "border-white/[0.06]"
       }`}
       style={{ minHeight: isBlank ? 200 : minHeight }}
@@ -153,7 +153,7 @@ export default function StudyPage({ pageNumber, totalPages, state, isActive, min
             className="flex items-center gap-1.5 rounded-full bg-rose-500/10 border border-rose-400/20 px-3 py-1 text-xs text-rose-200 hover:bg-rose-500/15 transition-colors"
             title="See the highlights on the PDF"
           >
-            <span className="w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[10px] font-black leading-[14px] text-center">!</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-rose-500 text-snow text-[10px] font-black leading-[14px] text-center">!</span>
             {data.highlights.length} marked on PDF
           </button>
         )}

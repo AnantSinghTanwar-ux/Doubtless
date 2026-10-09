@@ -113,12 +113,12 @@ export default function VideoIntro({
       <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-sm leading-6 text-amber-100">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-300 mb-1">What to say</p>
         Say your full name, then read this code aloud:{" "}
-        <span className="font-mono text-base font-bold text-white bg-black/30 rounded px-2 py-0.5 tracking-widest">{code}</span>
+        <span className="font-mono text-base font-bold text-white bg-white/10 rounded px-2 py-0.5 tracking-widest">{code}</span>
         <br />
         Then explain one concept from <span className="font-semibold text-white">{subject || "your subject"}</span> as you would to a student ({MIN_VIDEO_SEC}–{MAX_VIDEO_SEC} seconds).
       </div>
 
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
+      <div className="relative aspect-video w-full dark-surface overflow-hidden rounded-2xl border border-white/10 bg-black">
         {value ? (
           <video src={value.url} controls playsInline className="w-full h-full object-contain bg-black" />
         ) : (
@@ -126,7 +126,7 @@ export default function VideoIntro({
             <video ref={videoRef} playsInline muted className="w-full h-full object-cover -scale-x-100" />
             {status === "live" && (
               <>
-                <div className="absolute top-3 left-3 flex items-center gap-2 rounded-full bg-black/65 px-3 py-1.5 text-xs font-medium text-white tabular-nums">
+                <div className="absolute top-3 left-3 flex items-center gap-2 rounded-full bg-black/65 px-3 py-1.5 text-xs font-medium text-snow tabular-nums">
                   <span className={`w-2.5 h-2.5 rounded-full ${recording ? "bg-red-500 animate-pulse" : "bg-slate-400"}`} />
                   {recording ? `REC ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}` : "Ready"}
                 </div>
@@ -164,7 +164,7 @@ export default function VideoIntro({
             {canStop ? "Stop recording" : `Keep going… ${MIN_VIDEO_SEC - elapsed}s minimum`}
           </button>
         ) : (
-          <button onClick={begin} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/25">
+          <button onClick={begin} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-3 text-sm font-semibold text-snow shadow-lg shadow-red-600/25">
             <Circle className="w-4 h-4 fill-current" /> Start recording
           </button>
         ))

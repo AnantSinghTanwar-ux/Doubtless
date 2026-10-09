@@ -64,7 +64,7 @@ export default function LiveSelfie({
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-[4/3] sm:aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
+      <div className="relative aspect-[4/3] sm:aspect-video w-full dark-surface overflow-hidden rounded-2xl border border-white/10 bg-black">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value.dataUrl} alt="Your captured selfie" className="w-full h-full object-cover" />
@@ -77,7 +77,7 @@ export default function LiveSelfie({
                   <div className="w-[38%] aspect-[3/4] rounded-[50%] border-2 border-dashed border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
                 </div>
                 <div className="absolute top-3 left-3 right-3 flex justify-center">
-                  <div className="flex items-center gap-2 rounded-full bg-black/70 backdrop-blur px-4 py-2 text-sm text-white">
+                  <div className="flex items-center gap-2 rounded-full bg-black/70 backdrop-blur px-4 py-2 text-sm text-snow">
                     <ScanFace className="w-4 h-4 text-amber-300 shrink-0" />
                     <span>
                       <span className="text-amber-200 font-semibold">Challenge: </span>
@@ -92,7 +92,7 @@ export default function LiveSelfie({
                     </span>
                   </div>
                 )}
-                <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
+                <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-snow">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> LIVE
                 </span>
               </>
@@ -116,7 +116,7 @@ export default function LiveSelfie({
           <button
             onClick={capture}
             disabled={countdown !== null}
-            className="w-full rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25"
+            className="w-full rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 py-3 text-sm font-semibold text-snow shadow-lg shadow-blue-600/25"
           >
             {countdown !== null ? "Hold still…" : "Do the challenge & capture"}
           </button>

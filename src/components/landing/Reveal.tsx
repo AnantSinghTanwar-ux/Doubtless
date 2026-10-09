@@ -100,13 +100,13 @@ export function SpotlightCard({ children, className }: { children: ReactNode; cl
         ref.current!.style.setProperty("--my", `${e.clientY - r.top}px`);
       }}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e0e12]/80 transition-all duration-500 hover:-translate-y-1 hover:border-violet-400/30",
+        "group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#fffdf8]/80 transition-all duration-500 hover:-translate-y-1 hover:border-violet-400/30",
         className
       )}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{ background: "radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(154, 95, 150,0.16), transparent 65%)" }}
+        style={{ background: "radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(194, 65, 12,0.16), transparent 65%)" }}
       />
       <div className="relative">{children}</div>
     </div>

@@ -100,7 +100,7 @@ export default function LoginPage() {
       <div className="lp-glow pointer-events-none absolute -top-40 left-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/[0.09] blur-[130px]" />
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-70" />
 
-      <Link href="/" className="lp-drop absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-zinc-300 backdrop-blur transition-colors hover:text-white">
+      <Link href="/" className="lp-drop absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-[#fffdf8]/75 px-4 py-2 text-sm text-zinc-300 backdrop-blur transition-colors hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Back to home
       </Link>
 
@@ -135,7 +135,7 @@ export default function LoginPage() {
             <h1 className="mt-4 font-display text-3xl font-semibold text-white">Doubtless</h1>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#0e0e12]/85 p-8 shadow-[0_30px_100px_-40px_rgba(154, 95, 150,0.6)] backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/10 bg-[#fffdf8]/85 p-8 shadow-[0_30px_100px_-40px_rgba(194, 65, 12,0.6)] backdrop-blur-xl">
             {choosingRole ? (
               <div className="slide-up">
                 <h2 className="text-center font-display text-2xl font-semibold text-white">How will you use Doubtless?</h2>
@@ -149,9 +149,9 @@ export default function LoginPage() {
                       key={o.role}
                       onClick={() => handleRoleSelect(o.role)}
                       disabled={settingRole}
-                      className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/40 hover:bg-violet-500/10 disabled:opacity-50"
+                      className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-[#fffdf8]/55 p-5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/40 hover:bg-violet-500/10 disabled:opacity-50"
                     >
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 text-white shadow-lg shadow-violet-600/30 transition-transform group-hover:scale-110">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 text-snow shadow-lg shadow-violet-600/30 transition-transform group-hover:scale-110">
                         <o.icon className="h-5 w-5" />
                       </span>
                       <span>

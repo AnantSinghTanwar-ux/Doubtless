@@ -60,7 +60,7 @@ export default function DocumentDrop({ label, hint, value, onChange }: { label: 
             accept(e.dataTransfer.files[0]);
           }}
           className={`w-full rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
-            dragging ? "border-blue-400 bg-blue-500/10" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
+            dragging ? "border-blue-400 bg-blue-500/10" : "border-white/10 hover:border-white/20 hover:bg-[#fffdf8]/55"
           }`}
         >
           <UploadCloud className="w-7 h-7 mx-auto text-slate-500 mb-2" />

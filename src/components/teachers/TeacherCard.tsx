@@ -18,13 +18,13 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
   if (!teacher) return null;
 
   return (
-    <Card className="bg-[#0e0e12]/80 hover:bg-[#0e0e12] transition-colors border-white/[0.06]">
+    <Card className="bg-[#fffdf8]/80 hover:bg-[#fffdf8] transition-colors border-white/[0.06]">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-none flex flex-col items-center gap-3">
           {teacher.photoURL ? (
             <img src={teacher.photoURL} alt={teacher.name} className="w-20 h-20 rounded-2xl object-cover" />
           ) : (
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-amber-500/20">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-3xl font-bold text-snow shadow-lg shadow-amber-500/20">
               {teacher.name.charAt(0)}
             </div>
           )}
@@ -39,7 +39,7 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
               <h3 className="flex items-center gap-1.5 text-lg font-semibold text-white">
                 {teacher.name}
                 {teacher.verified ? (
-                  <BadgeCheck className="h-5 w-5 fill-blue-500 text-[#0e0e12]" aria-label="Verified teacher" />
+                  <BadgeCheck className="h-5 w-5 fill-blue-500 text-[#fffdf8]" aria-label="Verified teacher" />
                 ) : (
                   <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-200">Unverified</span>
                 )}
@@ -56,7 +56,7 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
 
           <div className="flex flex-wrap gap-2 mb-4">
             {teacher.specialties.map(spec => (
-              <Badge key={spec} variant="default" className="text-xs bg-white/[0.03]">
+              <Badge key={spec} variant="default" className="text-xs bg-[#fffdf8]/75">
                 {spec}
               </Badge>
             ))}

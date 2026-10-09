@@ -241,7 +241,7 @@ export default function VideoCall({ sessionId, uid }: { sessionId: string; uid: 
   const canShare = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia && hasCamera;
 
   return (
-    <div className="absolute inset-0 bg-[#060608]">
+    <div className="dark-surface absolute inset-0 bg-[#0b0b10]">
       <video ref={remoteVideo} autoPlay playsInline className={cn("h-full w-full bg-black object-contain", state !== "connected" && "invisible")} />
 
       {state === "connected" && !remoteHasVideo && (
@@ -262,7 +262,7 @@ export default function VideoCall({ sessionId, uid }: { sessionId: string; uid: 
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <VideoOff className="h-9 w-9 text-rose-400" />
           <p className="max-w-sm text-sm text-slate-300">{error}</p>
-          <button onClick={() => { setError(""); setState("starting"); setAttempt((a) => a + 1); }} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-500">
+          <button onClick={() => { setError(""); setState("starting"); setAttempt((a) => a + 1); }} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-snow hover:bg-blue-500">
             Try again
           </button>
         </div>
@@ -291,7 +291,7 @@ function Control({ on, accent, onClick, label, icon: Icon }: { on: boolean; acce
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={cn("flex h-10 w-10 items-center justify-center rounded-full transition-colors", accent ? "bg-blue-600 text-white" : on ? "bg-white/10 text-white hover:bg-white/20" : "bg-rose-600 text-white")}
+      className={cn("flex h-10 w-10 items-center justify-center rounded-full transition-colors", accent ? "bg-blue-600 text-snow" : on ? "bg-white/10 text-snow hover:bg-white/20" : "bg-rose-600 text-snow")}
     >
       <Icon className="h-4.5 w-4.5" />
     </button>

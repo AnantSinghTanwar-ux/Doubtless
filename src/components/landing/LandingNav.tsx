@@ -58,11 +58,11 @@ export default function LandingNav() {
           paddingInline: 24 - p * 6,
           paddingBlock: 18 - p * 8,
           borderRadius: p * 40,
-          background: `rgba(12, 12, 16, ${p * 0.72})`,
-          border: `1px solid rgba(255, 255, 255, ${p * 0.1})`,
+          background: `rgba(247, 244, 236, ${p * 0.72})`,
+          border: `1px solid rgba(20, 33, 61, ${p * 0.1})`,
           backdropFilter: `blur(${p * 18}px)`,
           WebkitBackdropFilter: `blur(${p * 18}px)`,
-          boxShadow: `0 12px 50px -14px rgba(154, 95, 150, ${p * 0.4})`,
+          boxShadow: `0 12px 50px -14px rgba(194, 65, 12, ${p * 0.4})`,
           transition: "all 160ms ease-out",
         }}
       >

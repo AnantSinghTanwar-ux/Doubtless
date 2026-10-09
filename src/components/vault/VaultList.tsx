@@ -45,7 +45,7 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
         className={`w-full p-4 rounded-xl border text-left transition-all duration-200 ${
           !selectedVault
             ? "border-blue-500/30 bg-blue-500/10 text-blue-400"
-            : "border-white/[0.06] bg-white/[0.02] text-gray-400 hover:bg-white/[0.04]"
+            : "border-white/[0.06] bg-[#fffdf8]/55 text-gray-400 hover:bg-[#fffdf8]/75"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -62,8 +62,8 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
         const isExpanded = expandedFolders[folder.id];
         
         return (
-          <div key={folder.id} className="border border-white/10 bg-white/[0.02] rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 bg-black/20">
+          <div key={folder.id} className="border border-white/10 bg-[#fffdf8]/55 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 bg-white/[0.05]">
               <button 
                 onClick={() => toggleFolder(folder.id)}
                 className="flex items-center gap-3 flex-1 text-left"
@@ -84,14 +84,14 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
             </div>
             
             {isExpanded && (
-              <div className="p-4 border-t border-white/5 space-y-4 bg-black/10">
+              <div className="p-4 border-t border-[#e2d9c6] space-y-4 bg-white/[0.05]">
                 {folderDocs.map(doc => (
                   <div
                     key={doc.id}
                     className={`p-3 rounded-xl border transition-all duration-200 flex justify-between items-center ${
                       selectedVault?.id === doc.id
                         ? "border-blue-500/30 bg-blue-500/10"
-                        : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
+                        : "border-white/[0.06] bg-[#fffdf8]/55 hover:bg-[#fffdf8]/75"
                     }`}
                   >
                     <button
@@ -112,7 +112,7 @@ export default function VaultList({ folders, documents, onRefresh }: VaultListPr
                   </div>
                 ))}
                 
-                <div className="pt-4 border-t border-white/5 mt-4">
+                <div className="pt-4 border-t border-[#e2d9c6] mt-4">
                   <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
                     <Upload className="w-4 h-4" /> Add File to Folder
                   </h4>

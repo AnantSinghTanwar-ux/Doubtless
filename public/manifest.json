@@ -4,6 +4,6 @@
   "description": "AI-Native Education OS",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#08080b",
-  "theme_color": "#08080b"
+  "background_color": "#f7f4ec",
+  "theme_color": "#f7f4ec"
 }

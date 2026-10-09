@@ -22,7 +22,7 @@ export default function RouteCard({ result }: RouteCardProps) {
   if (result.route === "teacher") routeName = "Live Teacher Session";
 
   return (
-    <Card glow className="border-blue-500/20 bg-gradient-to-br from-[#0e0e12] to-[#08080b]">
+    <Card glow className="border-blue-500/20 bg-gradient-to-br from-[#fffdf8] to-[#f7f4ec]">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -57,7 +57,7 @@ export default function RouteCard({ result }: RouteCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 p-4 bg-black/20 rounded-xl border border-white/[0.03]">
+      <div className="mt-4 p-4 bg-white/[0.05] rounded-xl border border-white/[0.03]">
         <h4 className="text-xs text-gray-500 uppercase tracking-wider mb-2">Why this route?</h4>
         <p className="text-sm text-gray-300 leading-relaxed">{result.reasoning}</p>
       </div>

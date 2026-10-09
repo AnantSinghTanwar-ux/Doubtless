@@ -83,7 +83,7 @@ export default function VaultPage() {
             </div>
             <button
               onClick={handleCreateFolder}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-snow px-4 py-2 rounded-xl text-sm font-medium transition-colors"
             >
               <FolderPlus className="w-4 h-4" />
               New Folder

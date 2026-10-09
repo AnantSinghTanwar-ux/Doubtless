@@ -40,17 +40,17 @@ export default function TopBar({ title }: { title: string }) {
           paddingInline: 24 - p * 6,
           paddingBlock: 16 - p * 6,
           borderRadius: p * 22,
-          background: `rgba(12, 12, 16, ${0.6 + p * 0.2})`,
+          background: `rgba(247, 244, 236, ${0.6 + p * 0.2})`,
           // Longhand properties only: mixing the `border` shorthand with borderTopColor warns on re-render.
           borderStyle: "solid",
           borderWidth: 1,
           borderTopColor: "transparent",
-          borderLeftColor: `rgba(255, 255, 255, ${0.06 + p * 0.06})`,
-          borderRightColor: `rgba(255, 255, 255, ${0.06 + p * 0.06})`,
-          borderBottomColor: `rgba(255, 255, 255, ${0.06 + p * 0.06})`,
+          borderLeftColor: `rgba(20, 33, 61, ${0.06 + p * 0.06})`,
+          borderRightColor: `rgba(20, 33, 61, ${0.06 + p * 0.06})`,
+          borderBottomColor: `rgba(20, 33, 61, ${0.06 + p * 0.06})`,
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
-          boxShadow: `0 14px 40px -16px rgba(154, 95, 150, ${p * 0.45})`,
+          boxShadow: `0 14px 40px -16px rgba(194, 65, 12, ${p * 0.45})`,
           transition: "all 160ms ease-out",
         }}
       >
@@ -77,7 +77,7 @@ export default function TopBar({ title }: { title: string }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.photoURL} alt="" className="h-9 w-9 rounded-full border-2 border-white/10 object-cover lg:hidden" />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-xs font-bold text-white lg:hidden">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-xs font-bold text-snow lg:hidden">
                 {profile?.displayName?.charAt(0) ?? "?"}
               </div>
             )}

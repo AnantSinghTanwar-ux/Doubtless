@@ -20,8 +20,7 @@ interface Streak {
 }
 
 /**
- * Fixed, non-interactive night-sky backdrop: faint twinkling stars, plus one very soft white streak of
- * starlight drifting down every ~10 seconds. Pauses when the tab is hidden and is static for reduced-motion users.
+ * Fixed, non-interactive backdrop: faint drifting ink specks, plus one very soft streak drifting down every ~10 seconds. Pauses when the tab is hidden and is static for reduced-motion users.
  */
 export default function StarField() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -62,7 +61,7 @@ export default function StarField() {
       ctx.clearRect(0, 0, w, h);
       for (const s of stars) {
         const a = s.base * (0.65 + 0.35 * Math.sin(t * s.speed + s.phase));
-        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fillStyle = `rgba(20,33,61,${a * 0.55})`;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
@@ -74,15 +73,15 @@ export default function StarField() {
         const ty = k.y - (k.vy / len) * tail;
         const alpha = 0.4 * Math.sin(Math.min(1, k.life) * Math.PI);
         const g = ctx.createLinearGradient(tx, ty, k.x, k.y);
-        g.addColorStop(0, "rgba(255,255,255,0)");
-        g.addColorStop(1, `rgba(255,255,255,${alpha})`);
+        g.addColorStop(0, "rgba(20,33,61,0)");
+        g.addColorStop(1, `rgba(20,33,61,${alpha * 0.6})`);
         ctx.strokeStyle = g;
         ctx.lineWidth = 1.2;
         ctx.beginPath();
         ctx.moveTo(tx, ty);
         ctx.lineTo(k.x, k.y);
         ctx.stroke();
-        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.fillStyle = `rgba(20,33,61,${alpha * 0.6})`;
         ctx.beginPath();
         ctx.arc(k.x, k.y, 1.4, 0, Math.PI * 2);
         ctx.fill();

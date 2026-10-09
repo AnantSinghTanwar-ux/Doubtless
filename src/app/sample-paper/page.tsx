@@ -69,7 +69,7 @@ export default function SamplePaperPage() {
       </header>
 
       {!paper ? (
-        <div className="bg-[#0e0e12] border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
+        <div className="bg-[#fffdf8] border border-[#e2d9c6] rounded-2xl p-6 space-y-6 shadow-xl">
           <h2 className="text-xl font-semibold text-white">Select Reference Material</h2>
           {loading ? (
             <div className="flex items-center justify-center p-12">
@@ -88,7 +88,7 @@ export default function SamplePaperPage() {
                   className={`p-4 rounded-xl cursor-pointer border transition-all duration-200 flex items-start gap-3 ${
                     selectedVaults.includes(vault.id!)
                       ? "bg-blue-500/10 border-blue-500/50"
-                      : "bg-white/[0.02] border-white/10 hover:border-white/20"
+                      : "bg-[#fffdf8]/55 border-white/10 hover:border-white/20"
                   }`}
                 >
                   <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center border mt-0.5 ${
@@ -109,7 +109,7 @@ export default function SamplePaperPage() {
             <button
               onClick={generatePaper}
               disabled={selectedVaults.length === 0 || generating}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-snow font-medium rounded-xl hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
             >
               {generating && <Loader2 className="w-4 h-4 animate-spin" />}
               {generating ? "Analyzing & Generating..." : "Generate Sample Paper"}
@@ -127,7 +127,7 @@ export default function SamplePaperPage() {
               Generate Another
             </button>
           </div>
-          <div className="bg-[#0e0e12] border border-white/5 rounded-2xl p-8 shadow-xl prose prose-invert max-w-none">
+          <div className="bg-[#fffdf8] border border-[#e2d9c6] rounded-2xl p-8 shadow-xl prose prose-invert max-w-none">
             <ReactMarkdown>{paper}</ReactMarkdown>
           </div>
         </div>

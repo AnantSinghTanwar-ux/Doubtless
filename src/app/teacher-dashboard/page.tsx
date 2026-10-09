@@ -134,7 +134,7 @@ export default function TeacherDashboard() {
         <TopBar title="Teacher Dashboard" />
         <main className="mx-auto max-w-6xl space-y-6 p-4 pb-16 md:p-6">
           {/* Hero */}
-          <section className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-[#101014] via-[#101014] to-[#08080b] p-6 md:p-8 slide-up">
+          <section className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-[#f3eee2] via-[#f3eee2] to-[#f7f4ec] p-6 md:p-8 slide-up">
             <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/15 blur-[90px]" />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
               <Avatar teacher={teacher} name={app.personal.fullName} verified={app.status === "approved"} />
@@ -146,7 +146,7 @@ export default function TeacherDashboard() {
                 <p className="mt-1 text-sm text-slate-400">{app.personal.headline}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {app.professional.subjects.map((s) => (
-                    <span key={s} className="rounded-lg border border-white/[0.06] bg-white/[0.04] px-2.5 py-1 text-xs text-slate-300">
+                    <span key={s} className="rounded-lg border border-white/[0.06] bg-[#fffdf8]/75 px-2.5 py-1 text-xs text-slate-300">
                       {s}
                     </span>
                   ))}
@@ -157,7 +157,7 @@ export default function TeacherDashboard() {
                 disabled={toggling || !teacher}
                 className={cn(
                   "group flex items-center gap-3 self-start rounded-2xl border px-4 py-3 text-left transition-all md:self-center",
-                  online ? "border-emerald-400/30 bg-emerald-400/10" : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                  online ? "border-emerald-400/30 bg-emerald-400/10" : "border-white/10 bg-[#fffdf8]/75 hover:border-white/20"
                 )}
               >
                 <span className={cn("relative h-6 w-11 rounded-full transition-colors", online ? "bg-emerald-500" : "bg-slate-600")}>
@@ -228,7 +228,7 @@ export default function TeacherDashboard() {
             {/* Profile / shortcuts */}
             <aside className="space-y-3 lg:col-span-2">
               <SectionTitle icon={Users} title="Your profile" />
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+              <div className="rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-5">
                 <p className="text-sm leading-6 text-slate-300 line-clamp-5">{app.personal.bio}</p>
                 <dl className="mt-4 space-y-2 border-t border-white/[0.06] pt-4 text-sm">
                   <Meta k="Qualification" v={`${app.professional.degree}, ${app.professional.institution}`} />
@@ -263,7 +263,7 @@ export default function TeacherDashboard() {
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {past.slice(0, 12).map((s) => (
-                  <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <div key={s.id} className="rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-medium text-white">{s.doubtContext.topic}</p>
                       <span className="shrink-0 text-xs text-slate-500">{ago(s.completedAt ?? s.createdAt)}</span>
@@ -300,13 +300,13 @@ function Avatar({ teacher, name, verified }: { teacher: TeacherProfile | null; n
         // eslint-disable-next-line @next/next/no-img-element
         <img src={teacher.photoURL} alt="" className="h-20 w-20 rounded-2xl object-cover ring-1 ring-white/10" />
       ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-bold text-white">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-bold text-snow">
           {name.charAt(0) || "?"}
         </div>
       )}
       {verified && (
         <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-transparent">
-          <BadgeCheck className="h-6 w-6 fill-blue-500 text-[#08080b]" />
+          <BadgeCheck className="h-6 w-6 fill-blue-500 text-[#f7f4ec]" />
         </span>
       )}
     </div>
@@ -397,7 +397,7 @@ const TONES = {
 
 function Stat({ icon: Icon, label, value, tone }: { icon: typeof Inbox; label: string; value: number | string; tone: keyof typeof TONES }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+    <div className="rounded-2xl border border-white/[0.06] bg-[#fffdf8]/55 p-4">
       <div className={cn("mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br to-transparent", TONES[tone])}>
         <Icon className="h-4 w-4" />
       </div>

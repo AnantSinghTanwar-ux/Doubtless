@@ -21,7 +21,7 @@ interface OverviewPanelProps {
 
 function Block({ id, icon, title, count, accent, children, action }: { id: string; icon: ReactNode; title: string; count?: number; accent: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section id={id} className="rounded-2xl border border-white/[0.06] bg-[#0c0c10] p-5 sm:p-6 scroll-mt-20">
+    <section id={id} className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] p-5 sm:p-6 scroll-mt-20">
       <header className="flex items-center justify-between gap-3 mb-4">
         <h3 className="flex items-center gap-2.5 text-base font-semibold text-white">
           <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}>{icon}</span>
@@ -59,10 +59,10 @@ function Question({ q, onGoToPage }: { q: DocumentOverview["importantQuestions"]
   const [open, setOpen] = useState(false);
   const high = q.priority === "high";
   return (
-    <div className={`rounded-xl border overflow-hidden ${high ? "border-rose-400/20 bg-rose-500/[0.04]" : "border-white/[0.07] bg-white/[0.02]"}`}>
+    <div className={`rounded-xl border overflow-hidden ${high ? "border-rose-400/20 bg-rose-500/[0.04]" : "border-white/[0.07] bg-[#fffdf8]/55"}`}>
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-start gap-3 p-4 text-left">
         {high ? (
-          <span className="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-rose-600 text-white text-xs font-black leading-5 text-center shadow-[0_0_12px_rgba(225,29,72,0.5)]">!</span>
+          <span className="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-rose-600 text-snow text-xs font-black leading-5 text-center shadow-[0_0_12px_rgba(225,29,72,0.5)]">!</span>
         ) : (
           <span className="mt-2 w-1.5 h-1.5 mx-[7px] shrink-0 rounded-full bg-slate-500" />
         )}
@@ -90,7 +90,7 @@ function PyqGroup({ group, defaultOpen }: { group: DocumentOverview["pyqs"][numb
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-xl border border-white/[0.07] overflow-hidden">
-      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/[0.02] hover:bg-white/[0.04] text-left">
+      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#fffdf8]/55 hover:bg-[#fffdf8]/75 text-left">
         <span className="text-sm font-medium text-slate-100">{group.topic}</span>
         <span className="flex items-center gap-2 text-xs text-slate-500">
           {group.questions.length}
@@ -121,7 +121,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
   if (state.status === "idle" || state.status === "preparing" || state.status === "generating") {
     const pct = state.status === "preparing" ? Math.round((state.done / Math.max(1, state.total)) * 60) : state.status === "generating" ? 75 : 0;
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0c0c10] px-6 py-16 text-center">
+      <div className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] px-6 py-16 text-center">
         <div className="relative w-14 h-14 mx-auto mb-5">
           <div className="absolute inset-0 rounded-2xl bg-blue-500/20 animate-ping" />
           <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
 
   if (state.status === "error") {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0c0c10] px-6 py-16 text-center">
+      <div className="rounded-2xl border border-white/[0.06] bg-[#fbf8f0] px-6 py-16 text-center">
         <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-3" />
         <p className="text-slate-200 font-medium">Couldn&apos;t build the study guide</p>
         <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">{state.error}</p>
@@ -177,7 +177,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
   return (
     <div className="space-y-5">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border border-blue-400/15 bg-gradient-to-br from-[#101014] via-[#101014] to-[#101014] p-6 sm:p-7">
+      <section className="relative overflow-hidden rounded-2xl border border-blue-400/15 bg-gradient-to-br from-[#f3eee2] via-[#f3eee2] to-[#f3eee2] p-6 sm:p-7">
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-violet-600/20 blur-3xl pointer-events-none" />
         <div className="relative">
           <div className="flex items-center justify-between gap-3">
@@ -217,7 +217,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
               <li key={i}>
                 <button
                   onClick={() => t.pages[0] && onGoToPage(t.pages[0])}
-                  className="group w-full flex items-start gap-3 rounded-lg px-2 py-2.5 -mx-2 text-left hover:bg-white/[0.03] transition-colors"
+                  className="group w-full flex items-start gap-3 rounded-lg px-2 py-2.5 -mx-2 text-left hover:bg-[#fffdf8]/75 transition-colors"
                 >
                   <span
                     className={`mt-1.5 w-2 h-2 shrink-0 rounded-full ${
@@ -273,7 +273,7 @@ export default function OverviewPanel({ state, numPages, onGoToPage, onRegenerat
       {d.pyqs.length > 0 && (
         <Block id="ov-pyqs" icon={<GraduationCap className="w-4 h-4 text-emerald-300" />} accent="bg-emerald-500/15" title="Previous year questions by topic" count={pyqCount}>
           {!d.hasPastPapers && (
-            <p className="mb-4 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2 text-xs leading-5 text-slate-400">
+            <p className="mb-4 rounded-lg bg-[#fffdf8]/75 border border-white/[0.06] px-3 py-2 text-xs leading-5 text-slate-400">
               These are frequently asked university questions on this unit&apos;s topics. Upload past papers to this folder in your Study Vault to get questions taken from your own papers.
             </p>
           )}

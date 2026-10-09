@@ -5,7 +5,7 @@ import type { CameraStatus } from "@/hooks/useCamera";
 
 export default function CameraPermission({ status, error, onStart, label }: { status: CameraStatus; error: string; onStart: () => void; label: string }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#060608] px-6 text-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 dark-surface bg-[#0b0b10] px-6 text-center">
       {status === "starting" ? (
         <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
       ) : status === "denied" || status === "unavailable" ? (
@@ -22,7 +22,7 @@ export default function CameraPermission({ status, error, onStart, label }: { st
             <Camera className="w-6 h-6 text-blue-300" />
           </div>
           <p className="text-sm text-slate-400 max-w-xs">Your camera is used only for this verification. Nothing is recorded until you press the button.</p>
-          <button onClick={onStart} className="rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-blue-600/25">
+          <button onClick={onStart} className="rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-2.5 text-sm font-medium text-snow shadow-lg shadow-blue-600/25">
             {label}
           </button>
         </>

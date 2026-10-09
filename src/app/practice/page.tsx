@@ -193,7 +193,7 @@ function PracticeContent() {
                 Generate a personalized practice set targeted at your weak spots. The AI adjusts the difficulty based on your past performance.
               </p>
               
-              <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 space-y-4">
+              <div className="bg-[#fffdf8]/55 border border-white/[0.06] rounded-2xl p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Topic</label>
                   <input
@@ -201,7 +201,7 @@ function PracticeContent() {
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="e.g., Algebra"
-                    className="w-full bg-white/[0.03] border-white/[0.06]"
+                    className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
                   />
                 </div>
                 <div>
@@ -211,7 +211,7 @@ function PracticeContent() {
                     value={subtopic}
                     onChange={(e) => setSubtopic(e.target.value)}
                     placeholder="e.g., Quadratic Equations"
-                    className="w-full bg-white/[0.03] border-white/[0.06]"
+                    className="w-full bg-[#fffdf8]/75 border-white/[0.06]"
                   />
                 </div>
                 <div className="pt-2">
@@ -232,7 +232,7 @@ function PracticeContent() {
                   <Badge variant="info">Difficulty: {questions[currentIndex].difficulty}/5</Badge>
                 </div>
 
-                <Card className="bg-[#0e0e12]/80 mb-6">
+                <Card className="bg-[#fffdf8]/80 mb-6">
                   <p className="text-lg text-white font-medium mb-4">{questions[currentIndex].question}</p>
                   
                   <div className="space-y-2 mt-6">
@@ -253,7 +253,7 @@ function PracticeContent() {
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
                       placeholder="Type your answer here..."
-                      className="w-full h-32 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500"
+                      className="w-full h-32 p-4 bg-[#fffdf8]/75 border border-white/[0.06] rounded-xl text-white placeholder-gray-600 focus:ring-1 focus:ring-blue-500"
                       disabled={evaluating}
                     />
                     <div className="flex justify-end">
