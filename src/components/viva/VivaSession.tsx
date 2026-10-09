@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { GraduationCap, Volume2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { GraduationCap } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import type { VivaAnswer } from "@/types";
@@ -22,22 +22,10 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
   
   const { transcript, isListening, startListening, stopListening, metrics } = useSpeechRecognition();
   
-  // Use a synth ref to stop speech if component unmounts or skips
-  const synthRef = useRef<SpeechSynthesis | null>(null);
-
+  // The question is shown as text only (no robotic read-aloud); the mic opens as soon as a new question appears.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      synthRef.current = window.speechSynthesis;
-    }
-    return () => {
-      if (synthRef.current) synthRef.current.cancel();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (nextQuestion && sessionActive) {
-      speakText(nextQuestion.question);
-    }
+    if (nextQuestion && sessionActive) startListening();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per question, not whenever the hook re-renders
   }, [nextQuestion, sessionActive]);
 
   useEffect(() => {
@@ -45,25 +33,6 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
       setCurrentAnswer(transcript);
     }
   }, [transcript, isListening]);
-
-  const speakText = (text: string) => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    // Find a good English voice
-    const voices = synthRef.current.getVoices();
-    const preferredVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en-US'));
-    if (preferredVoice) utterance.voice = preferredVoice;
-    
-    utterance.rate = 0.95; // Slightly slower for clarity
-    
-    utterance.onend = () => {
-      // Auto-start listening after asking the question
-      startListening();
-    };
-    
-    synthRef.current.speak(utterance);
-  };
 
   const handleStart = () => {
     setSessionActive(true);
@@ -74,7 +43,6 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
     if (!currentAnswer.trim() || !nextQuestion) return;
     
     stopListening();
-    if (synthRef.current) synthRef.current.cancel();
 
     try {
       const res = await fetch("/api/voice/evaluate", {
@@ -150,9 +118,6 @@ export default function VivaSession({ topic, onComplete, loadingNext, nextQuesti
           <div className="rounded-card border border-pen/25 bg-pen-wash p-6">
              <p className="mb-2 text-sm font-medium text-pen-deep">Examiner</p>
              <p className="font-display text-xl font-medium leading-relaxed text-ink">{nextQuestion.question}</p>
-             <button onClick={() => speakText(nextQuestion.question)} className="mt-3 flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-               <Volume2 className="h-4 w-4" aria-hidden /> Hear it again
-             </button>
           </div>
 
           <div className="space-y-4">
