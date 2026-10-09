@@ -40,16 +40,26 @@ function PageLinks({ pages, onGoToPage }: { pages: number[]; onGoToPage: (p: num
   return (
     <span className="inline-flex flex-wrap gap-1">
       {pages.slice(0, 4).map((p) => (
-        <button
+        // A span, not a <button>: these chips sit inside clickable rows, and nested buttons are invalid HTML.
+        <span
           key={p}
+          role="button"
+          tabIndex={0}
           onClick={(e) => {
             e.stopPropagation();
             onGoToPage(p);
           }}
-          className="rounded-md bg-white/[0.05] hover:bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-slate-400 hover:text-blue-200 transition-colors"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              onGoToPage(p);
+            }
+          }}
+          className="cursor-pointer rounded-md bg-white/[0.05] hover:bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-slate-400 hover:text-blue-200 transition-colors"
         >
           p.{p}
-        </button>
+        </span>
       ))}
     </span>
   );
