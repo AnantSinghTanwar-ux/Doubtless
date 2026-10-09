@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { nvidiaChat, nvidiaConfigured, nvidiaDescribePage, withJsonInstruction, type NvidiaContent } from "./nvidia";
+import { NVIDIA_EMBED_DIM, nvidiaChat, nvidiaConfigured, nvidiaDescribePage, nvidiaEmbed, withJsonInstruction, type NvidiaContent } from "./nvidia";
 
 const apiKey = process.env.GEMINI_API_KEY || "placeholder_for_build";
 const genai = new GoogleGenAI({ apiKey });
@@ -286,15 +286,12 @@ async function generateWithImagePrimary(
   return response.text ?? "";
 }
 
-export async function embedText(text: string): Promise<number[]> {
+async function embedTextPrimary(text: string): Promise<number[]> {
   if (useLocalProvider) {
     const res = await fetch(`${localProviderUrl}/api/embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: ollamaEmbedModel,
-        prompt: text,
-      }),
+      body: JSON.stringify({ model: ollamaEmbedModel, prompt: text }),
     });
     if (!res.ok) throw new Error(`Ollama embedding error: ${res.statusText}`);
     const data = await res.json();
@@ -302,23 +299,60 @@ export async function embedText(text: string): Promise<number[]> {
   }
 
   const model = getEmbedModel();
-  const response = await genai.models.embedContent({
-    model,
-    contents: text,
-  });
-  return response.embeddings?.[0]?.values ?? [];
+  const response = await genai.models.embedContent({ model, contents: text });
+  const values = response.embeddings?.[0]?.values ?? [];
+  if (values.length === 0) throw new Error("Gemini returned an empty embedding");
+  return values;
 }
 
+/**
+ * Embeds a search question. A document must be searched with the model that indexed it, and models produce vectors of
+ * different lengths, so the stored vector length (`dim`) picks the model. Without it, the normal provider chain is used.
+ */
+export async function embedText(text: string, dim?: number): Promise<number[]> {
+  if (dim === NVIDIA_EMBED_DIM && nvidiaConfigured()) return (await nvidiaEmbed([text], "query"))[0];
+  if (preferNvidia && nvidiaConfigured() && !dim) {
+    try {
+      return (await nvidiaEmbed([text], "query"))[0];
+    } catch (err) {
+      console.warn("[aiProvider] NVIDIA embedding failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
+  try {
+    return await embedTextPrimary(text);
+  } catch (err) {
+    if (!dim && nvidiaConfigured()) return (await nvidiaEmbed([text], "query"))[0];
+    throw err;
+  }
+}
+
+/** Embeds document chunks. The whole batch uses ONE model, so a document's vectors are always comparable. */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  // A handful in flight at once: sequential calls make a 100-chunk document exceed serverless time limits.
-  const results: number[][] = new Array(texts.length);
-  let next = 0;
-  const worker = async () => {
-    for (let i = next++; i < texts.length; i = next++) results[i] = await embedText(texts[i]);
+  const viaPrimary = async () => {
+    // A handful in flight at once: sequential calls make a 100-chunk document exceed serverless time limits.
+    const results: number[][] = new Array(texts.length);
+    let next = 0;
+    const worker = async () => {
+      for (let i = next++; i < texts.length; i = next++) results[i] = await embedTextPrimary(texts[i]);
+    };
+    await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
+    return results;
   };
-  await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
-  return results;
+  if (preferNvidia && nvidiaConfigured()) {
+    try {
+      return await nvidiaEmbed(texts, "passage");
+    } catch (err) {
+      console.warn("[aiProvider] NVIDIA embeddings failed, falling back:", err instanceof Error ? err.message : err);
+    }
+  }
+  try {
+    return await viaPrimary();
+  } catch (err) {
+    if (!nvidiaConfigured()) throw err;
+    console.warn("[aiProvider] primary embeddings failed, using NVIDIA:", err instanceof Error ? err.message : err);
+    return nvidiaEmbed(texts, "passage");
+  }
 }
 
 export type OpenRouterContent =

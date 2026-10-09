@@ -119,3 +119,26 @@ export async function nvidiaDescribePage(imageDataUrl: string): Promise<string> 
     temperature: 0,
   });
 }
+
+/** Embedding dimension of the default NVIDIA model; search uses it to tell which model indexed a document. */
+export const NVIDIA_EMBED_DIM = 2048;
+
+/** Text embeddings via NVIDIA (batched). `kind` matters for retrieval models: documents are "passage", questions are "query". */
+export async function nvidiaEmbed(texts: string[], kind: "passage" | "query" = "passage"): Promise<number[][]> {
+  if (!nvidiaConfigured()) throw new Error("NVIDIA_API_KEY is not set");
+  const model = process.env.NVIDIA_EMBED_MODEL || "nvidia/nemotron-3-embed-1b";
+  const out: number[][] = [];
+  for (let i = 0; i < texts.length; i += 32) {
+    const res = await fetch(`${BASE_URL}/embeddings`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, input: texts.slice(i, i + 32).map((t) => t.slice(0, 6000)), input_type: kind, truncate: "END", encoding_format: "float" }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`NVIDIA embeddings ${res.status}: ${(await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 140)}`);
+    const data = await res.json();
+    for (const d of data.data as { embedding: number[] }[]) out.push(d.embedding);
+  }
+  if (out.length !== texts.length) throw new Error("NVIDIA embeddings returned an unexpected number of vectors");
+  return out;
+}

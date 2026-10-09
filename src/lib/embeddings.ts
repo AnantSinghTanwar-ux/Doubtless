@@ -6,15 +6,24 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import type { VaultDocument, VaultChunk } from "@/types";
 
+/** Chunks indexed by different models have different vector lengths; embed the question once per length and merge the results. */
+async function retrieveByModel(question: string, chunks: VaultChunk[], fileName: string, topK: number): Promise<RetrievedChunk[]> {
+  const dims = [...new Set(chunks.map((c) => c.embedding?.length ?? 0).filter(Boolean))];
+  if (dims.length === 0) return [];
+  const groups = await Promise.all(
+    dims.map(async (dim) => retrieveTopChunks(await embedText(question, dim), chunks.filter((c) => c.embedding?.length === dim), fileName, topK))
+  );
+  return groups.flat().sort((a, b) => b.score - a.score).slice(0, topK);
+}
+
 export async function searchVault(
   query: string,
   vaultId: string,
   fileName: string,
   topK: number = 5
 ): Promise<RetrievedChunk[]> {
-  const queryEmbedding = await embedText(query);
   const chunks = await getVaultChunks(vaultId);
-  return retrieveTopChunks(queryEmbedding, chunks, fileName, topK);
+  return retrieveByModel(query, chunks, fileName, topK);
 }
 
 export async function searchFolderPastPapers(
@@ -45,8 +54,7 @@ export async function searchFolderPastPapers(
   }
   
   // 3. Retrieve top chunks based on the query text
-  const queryEmbedding = await embedText(textQuery);
-  const topChunks = retrieveTopChunks(queryEmbedding, allChunks, "Past Papers", topK);
+  const topChunks = await retrieveByModel(textQuery, allChunks, "Past Papers", topK);
   
   // Correct the filenames
   return topChunks.map(c => {
