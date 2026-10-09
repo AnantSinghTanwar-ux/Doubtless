@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { gatewayChat, gatewayEnabled, type GatewayContent } from "./gateway";
 import { NVIDIA_EMBED_DIM, nvidiaChat, nvidiaConfigured, nvidiaDescribePage, nvidiaEmbed, withJsonInstruction, type NvidiaContent } from "./nvidia";
@@ -26,7 +27,8 @@ const ollamaUrls = process.env.VERCEL ? configuredOllama : configuredOllama.filt
 const cleanModel = (value: string | undefined, fallback: string) => (value || fallback).replace(/\s+/g, "");
 const ollamaModel = cleanModel(process.env.OLLAMA_MODEL, "llama3.2");
 const ollamaEmbedModel = cleanModel(process.env.OLLAMA_EMBED_MODEL, "nomic-embed-text");
-const ollamaVisionModel = cleanModel(process.env.OLLAMA_VISION_MODEL, "llava");
+// qwen2.5-vl reads slides and formulas faithfully (llava invents text) and is faster; llava stays as the fallback if it is not installed.
+const ollamaVisionModel = cleanModel(process.env.OLLAMA_VISION_MODEL, "qwen2.5vl:3b");
 
 /** POST to Ollama, trying each configured host in turn. OLLAMA_API_KEY is sent as a bearer token for hosts behind an auth proxy. */
 async function ollamaPost(path: string, body: unknown, timeoutMs?: number): Promise<Response> {
@@ -36,7 +38,7 @@ async function ollamaPost(path: string, body: unknown, timeoutMs?: number): Prom
   const failures: string[] = [];
   for (const base of ollamaUrls) {
     try {
-      const res = await fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(timeout) });
+      const res = await fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify({ keep_alive: process.env.OLLAMA_KEEP_ALIVE || "30m", ...(body as object) }), signal: AbortSignal.timeout(timeout) });
       if (res.ok) return res;
       failures.push(`${base} -> ${res.status} ${(await res.text()).replace(/\s+/g, " ").slice(0, 200)}`);
     } catch (err) {
@@ -75,9 +77,46 @@ async function ollamaText(prompt: string, systemPrompt?: string): Promise<string
   return (await res.json()).response ?? "";
 }
 
+let visionModelInUse = ollamaVisionModel;
+
+/** Vision request that falls back to llava once if the preferred model is not installed. */
+async function visionPost(body: Record<string, unknown>, timeoutMs?: number): Promise<Response> {
+  try {
+    return await ollamaPost("/api/generate", { ...body, model: visionModelInUse }, timeoutMs);
+  } catch (err) {
+    if (visionModelInUse === "llava" || !/not found|404/i.test(String(err))) throw err;
+    console.warn(`[aiProvider] vision model ${visionModelInUse} is not installed; using llava. Install it with: ollama pull ${visionModelInUse}`);
+    visionModelInUse = "llava";
+    ollamaPausedUntil = 0; // the failed attempt above was about a missing model, not an unreachable Ollama
+    return ollamaPost("/api/generate", { ...body, model: visionModelInUse }, timeoutMs);
+  }
+}
+
+/** The same page is read for the study guide and again for its page notes; remember what each picture said. */
+const readCache = new Map<string, string>();
+
+async function ollamaReadImage(dataUrl: string): Promise<string> {
+  const key = `${visionModelInUse}:${createHash("sha1").update(dataUrl).digest("hex")}`;
+  const hit = readCache.get(key);
+  if (hit !== undefined) return hit;
+  const res = await visionPost({
+    prompt:
+      "Transcribe this slide or page faithfully: every heading, sentence and formula exactly as written (use plain text or simple LaTeX for formulas). Do not add, guess or summarise anything that is not on the page. If there is a figure, finish with one short line saying what it shows.",
+    images: [dataUrl.replace(/^data:image\/\w+;base64,/, "")],
+    stream: false,
+    options: { num_predict: 700, temperature: 0 },
+  });
+  const text = ((await res.json()).response ?? "").trim();
+  if (text) {
+    if (readCache.size >= 200) readCache.delete(readCache.keys().next().value as string);
+    readCache.set(key, text);
+  }
+  return text;
+}
+
 async function ollamaVision(prompt: string, imageBase64: string, systemPrompt?: string): Promise<string> {
   const images = [imageBase64.replace(/^data:image\/\w+;base64,/, "")];
-  const res = await ollamaPost("/api/generate", { model: ollamaVisionModel, prompt, system: systemPrompt, images, stream: false, format: "json" });
+  const res = await visionPost({ prompt, system: systemPrompt, images, stream: false, format: "json" });
   return (await res.json()).response ?? "";
 }
 
@@ -518,15 +557,7 @@ function ollamaRead<T>(opts: { system: string; content: OpenRouterContent[]; max
 async function ollamaVisionJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
   const urls = [...new Set(opts.content.flatMap((c) => (c.type === "image_url" ? [c.image_url.url] : [])))].slice(0, MAX_OLLAMA_IMAGES);
   const read = new Map<string, string>();
-  for (const url of urls) {
-    const res = await ollamaPost("/api/generate", {
-      model: ollamaVisionModel,
-      prompt: "Write out all the text on this slide or page exactly as written, including formulas. Then add one short line describing any diagram. Output only that.",
-      images: [url.replace(/^data:image\/\w+;base64,/, "")],
-      stream: false,
-    });
-    read.set(url, ((await res.json()).response ?? "").trim());
-  }
+  for (const url of urls) read.set(url, await ollamaReadImage(url));
   const content = opts.content.flatMap((c): OpenRouterContent[] =>
     c.type === "image_url" ? (read.get(c.image_url.url) ? [{ type: "text", text: `(text read from the page image)\n${read.get(c.image_url.url)}` }] : []) : [c]
   );
@@ -534,13 +565,19 @@ async function ollamaVisionJSON<T>(opts: { system: string; content: OpenRouterCo
 }
 
 /** Last resort on a machine with a local model: text parts only, since the default model can't see images. */
+/** A page analysis needs a few thousand tokens of context, not 16k; a smaller window means less memory and a faster start. */
+function contextFor(promptChars: number, maxTokens = 1500): number {
+  const need = Math.ceil(promptChars / 3) + maxTokens + 300;
+  return Math.min(16384, Math.max(4096, Math.ceil(need / 2048) * 2048));
+}
+
 async function ollamaTextJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens?: number }): Promise<T> {
   const prompt = opts.content.map((c) => (c.type === "text" ? c.text : "")).filter(Boolean).join("\n");
   // A long answer (a CoWork study guide asks for 8000 tokens) takes a laptop model minutes, so it gets a longer wait and a token cap.
   const long = (opts.maxTokens ?? 0) > 2000;
   const res = await ollamaPost(
     "/api/generate",
-    { model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384, ...(opts.maxTokens ? { num_predict: opts.maxTokens } : {}) } },
+    { model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: contextFor(prompt.length + opts.system.length, opts.maxTokens), ...(opts.maxTokens ? { num_predict: opts.maxTokens } : {}) } },
     long ? 240_000 : undefined
   );
   const data = await res.json();

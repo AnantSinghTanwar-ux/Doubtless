@@ -107,6 +107,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // A cold or small local model sometimes returns valid JSON with nothing in it; ask once more before showing an empty page.
+    const isEmpty = (r: Partial<PageAnalysis>) => r.hasContent !== false && !(typeof r.title === "string" && r.title.trim()) && !(typeof r.summary === "string" && r.summary.trim());
+    if (isEmpty(raw)) {
+      try {
+        raw = await analyse(content);
+      } catch {
+        /* keep the first answer */
+      }
+    }
+
     const result: PageAnalysis = {
       hasContent: raw.hasContent !== false,
       title: typeof raw.title === "string" ? raw.title : "",
