@@ -41,8 +41,8 @@ export default function CoWorkPage() {
       try {
         const [f, d] = await Promise.all([getVaultFolders(user.uid), getVaultDocuments(user.uid)]);
         setFolders(f);
-        // Past papers aren't read like textbooks — they only feed the PYQ section.
-        setVaults(d.filter((doc) => doc.type !== "paper"));
+        // Everything in the Study Vault is listed. Past papers also feed the PYQ section of other files in their folder.
+        setVaults(d);
       } catch (error) {
         console.error(error);
       } finally {
@@ -57,11 +57,11 @@ export default function CoWorkPage() {
     return <Reader vault={selectedVault} onExit={() => setSelectedVault(null)} />;
   }
 
-  // CoWork renders PDFs page by page; PowerPoint uploads are searchable elsewhere but have no page view.
-  const pdfVaults = vaults.filter((v) => !/\.pptx?$/i.test(v.fileName || ""));
+  // A file whose folder was deleted would otherwise match no group and disappear, so it joins "Uncategorized".
+  const folderIds = new Set(folders.map((f) => f.id));
   const groups = [
-    ...folders.map((f) => ({ id: f.id, name: f.name, docs: pdfVaults.filter((v) => v.folderId === f.id) })),
-    { id: "_none", name: "Uncategorized", docs: pdfVaults.filter((v) => !v.folderId) },
+    ...folders.map((f) => ({ id: f.id, name: f.name, docs: vaults.filter((v) => v.folderId === f.id) })),
+    { id: "_none", name: "Uncategorized", docs: vaults.filter((v) => !v.folderId || !folderIds.has(v.folderId)) },
   ].filter((g) => g.docs.length > 0);
 
   return (
@@ -80,7 +80,7 @@ export default function CoWorkPage() {
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink">Read with an AI study partner</h1>
           <p className="text-muted mt-3 max-w-2xl leading-relaxed">
-            Pick a textbook or notes PDF. Every page gets its own summary, key points, practice questions and PYQs —
+            Pick a textbook, notes or past paper PDF. Every page gets its own summary, key points, practice questions and PYQs —
             and the notes scroll along with the PDF as you read.
           </p>
         </header>
@@ -92,7 +92,7 @@ export default function CoWorkPage() {
         ) : groups.length === 0 ? (
           <div className="rounded-card border border-dashed border-line py-20 text-center">
             <FileText className="w-8 h-8 text-faint mx-auto mb-3" />
-            <p className="text-ink/80 font-medium">No textbooks or notes yet</p>
+            <p className="text-ink/80 font-medium">Nothing in your Study Vault yet</p>
             <p className="text-sm text-faint mt-1">Upload a PDF in your Study Vault to start a CoWork session.</p>
             <button
               onClick={() => router.push("/vault")}
@@ -111,11 +111,15 @@ export default function CoWorkPage() {
                   <span className="ml-auto text-xs font-normal text-faint">{group.docs.length} {group.docs.length === 1 ? "file" : "files"}</span>
                 </h2>
                 <div className="flex flex-col gap-2.5">
-                  {group.docs.map((vault) => (
+                  {group.docs.map((vault) => {
+                    // CoWork renders PDFs page by page; a PowerPoint upload is searchable elsewhere but has no page view.
+                    const isSlides = /\.pptx?$/i.test(vault.fileName || "");
+                    return (
                     <button
                       key={vault.id}
                       onClick={() => setSelectedVault(vault)}
-                      className="group text-left rounded-xl border border-line bg-sheet hover:border-pen/40 hover:bg-sheet p-4 transition-all"
+                      disabled={isSlides}
+                      className="group text-left rounded-xl border border-line bg-sheet hover:border-pen/40 hover:bg-sheet p-4 transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-line"
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-12 shrink-0 rounded-md bg-pen/20 border border-line flex items-center justify-center">
@@ -125,11 +129,15 @@ export default function CoWorkPage() {
                           <h3 className="text-sm font-medium text-ink line-clamp-2 group-hover:text-pen-deep">
                             {vault.fileName || "Untitled document"}
                           </h3>
-                          <p className="text-xs text-faint mt-1">{vault.pageCount} pages</p>
+                          <p className="text-xs text-faint mt-1">
+                            {isSlides ? "PowerPoint: no page view, ask about it in Ask Doubt" : `${vault.pageCount} pages`}
+                            {vault.type === "paper" && <span className="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Past paper</span>}
+                          </p>
                         </div>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             ))}
