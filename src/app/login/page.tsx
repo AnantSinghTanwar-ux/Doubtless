@@ -97,8 +97,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="lp-glow pointer-events-none absolute -top-40 left-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/[0.09] blur-[130px]" />
-      <div className="bg-grid pointer-events-none absolute inset-0 opacity-70" />
 
       <Link href="/" className="lp-drop absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-[#fffdf8]/75 px-4 py-2 text-sm text-zinc-300 backdrop-blur transition-colors hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Back to home
@@ -111,7 +109,7 @@ export default function LoginPage() {
             <span className="font-display text-3xl font-semibold tracking-tight text-white">Doubtless</span>
           </div>
           <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white">
-            Get unstuck, <span className="gradient-text">fast.</span>
+            Get unstuck, <span className="text-orange-600">fast.</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-8 text-zinc-400">The AI-native education OS that finds the real reason you&apos;re stuck and sends you to the fastest help.</p>
           <ul className="mt-10 space-y-5">

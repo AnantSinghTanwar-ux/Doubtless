@@ -204,10 +204,9 @@ export function FinalCta() {
     <section className="relative py-24">
       <div className="mx-auto max-w-5xl px-6">
         <Reveal>
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-[#fbeee4] to-[#fbf8f0] px-8 py-16 text-center sm:px-16">
-            <div className="lp-glow pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/[0.14] blur-[100px]" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#fffdf8] px-8 py-16 text-center sm:px-16">
             <h2 className="relative font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Ready to <span className="gradient-text">doubt less</span>?
+              Ready to <span className="text-orange-600">doubt less</span>?
             </h2>
             <p className="relative mx-auto mt-4 max-w-xl text-lg text-zinc-400">Sign in with Google and ask your first doubt in under a minute.</p>
             <div className="relative mt-9 flex flex-wrap justify-center gap-3">

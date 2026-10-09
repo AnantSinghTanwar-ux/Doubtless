@@ -93,10 +93,10 @@
   --color-slate-50: #0f1a31;
   --color-slate-100: #14213d;
   --color-slate-200: #232e48;
-  --color-slate-300: #3a4560;
-  --color-slate-400: #566074;
-  --color-slate-500: #6c7587;
-  --color-slate-600: #8b91a0;
+  --color-slate-300: #27324b;
+  --color-slate-400: #3d485f;
+  --color-slate-500: #556074;
+  --color-slate-600: #76809a;
   --color-slate-700: #b8b6ae;
   --color-slate-800: #d9d2c0;
   --color-slate-900: #e8e0cf;
@@ -104,10 +104,10 @@
   --color-gray-50: #0f1a31;
   --color-gray-100: #14213d;
   --color-gray-200: #232e48;
-  --color-gray-300: #3a4560;
-  --color-gray-400: #566074;
-  --color-gray-500: #6c7587;
-  --color-gray-600: #8b91a0;
+  --color-gray-300: #27324b;
+  --color-gray-400: #3d485f;
+  --color-gray-500: #556074;
+  --color-gray-600: #76809a;
   --color-gray-700: #b8b6ae;
   --color-gray-800: #d9d2c0;
   --color-gray-900: #e8e0cf;
@@ -115,10 +115,10 @@
   --color-zinc-50: #0f1a31;
   --color-zinc-100: #14213d;
   --color-zinc-200: #232e48;
-  --color-zinc-300: #3a4560;
-  --color-zinc-400: #566074;
-  --color-zinc-500: #6c7587;
-  --color-zinc-600: #8b91a0;
+  --color-zinc-300: #27324b;
+  --color-zinc-400: #3d485f;
+  --color-zinc-500: #556074;
+  --color-zinc-600: #76809a;
   --color-zinc-700: #b8b6ae;
   --color-zinc-800: #d9d2c0;
   --color-zinc-900: #e8e0cf;
@@ -126,10 +126,10 @@
   --color-neutral-50: #0f1a31;
   --color-neutral-100: #14213d;
   --color-neutral-200: #232e48;
-  --color-neutral-300: #3a4560;
-  --color-neutral-400: #566074;
-  --color-neutral-500: #6c7587;
-  --color-neutral-600: #8b91a0;
+  --color-neutral-300: #27324b;
+  --color-neutral-400: #3d485f;
+  --color-neutral-500: #556074;
+  --color-neutral-600: #76809a;
   --color-neutral-700: #b8b6ae;
   --color-neutral-800: #d9d2c0;
   --color-neutral-900: #e8e0cf;
@@ -137,10 +137,10 @@
   --color-stone-50: #0f1a31;
   --color-stone-100: #14213d;
   --color-stone-200: #232e48;
-  --color-stone-300: #3a4560;
-  --color-stone-400: #566074;
-  --color-stone-500: #6c7587;
-  --color-stone-600: #8b91a0;
+  --color-stone-300: #27324b;
+  --color-stone-400: #3d485f;
+  --color-stone-500: #556074;
+  --color-stone-600: #76809a;
   --color-stone-700: #b8b6ae;
   --color-stone-800: #d9d2c0;
   --color-stone-900: #e8e0cf;
@@ -314,10 +314,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #c2410c, #f4893b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #c2410c;
   }
 
   .glass {

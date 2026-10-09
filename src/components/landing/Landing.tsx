@@ -7,6 +7,7 @@ import HeroPreview from "./HeroPreview";
 import { Features, FinalCta, Footer, HowItWorks, Teachers } from "./Sections";
 import { WordReveal } from "./Reveal";
 import PaperSolution from "./PaperSolution";
+import CornerBrackets from "./CornerBrackets";
 import PaperNote from "@/components/paper/PaperNote";
 
 export default function Landing() {
@@ -14,14 +15,8 @@ export default function Landing() {
     <div className="relative min-h-screen overflow-x-clip">
       <LandingNav />
 
-      {/* faint page rails, like the portfolio */}
-      <div className="pointer-events-none fixed inset-y-0 left-[calc(50%-620px)] hidden border-l border-dashed border-white/[0.07] xl:block" />
-      <div className="pointer-events-none fixed inset-y-0 right-[calc(50%-620px)] hidden border-r border-dashed border-white/[0.07] xl:block" />
-
       <main>
         <section id="top" className="relative px-6 pb-16 pt-40 text-center sm:pt-48">
-          <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-[44rem]" />
-          <div className="lp-glow pointer-events-none absolute left-1/2 top-24 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-violet-600/[0.09] blur-[120px]" />
 
           {/* scraps of notebook paper pinned around the headline */}
           <div className="lp-rise pointer-events-none absolute left-[3%] top-[30%] hidden 2xl:block" style={{ animationDelay: "1.2s" }}>
@@ -32,6 +27,7 @@ export default function Landing() {
           </div>
 
           <div className="relative mx-auto max-w-4xl">
+            <CornerBrackets />
             <div className="lp-rise mx-auto mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-[#fffdf8]/75 px-4 py-2 text-sm text-zinc-300 backdrop-blur" style={{ animationDelay: "0.1s" }}>
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-70" />
@@ -41,7 +37,7 @@ export default function Landing() {
             </div>
 
             <WordReveal text="Doubt less." level={1} className="font-display text-6xl font-bold leading-[1.02] tracking-tight text-white sm:text-7xl md:text-8xl" />
-            <WordReveal text="Learn more." level={1} delay={260} className="font-display text-6xl font-bold leading-[1.02] tracking-tight sm:text-7xl md:text-8xl" wordClassName="gradient-text" />
+            <WordReveal text="Learn more." level={1} delay={260} className="font-display text-6xl font-bold leading-[1.02] tracking-tight sm:text-7xl md:text-8xl" wordClassName="text-orange-600" />
 
             <p className="lp-rise mx-auto mt-8 max-w-2xl text-lg leading-8 text-zinc-400 sm:text-xl" style={{ animationDelay: "0.7s" }}>
               Doubtless reads your doubt, works out <span className="text-white">why you&apos;re stuck</span>, and sends you to the fastest help: an instant AI explanation, targeted practice, or a{" "}
