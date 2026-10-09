@@ -50,7 +50,7 @@ export async function uploadMedia(uid: string, key: string, blob: Blob, onChunk?
   const indexes = Array.from({ length: total }, (_, i) => i);
 
   // A few chunks in flight at once keeps the upload quick without hammering Firestore.
-  const workers = Array.from({ length: Math.min(4, total) }, async () => {
+  const workers = Array.from({ length: Math.min(8, total) }, async () => {
     for (let i = indexes.shift(); i !== undefined; i = indexes.shift()) {
       const slice = bytes.subarray(i * CHUNK_BYTES, (i + 1) * CHUNK_BYTES);
       await setDoc(doc(db, COLLECTION, id, "chunks", String(i).padStart(4, "0")), { i, data: bytesToBase64(slice) });

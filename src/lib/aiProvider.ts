@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { nvidiaChat, nvidiaConfigured, withJsonInstruction, type NvidiaContent } from "./nvidia";
+import { nvidiaChat, nvidiaConfigured, nvidiaDescribePage, withJsonInstruction, type NvidiaContent } from "./nvidia";
 
 const apiKey = process.env.GEMINI_API_KEY || "placeholder_for_build";
 const genai = new GoogleGenAI({ apiKey });
@@ -61,11 +61,12 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
         console.warn("[aiProvider] NVIDIA failed too:", err instanceof Error ? err.message : err);
       }
     }
-    const key = process.env.OPENROUTER_API_KEY;
+    const key = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
     // useHighEnd already tried OpenRouter inside the primary path.
     if (!key || useHighEnd) throw primaryError;
-    console.warn("[aiProvider] trying OpenRouter:", primaryError instanceof Error ? primaryError.message : primaryError);
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
+    console.warn("[aiProvider] trying OpenRouter/OpenAI:", primaryError instanceof Error ? primaryError.message : primaryError);
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -82,13 +83,14 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
 }
 
 async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
+  const openRouterKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+  const openRouterModel = process.env.OPENAI_MODEL || process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
+  const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
 
   if (useHighEnd && openRouterKey) {
-    console.log(`[aiProvider] Routing to OpenRouter API (${openRouterModel}) for high-end task`);
+    console.log(`[aiProvider] Routing to OpenRouter/OpenAI API (${openRouterModel}) for high-end task`);
     try {
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${openRouterKey}`,
@@ -309,11 +311,13 @@ export async function embedText(text: string): Promise<number[]> {
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  const results: number[][] = [];
-  for (const text of texts) {
-    const embedding = await embedText(text);
-    results.push(embedding);
-  }
+  // A handful in flight at once: sequential calls make a 100-chunk document exceed serverless time limits.
+  const results: number[][] = new Array(texts.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i = next++; i < texts.length; i = next++) results[i] = await embedText(texts[i]);
+  };
+  await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
   return results;
 }
 
@@ -364,10 +368,28 @@ function shortError(err: unknown): string {
 
 /** Text and images through NVIDIA: a vision model when the request carries images, otherwise the text model. */
 async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRouterContent[]; maxTokens: number }): Promise<T> {
-  const hasImages = opts.content.some((c) => c.type === "image_url");
+  let content = opts.content;
+  const imageCount = content.filter((c) => c.type === "image_url").length;
+  if (imageCount > 1) {
+    // The vision models take a single image per request: read each page picture into text first (capped, a few at a time).
+    const urls = [...new Set(content.flatMap((c) => (c.type === "image_url" ? [c.image_url.url] : [])))].slice(0, 24);
+    const read = new Map<string, string>();
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: 4 }, async () => {
+        for (let i = next++; i < urls.length; i = next++) {
+          read.set(urls[i], await nvidiaDescribePage(urls[i]).catch(() => ""));
+        }
+      })
+    );
+    content = content.flatMap((c): OpenRouterContent[] =>
+      c.type === "image_url" ? (read.get(c.image_url.url) ? [{ type: "text", text: `(text read from the page image)\n${read.get(c.image_url.url)}` }] : []) : [c]
+    );
+  }
+  const hasImages = content.some((c) => c.type === "image_url");
   const text = await nvidiaChat({
     system: withJsonInstruction(opts.system),
-    user: opts.content as NvidiaContent,
+    user: content as NvidiaContent,
     vision: hasImages,
     maxTokens: Math.max(opts.maxTokens, 1500),
   });
@@ -407,11 +429,12 @@ async function openRouterRequest<T>(opts: {
   content: OpenRouterContent[];
   maxTokens: number;
 }): Promise<T> {
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) throw new Error("OPENROUTER_API_KEY is not set");
-  const model = opts.model || process.env.COWORK_MODEL || "google/gemini-2.5-flash";
+  const key = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!key) throw new Error("OPENROUTER_API_KEY or OPENAI_API_KEY is not set");
+  const model = opts.model || process.env.OPENAI_MODEL || process.env.COWORK_MODEL || "google/gemini-2.5-flash";
+  const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
 
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({

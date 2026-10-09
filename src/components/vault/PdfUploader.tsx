@@ -4,6 +4,9 @@ import { FileUp } from "lucide-react";
 import { useState, useRef } from "react";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { authedJSON } from "@/lib/apiClient";
+import { chunkCount, uploadMedia } from "@/lib/mediaStore";
+import { MAX_UPLOAD_MB, docKind, extractDocumentPages } from "@/lib/documentText";
 
 interface PdfUploaderProps {
   folderId?: string;
@@ -20,73 +23,45 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
 
   const handleUpload = async (file: File) => {
     if (!user || !file) return;
-    if (file.type !== "application/pdf") {
-      setProgress("Please upload a PDF file");
+    const kind = docKind(file);
+    if (!kind) {
+      setProgress(file.name.toLowerCase().endsWith(".ppt") ? "Old .ppt files aren't supported. Save it as .pptx or PDF and try again." : "Please upload a PDF or PowerPoint (.pptx) file.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      setProgress(`That file is larger than ${MAX_UPLOAD_MB} MB.`);
       return;
     }
 
     setUploading(true);
-    setProgress("Extracting text from PDF...");
-
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("userId", user.uid);
-      if (folderId) formData.append("folderId", folderId);
-      formData.append("type", docType);
+      // 1. Read the text here in the browser: big files never have to pass through the server.
+      setProgress(kind === "pptx" ? "Reading slides…" : "Reading pages…");
+      const { pages, pageCount } = await extractDocumentPages(file, kind);
 
-      setProgress("Processing and embedding chunks...");
-
-      const response = await fetch("/api/vault/upload", {
+      // 2. Send only the text to be chunked, embedded and indexed.
+      setProgress("Indexing for search…");
+      const result = await authedJSON<{ vaultId: string; chunkCount: number; pageCount: number }>("/api/vault/upload", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, pageCount, pages, folderId, type: docType }),
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Upload failed");
+      // 3. Keep the original so CoWork can display it (PDFs only: PowerPoints can't be rendered in the browser).
+      if (kind === "pdf") {
+        const parts = chunkCount(file.size);
+        let saved = 0;
+        setProgress("Saving your file… 0%");
+        await uploadMedia(user.uid, `pdf-${result.vaultId}`, file, () => setProgress(`Saving your file… ${Math.round((++saved / parts) * 100)}%`)).catch((e) =>
+          console.error("Could not store the PDF for CoWork:", e)
+        );
       }
 
-      const result = await response.json();
-      
-      if (result.jobId) {
-        setProgress("Job queued. Processing PDF in background...");
-        
-        const poll = async () => {
-          try {
-            const res = await fetch(`/api/jobs/${result.jobId}`);
-            const data = await res.json();
-            
-            if (data.ok) {
-               if (data.job.status === "completed") {
-                 setProgress(`✓ Background processing finished!`);
-                 onUploadComplete();
-                 setUploading(false);
-               } else if (data.job.status === "failed") {
-                 setProgress(`Failed: ${data.job.error}`);
-                 setUploading(false);
-               } else {
-                 setTimeout(poll, 2000);
-               }
-            } else {
-               setProgress("Failed to check job status.");
-               setUploading(false);
-            }
-          } catch(e) {
-            setProgress("Failed to check job status.");
-            setUploading(false);
-          }
-        };
-        
-        setTimeout(poll, 2000);
-        return;
-      }
-
-      setProgress(`✓ Uploaded: ${result.chunkCount} chunks from ${result.pageCount} pages`);
+      setProgress(`✓ Added ${file.name}: ${pageCount} ${kind === "pptx" ? "slides" : "pages"} read and indexed${kind === "pptx" ? ". (CoWork reading mode needs a PDF.)" : ""}`);
       onUploadComplete();
-      setUploading(false);
     } catch (error) {
       setProgress(error instanceof Error ? error.message : "Upload failed");
+    } finally {
       setUploading(false);
     }
   };
@@ -116,14 +91,14 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
         }}
         role="button"
         tabIndex={0}
-        aria-label="Upload a PDF"
+        aria-label="Upload a PDF or PowerPoint"
         className={`cursor-pointer rounded-card border-2 border-dashed p-10 text-center transition-colors ${
           dragOver ? "border-pen bg-pen-wash" : "border-line-strong hover:border-pen hover:bg-pen-wash"
         }`}
       >
         <FileUp className="mx-auto mb-3 h-8 w-8 text-pen" aria-hidden />
         <p className="mb-1 font-medium text-ink">
-          {uploading ? "Processing..." : "Drop a PDF here or click to browse"}
+          {uploading ? "Processing..." : "Drop a PDF or PowerPoint here, or click to browse"}
         </p>
         <p className="text-sm text-muted">
           {docType === 'content' ? "Notes, textbooks, study material" : "Past papers, exam questions"}
@@ -132,7 +107,7 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf"
+          accept=".pdf,.pptx"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];

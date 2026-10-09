@@ -57,9 +57,11 @@ export default function CoWorkPage() {
     return <Reader vault={selectedVault} onExit={() => setSelectedVault(null)} />;
   }
 
+  // CoWork renders PDFs page by page; PowerPoint uploads are searchable elsewhere but have no page view.
+  const pdfVaults = vaults.filter((v) => !/\.pptx?$/i.test(v.fileName || ""));
   const groups = [
-    ...folders.map((f) => ({ id: f.id, name: f.name, docs: vaults.filter((v) => v.folderId === f.id) })),
-    { id: "_none", name: "Uncategorized", docs: vaults.filter((v) => !v.folderId) },
+    ...folders.map((f) => ({ id: f.id, name: f.name, docs: pdfVaults.filter((v) => v.folderId === f.id) })),
+    { id: "_none", name: "Uncategorized", docs: pdfVaults.filter((v) => !v.folderId) },
   ].filter((g) => g.docs.length > 0);
 
   return (

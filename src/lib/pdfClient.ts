@@ -7,6 +7,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.m
 
 export type { PDFDocumentProxy, PDFPageProxy };
 
+export function loadPdfFromData(data: Uint8Array): Promise<PDFDocumentProxy> {
+  return pdfjs.getDocument({ data }).promise;
+}
+
 export function loadPdf(url: string, httpHeaders?: Record<string, string>): Promise<PDFDocumentProxy> {
   return pdfjs.getDocument({ url, httpHeaders }).promise;
 }

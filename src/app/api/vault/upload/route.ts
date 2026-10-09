@@ -1,132 +1,74 @@
-import { uploadMedia } from "@/lib/mediaStore";
 import { NextRequest, NextResponse } from "next/server";
-import { chunkPages, extractPagesFromText } from "@/lib/chunker";
+import { authErrorResponse, requireUser } from "@/lib/serverAuth";
+import { chunkPages } from "@/lib/chunker";
 import { embedTexts } from "@/lib/aiProvider";
-import { createVaultDocument, saveVaultChunks, createJob, updateJob } from "@/lib/firestore";
+import { createVaultDocument, saveVaultChunks } from "@/lib/firestore";
 
-async function processPdf(fileBuffer: Buffer, fileName: string, userId: string, folderId: string | null, type: string | null, jobId?: string) {
+/** Embedding a full document can take a while; give it room on serverless hosts. */
+export const maxDuration = 60;
+
+interface IngestBody {
+  fileName?: unknown;
+  pageCount?: unknown;
+  folderId?: unknown;
+  type?: unknown;
+  pages?: unknown;
+}
+
+/**
+ * Receives a document's text, already read in the browser (so large PDFs and PowerPoints never hit the
+ * serverless request-size limit), then chunks, embeds and stores it. The file itself is stored by the browser.
+ */
+export async function POST(request: NextRequest) {
   try {
-    const pdfParse = require("pdf-parse");
+    const user = await requireUser(request);
+    const body = (await request.json()) as IngestBody;
 
-    const render_page = (pageData: any) => {
-      let render_options = { normalizeWhitespace: false, disableCombineTextItems: false };
-      return pageData.getTextContent(render_options).then(function (textContent: any) {
-        let lastY, text = "";
-        for (let item of textContent.items) {
-          if (lastY == item.transform[5] || !lastY) {
-            text += item.str;
-          } else {
-            text += "\n" + item.str;
-          }
-          lastY = item.transform[5];
-        }
-        return text + "\n\n---PAGE_BREAK---\n\n";
-      });
-    };
+    const fileName = typeof body.fileName === "string" ? body.fileName.slice(0, 200) : "";
+    const pages = (Array.isArray(body.pages) ? body.pages : [])
+      .filter((p): p is { pageNumber: number; text: string } => !!p && typeof p.pageNumber === "number" && typeof p.text === "string")
+      .map((p) => ({ pageNumber: p.pageNumber, text: p.text.slice(0, 20_000) }))
+      .slice(0, 600);
+    if (!fileName || pages.length === 0) return NextResponse.json({ error: "No readable text was found in this file." }, { status: 400 });
 
-    const parsed = await pdfParse(fileBuffer, { pagerender: render_page });
-
-    if (!parsed.text || parsed.text.trim().length < 50) {
-      throw new Error("This PDF appears to be a scanned document without selectable text. Please upload a text-searchable PDF, or wait for the upcoming OCR feature.");
+    const total = pages.reduce((n, p) => n + p.text.length, 0);
+    if (total < 50) {
+      return NextResponse.json(
+        { error: "This file has no selectable text (it looks like scanned images). Please upload a text-searchable version." },
+        { status: 400 }
+      );
     }
 
-    const pages = extractPagesFromText(parsed.text);
-    // Limit to 100 chunks to prevent API exhaustion
+    // Cap the number of chunks to keep embedding cost and time bounded.
     const chunks = chunkPages(pages, 800, 100).slice(0, 100);
-
-    if (chunks.length === 0) {
-      throw new Error("No text content found in PDF after processing");
-    }
-
-    const chunkTexts = chunks.map((c) => c.text);
-    const embeddings = await embedTexts(chunkTexts);
+    const embeddings = await embedTexts(chunks.map((c) => c.text));
 
     const vaultId = await createVaultDocument({
-      userId,
+      userId: user.uid,
       fileName,
-      folderId: folderId || undefined,
-      type: (type as "content" | "paper") || undefined,
-      pageCount: parsed.numpages ?? pages.length,
+      folderId: typeof body.folderId === "string" && body.folderId ? body.folderId : undefined,
+      type: body.type === "paper" ? "paper" : "content",
+      pageCount: typeof body.pageCount === "number" ? body.pageCount : pages.length,
       chunkCount: chunks.length,
       uploadedAt: Date.now(),
     });
-
-    const chunkDocs = chunks.map((chunk, i) => ({
+    await saveVaultChunks(
       vaultId,
-      userId,
-      text: chunk.text,
-      pageNumber: chunk.pageNumber,
-      chunkIndex: chunk.chunkIndex,
-      embedding: embeddings[i],
-    }));
-
-    await saveVaultChunks(vaultId, chunkDocs);
-
-    // Keep the original PDF so CoWork can render it. Stored in Firestore, not on disk, so it survives serverless hosts.
-    try {
-      await uploadMedia(userId, `pdf-${vaultId}`, new Blob([new Uint8Array(fileBuffer)], { type: "application/pdf" }));
-    } catch (err) {
-      console.error("Could not store PDF for CoWork:", err);
-    }
-
-    if (jobId) {
-      await updateJob(jobId, { status: "completed", result: { vaultId, chunkCount: chunks.length } });
-    }
-
-    return { vaultId, chunkCount: chunks.length, pageCount: parsed.numpages ?? pages.length };
-  } catch (error) {
-    if (jobId) {
-      await updateJob(jobId, { status: "failed", error: error instanceof Error ? error.message : String(error) });
-    }
-    throw error;
-  }
-}
-
-/** AI calls can take a while; give them room on serverless hosts. */
-export const maxDuration = 60;
-
-export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const userId = formData.get("userId") as string | null;
-    const folderId = formData.get("folderId") as string | null;
-    const type = formData.get("type") as string | null;
-
-    if (!file || !userId) {
-      return NextResponse.json({ error: "File and userId are required" }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    if (file.size > 1024 * 1024) {
-      // Async Background Job for > 1MB
-      const jobId = await createJob({
-        userId,
-        type: "pdf_ingestion",
-        status: "processing",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-
-      processPdf(buffer, file.name, userId, folderId, type, jobId).catch(console.error);
-
-      return NextResponse.json({ jobId, message: "Processing in background" });
-    } else {
-      // Sync processing
-      const result = await processPdf(buffer, file.name, userId, folderId, type);
-      return NextResponse.json({
-        vaultId: result.vaultId,
-        fileName: file.name,
-        pageCount: result.pageCount,
-        chunkCount: result.chunkCount,
-      });
-    }
-  } catch (error) {
-    console.error("Vault upload error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Upload failed" },
-      { status: 500 }
+      chunks.map((chunk, i) => ({
+        vaultId,
+        userId: user.uid,
+        text: chunk.text,
+        pageNumber: chunk.pageNumber,
+        chunkIndex: chunk.chunkIndex,
+        embedding: embeddings[i],
+      }))
     );
+
+    return NextResponse.json({ vaultId, fileName, pageCount: pages.length, chunkCount: chunks.length });
+  } catch (error) {
+    const authResponse = authErrorResponse(error);
+    if (authResponse) return authResponse;
+    console.error("Vault ingest error:", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed" }, { status: 500 });
   }
 }
