@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { GoogleGenAI } from "@google/genai";
+import { estimateTokens, recordAiCall } from "./usage";
 import { gatewayChat, gatewayEnabled, type GatewayContent } from "./gateway";
 import { NVIDIA_EMBED_DIM, nvidiaChat, nvidiaConfigured, nvidiaDescribePage, nvidiaEmbed, withJsonInstruction, type NvidiaContent } from "./nvidia";
 
@@ -39,7 +40,13 @@ async function ollamaPost(path: string, body: unknown, timeoutMs?: number): Prom
   for (const base of ollamaUrls) {
     try {
       const res = await fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify({ keep_alive: process.env.OLLAMA_KEEP_ALIVE || "30m", ...(body as object) }), signal: AbortSignal.timeout(timeout) });
-      if (res.ok) return res;
+      if (res.ok) {
+        // Report tokens (Ollama counts them; embeddings don't, so estimate) without consuming the caller's body.
+        const b = body as { model?: string; prompt?: string };
+        const d = await res.clone().json().catch(() => ({}) as Record<string, number>);
+        recordAiCall({ provider: "ollama", model: String(b.model ?? "unknown"), inTokens: d.prompt_eval_count ?? estimateTokens(b.prompt ?? ""), outTokens: d.eval_count ?? 0 });
+        return res;
+      }
       failures.push(`${base} -> ${res.status} ${(await res.text()).replace(/\s+/g, " ").slice(0, 200)}`);
     } catch (err) {
       failures.push(`${base} -> ${err instanceof Error ? err.message : err}`);
@@ -79,8 +86,20 @@ async function ollamaText(prompt: string, systemPrompt?: string): Promise<string
 
 let visionModelInUse = ollamaVisionModel;
 
+/*
+ * A laptop runs one vision request at a time. Sent together (CoWork asks for three pages at once), they queue inside
+ * Ollama and each one's timeout runs while it waits, so they time out and pause Ollama for everyone. Queue them here
+ * instead, so a timeout only measures the model's own work.
+ */
+let visionQueue: Promise<unknown> = Promise.resolve();
+function visionPost(body: Record<string, unknown>, timeoutMs?: number): Promise<Response> {
+  const run = visionQueue.then(() => visionPostNow(body, timeoutMs));
+  visionQueue = run.catch(() => {});
+  return run;
+}
+
 /** Vision request that falls back to llava once if the preferred model is not installed. */
-async function visionPost(body: Record<string, unknown>, timeoutMs?: number): Promise<Response> {
+async function visionPostNow(body: Record<string, unknown>, timeoutMs?: number): Promise<Response> {
   try {
     return await ollamaPost("/api/generate", { ...body, model: visionModelInUse }, timeoutMs);
   } catch (err) {
@@ -121,7 +140,8 @@ async function ollamaVision(prompt: string, imageBase64: string, systemPrompt?: 
 }
 
 async function ollamaEmbed(text: string): Promise<number[]> {
-  const res = await ollamaPost("/api/embeddings", { model: ollamaEmbedModel, prompt: text });
+  // An embedding takes well under a second; a long wait means Ollama is stuck, so give up quickly and let search continue.
+  const res = await ollamaPost("/api/embeddings", { model: ollamaEmbedModel, prompt: text }, 20_000);
   const embedding: number[] = (await res.json()).embedding ?? [];
   if (embedding.length === 0) throw new Error("Ollama returned an empty embedding");
   return embedding;
@@ -137,6 +157,18 @@ async function embedAll(texts: string[], embed: (text: string) => Promise<number
   };
   await Promise.all(Array.from({ length: Math.min(6, texts.length) }, worker));
   return results;
+}
+
+/* ---- usage reporting: every provider call tells the ledger how many tokens it used ---- */
+type GeminiUsage = { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number } };
+function recordGemini(response: GeminiUsage, model: string) {
+  const u = response.usageMetadata;
+  recordAiCall({ provider: "gemini", model, inTokens: u?.promptTokenCount, outTokens: (u?.candidatesTokenCount ?? 0) + (u?.thoughtsTokenCount ?? 0) });
+}
+/** OpenAI-compatible chat responses (OpenRouter, the gateway): provider is read from the endpoint that answered. */
+function recordChat(data: { model?: string; usage?: { prompt_tokens?: number; completion_tokens?: number } }, url: string) {
+  const provider = url.includes("openrouter") ? "openrouter" : url.includes("nvidia") ? "nvidia" : "gateway";
+  recordAiCall({ provider, model: String(data?.model ?? "unknown"), inTokens: data?.usage?.prompt_tokens, outTokens: data?.usage?.completion_tokens });
 }
 
 export function parseJSON<T>(raw: string | undefined, source: string): T {
@@ -213,6 +245,7 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
     });
     if (!res.ok) throw primaryError;
     const data = await res.json();
+    recordChat(data, res.url);
     return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
   }
 }
@@ -249,6 +282,7 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
       }
 
       const data = await res.json();
+      recordChat(data, res.url);
       return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
     } catch (err) {
       // Fall through to the local / Gemini provider instead of failing the request.
@@ -265,6 +299,7 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
       responseMimeType: "application/json",
     },
   });
+  recordGemini(response, model);
   return parseJSON<T>(response.text, "Gemini");
 }
 
@@ -305,6 +340,7 @@ async function generateTextPrimary(prompt: string, systemPrompt?: string): Promi
       systemInstruction: systemPrompt,
     },
   });
+  recordGemini(response, model);
   return response.text ?? "";
 }
 
@@ -385,12 +421,14 @@ async function generateWithImagePrimary(
       responseMimeType: "application/json",
     },
   });
+  recordGemini(response, model);
   return response.text ?? "";
 }
 
 async function embedTextPrimary(text: string): Promise<number[]> {
   const model = getEmbedModel();
   const response = await genai.models.embedContent({ model, contents: text });
+  recordAiCall({ provider: "gemini", model, inTokens: estimateTokens(text) });
   const values = response.embeddings?.[0]?.values ?? [];
   if (values.length === 0) throw new Error("Gemini returned an empty embedding");
   return values;
@@ -595,6 +633,7 @@ async function geminiMultimodalJSON<T>(opts: { system: string; content: OpenRout
     contents: [{ role: "user", parts }],
     config: { systemInstruction: opts.system, responseMimeType: "application/json" },
   });
+  recordGemini(response, getModel());
   return parseJSON<T>(response.text, "Gemini");
 }
 
@@ -635,5 +674,6 @@ async function openRouterRequest<T>(opts: {
     throw new Error(`OpenRouter ${res.status}: ${message}`);
   }
   const data = await res.json();
+  recordChat(data, res.url);
   return parseJSON<T>(data.choices?.[0]?.message?.content, "OpenRouter");
 }

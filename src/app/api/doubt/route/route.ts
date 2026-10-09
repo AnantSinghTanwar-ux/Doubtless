@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { doubtRouterSchema } from "@/lib/zod-schemas";
@@ -7,7 +8,7 @@ import type { DoubtRouterResult, RetrievedChunk, LearnerProfile, RecentInteracti
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { question, chunks, profile, recentInteractions } = (await request.json()) as {
       question: string;
@@ -131,3 +132,6 @@ function normalizeRouterResult(raw: Partial<Record<keyof DoubtRouterResult, unkn
     reasoning: String(raw.reasoning || ""),
   };
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("doubt.route", handlePost);

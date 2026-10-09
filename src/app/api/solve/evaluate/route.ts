@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON, generateWithImage, parseJSON } from "@/lib/aiProvider";
 import { nvidiaConfigured, nvidiaTranscribe } from "@/lib/nvidia";
@@ -8,7 +9,7 @@ import type { SolutionEvaluation, RetrievedChunk } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { question, steps, imageBase64, imageMimeType, chunks, vaultFileName } = (await request.json()) as {
       question: string;
@@ -122,3 +123,6 @@ function normalizeEvaluation(raw: Partial<SolutionEvaluation>): SolutionEvaluati
     source_citations: Array.isArray(raw.source_citations) ? raw.source_citations : [],
   } as SolutionEvaluation;
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("solve", handlePost);

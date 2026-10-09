@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { vivaQuestionSchema, vivaAnswerEvalSchema } from "@/lib/zod-schemas";
@@ -7,7 +8,7 @@ import type { RetrievedChunk } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { topic, previousAnswers, chunks, questionNumber } = (await request.json()) as {
       topic: string;
@@ -70,3 +71,6 @@ Generate the next viva question. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("viva.question", handlePost);

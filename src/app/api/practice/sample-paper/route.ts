@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "@/lib/aiProvider";
 import { db } from "@/lib/firebase";
@@ -6,7 +7,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { vaultIds } = await request.json();
 
@@ -59,3 +60,6 @@ Please generate the complete sample paper now.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("sample-paper", handlePost);

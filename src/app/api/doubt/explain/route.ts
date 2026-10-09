@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { currentUser, withUsage } from "@/lib/usage";
+import { after, NextRequest, NextResponse } from "next/server";
+import { formatMemoriesForPrompt, recall, remember } from "@/lib/memory";
 import { generateJSON } from "@/lib/aiProvider";
 import { aiExplanationSchema } from "@/lib/zod-schemas";
 import { formatChunksForPrompt } from "@/lib/embeddings";
@@ -8,7 +10,7 @@ import { searchKnowledgeBase } from "@/lib/firestore";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { question, chunks, routerResult } = (await request.json()) as {
       question: string;
@@ -21,6 +23,9 @@ export async function POST(request: NextRequest) {
     }
 
     const contextStr = formatChunksForPrompt(chunks ?? []);
+    // The student's own related history (past doubts, teacher sessions, vivas), matched on this doubt's topic.
+    const { uid } = currentUser();
+    const memories = await recall(uid, question, { topic: [routerResult.topic, routerResult.subtopic].filter(Boolean).join(" / ") });
 
     let pastSessionContext = "";
     let basedOnPastSession = false;
@@ -51,7 +56,7 @@ Guidelines:
 - Use the reference material when available
 - Keep explanations clear, structured, and encouraging
 
-${pastSessionContext ? `PAST TEACHER SESSION INSIGHTS (use these to improve your explanation):\n${pastSessionContext}` : ""}
+${memories.length ? `THIS STUDENT'S OWN HISTORY (related things they asked or worked on before). Connect to it when it helps, e.g. "this builds on the X you asked about on <date>". Don't repeat it back verbatim:\n${formatMemoriesForPrompt(memories.slice(0, 3))}\n\n` : ""}${pastSessionContext ? `PAST TEACHER SESSION INSIGHTS (use these to improve your explanation):\n${pastSessionContext}` : ""}
 
 Return JSON with: explanation (markdown formatted), key_concepts (array), analogies (array, optional), follow_up_questions (array, optional), based_on_past_session (boolean).`;
 
@@ -75,7 +80,17 @@ Provide a thorough, clear explanation. Return JSON only.`;
       based_on_past_session: basedOnPastSession || result.based_on_past_session,
     });
 
-    return NextResponse.json(validated);
+    // Remember this doubt so later questions can build on it.
+    after(() =>
+      remember(uid, {
+        kind: "doubt",
+        topic: [routerResult.topic, routerResult.subtopic].filter(Boolean).join(" / "),
+        text: question,
+        takeaway: (validated.key_concepts ?? []).slice(0, 4).join("; ") || validated.explanation.slice(0, 300),
+      })
+    );
+
+    return NextResponse.json({ ...validated, memories: memories.map(({ kind, topic, text, at }) => ({ kind, topic, text, at })) });
   } catch (error) {
     console.error("Explanation error:", error);
     return NextResponse.json(
@@ -84,3 +99,6 @@ Provide a thorough, clear explanation. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("doubt.explain", handlePost);

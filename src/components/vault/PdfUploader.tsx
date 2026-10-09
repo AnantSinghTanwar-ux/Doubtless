@@ -37,7 +37,7 @@ export default function PdfUploader({ folderId, onUploadComplete }: PdfUploaderP
     try {
       // 1. Read the text here in the browser: big files never have to pass through the server.
       setProgress(kind === "pptx" ? "Reading slides…" : "Reading pages…");
-      const { pages, pageCount } = await extractDocumentPages(file, kind);
+      const { pages, pageCount } = await extractDocumentPages(file, kind, setProgress);
 
       // 2. Send only the text to be chunked, embedded and indexed.
       setProgress("Indexing for search…");

@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { authErrorResponse, requireUser } from "@/lib/serverAuth";
 import { chunkPages } from "@/lib/chunker";
@@ -19,7 +20,7 @@ interface IngestBody {
  * Receives a document's text, already read in the browser (so large PDFs and PowerPoints never hit the
  * serverless request-size limit), then chunks, embeds and stores it. The file itself is stored by the browser.
  */
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const user = await requireUser(request);
     const body = (await request.json()) as IngestBody;
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const total = pages.reduce((n, p) => n + p.text.length, 0);
     if (total < 50) {
       return NextResponse.json(
-        { error: "This file has no selectable text (it looks like scanned images). Please upload a text-searchable version." },
+        { error: "No readable text was found in this file, even with OCR. If it is a photo or scan, try a sharper copy." },
         { status: 400 }
       );
     }
@@ -72,3 +73,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed" }, { status: 500 });
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("vault.index", handlePost);

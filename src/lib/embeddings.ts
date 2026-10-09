@@ -1,5 +1,5 @@
 import { embedText } from "./aiProvider";
-import { getVaultChunks } from "./firestore";
+import { getVaultChunks, getVaultDocuments } from "./firestore";
 import { retrieveTopChunks } from "./rag";
 import type { RetrievedChunk } from "@/types";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -16,14 +16,59 @@ async function retrieveByModel(question: string, chunks: VaultChunk[], fileName:
   return groups.flat().sort((a, b) => b.score - a.score).slice(0, topK);
 }
 
+/*
+ * A document's chunks never change after upload, so a server keeps them in memory for a while. Without this every
+ * question re-reads every chunk from Firestore (one read per chunk), which is what would exhaust a free daily quota.
+ */
+const CHUNK_TTL_MS = 30 * 60_000;
+const chunkCache = new Map<string, { at: number; chunks: VaultChunk[] }>();
+
+async function cachedChunks(vaultId: string): Promise<VaultChunk[]> {
+  const hit = chunkCache.get(vaultId);
+  if (hit && Date.now() - hit.at < CHUNK_TTL_MS) return hit.chunks;
+  const chunks = await getVaultChunks(vaultId);
+  if (chunkCache.size >= 60) chunkCache.delete(chunkCache.keys().next().value!); // oldest first
+  chunkCache.set(vaultId, { at: Date.now(), chunks });
+  return chunks;
+}
+
 export async function searchVault(
   query: string,
   vaultId: string,
   fileName: string,
   topK: number = 5
 ): Promise<RetrievedChunk[]> {
-  const chunks = await getVaultChunks(vaultId);
+  const chunks = await cachedChunks(vaultId);
   return retrieveByModel(query, chunks, fileName, topK);
+}
+
+/**
+ * Searches all of a student's uploaded notes, not just the open one: the selected document plus their most recent
+ * uploads (capped, to bound reads). Results from the selected document get a small boost so it stays the main source.
+ */
+export async function searchUserVaults(
+  question: string,
+  userId: string,
+  opts: { preferVaultId?: string; topK?: number; maxVaults?: number; minScore?: number } = {}
+): Promise<RetrievedChunk[]> {
+  const { preferVaultId, topK = 5, maxVaults = 6, minScore = 0.3 } = opts;
+  const docs = (await getVaultDocuments(userId)).sort((a, b) => (b.uploadedAt ?? 0) - (a.uploadedAt ?? 0));
+  const chosen = [...docs.filter((d) => d.id === preferVaultId), ...docs.filter((d) => d.id !== preferVaultId)].slice(0, maxVaults);
+  if (!chosen.length) return [];
+
+  const loaded = await Promise.all(chosen.map(async (d) => ({ d, chunks: await cachedChunks(d.id).catch(() => [] as VaultChunk[]) })));
+  // Embed the question once per embedding model in use, then score every chunk.
+  const dims = [...new Set(loaded.flatMap(({ chunks }) => chunks.map((c) => c.embedding?.length ?? 0)).filter(Boolean))];
+  const queries = new Map(await Promise.all(dims.map(async (dim) => [dim, await embedText(question, dim).catch(() => null)] as const)));
+  const scored = loaded.flatMap(({ d, chunks }) =>
+    chunks.flatMap((c) => {
+      const q = queries.get(c.embedding?.length ?? 0);
+      if (!q) return [];
+      const [hit] = retrieveTopChunks(q, [c], d.fileName, 1);
+      return [{ ...hit, score: hit.score + (d.id === preferVaultId ? 0.05 : 0) }];
+    })
+  );
+  return scored.filter((c) => c.score >= minScore).sort((a, b) => b.score - a.score).slice(0, topK);
 }
 
 export async function searchFolderPastPapers(

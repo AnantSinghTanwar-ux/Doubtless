@@ -17,6 +17,8 @@ interface TeacherCardProps {
   featured?: boolean;
 }
 
+const gradeLabel = (g: number) => (g >= 13 ? "college" : `class ${g}`);
+
 function Bar({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -80,6 +82,13 @@ export default function TeacherCard({ match, teacher: rawTeacher, onRequestSessi
               </h3>
               {teacher.headline && <p className="text-sm text-ink/80">{teacher.headline}</p>}
               <p className="text-sm text-muted">{teacher.subjects.join(", ")}</p>
+              <p className="text-xs text-faint">
+                {Object.keys(teacher.subjectGrades ?? {}).length
+                  ? `Teaches ${Object.entries(teacher.subjectGrades!)
+                      .map(([s, r]) => `${s}: ${gradeLabel(r.from)}${r.to !== r.from ? `-${gradeLabel(r.to)}` : ""}`)
+                      .join(" · ")}`
+                  : "Grades not listed yet"}
+              </p>
             </div>
             {match && (
               <div className="shrink-0 text-right">

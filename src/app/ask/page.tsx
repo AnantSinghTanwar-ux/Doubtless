@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentProps } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVault } from "@/contexts/VaultContext";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,9 @@ import { needsExpert } from "@/lib/teacherRanking";
 import AiExplanation from "@/components/doubt/AiExplanation";
 import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
-import type { DoubtRouterResult } from "@/types";
+import type { DoubtRouterResult, RetrievedChunk } from "@/types";
+import type { RecalledMemory } from "@/lib/memory";
+import { BookOpen, History } from "lucide-react";
 
 export default function AskPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -25,9 +27,10 @@ export default function AskPage() {
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [loadingExplain, setLoadingExplain] = useState(false);
   const [routeResult, setRouteResult] = useState<DoubtRouterResult | null>(null);
-  const [explanation, setExplanation] = useState<any | null>(null);
+  const [explanation, setExplanation] = useState<ComponentProps<typeof AiExplanation>["explanation"] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [contextChunks, setContextChunks] = useState<unknown[]>([]);
+  const [memories, setMemories] = useState<Pick<RecalledMemory, "kind" | "topic" | "text" | "at">[]>([]);
 
   useEffect(() => {
     if (!authLoading && (!user || !profile)) {
@@ -41,28 +44,23 @@ export default function AskPage() {
     setError(null);
     setRouteResult(null);
     setExplanation(null);
+    setMemories([]);
+    setContextChunks([]);
     setLoadingRoute(true);
 
     try {
-      // 1. Get context chunks if a vault is selected
-      let chunks: any[] = [];
-      if (selectedVault) {
-        const searchRes = await fetch("/api/vault/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: q,
-            vaultId: selectedVault.id,
-            fileName: selectedVault.fileName,
-            topK: 5,
-          }),
-        });
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          chunks = searchData.chunks || [];
-        }
+      // 1. Retrieval: the most relevant passages from ALL of the student's uploaded notes (the selected one preferred).
+      //    The explanation step adds their own related past doubts, sessions and vivas.
+      let chunks: RetrievedChunk[] = [];
+      const searchRes = await fetch("/api/vault/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, scope: "all", vaultId: selectedVault?.id, topK: 5 }),
+      });
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        chunks = searchData.chunks || [];
       }
-
       // 2. Route the doubt
       const routeRes = await fetch("/api/doubt/route", {
         method: "POST",
@@ -71,7 +69,7 @@ export default function AskPage() {
           question: q,
           chunks,
           profile,
-          recentInteractions: (profile as any).recentInteractions || [],
+          recentInteractions: (profile as { recentInteractions?: unknown[] }).recentInteractions || [],
         }),
       });
 
@@ -105,6 +103,7 @@ export default function AskPage() {
 
         const explainData = await explainRes.json();
         setExplanation(explainData);
+        setMemories(explainData.memories ?? []);
         setLoadingExplain(false);
       }
     } catch (err) {
@@ -123,7 +122,9 @@ export default function AskPage() {
     try {
       const res = await fetch("/api/doubt/explain", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, chunks: contextChunks, routerResult: routeResult }) });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Explanation failed");
-      setExplanation(await res.json());
+      const data = await res.json();
+      setExplanation(data);
+      setMemories(data.memories ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -168,6 +169,37 @@ export default function AskPage() {
             {routeResult && !loadingRoute && (
               <div className="animate-in fade-in slide-up">
                 <RouteCard result={routeResult} />
+              </div>
+            )}
+
+            {routeResult && !loadingRoute && (contextChunks.length > 0 || memories.length > 0) && (
+              <div className="rounded-card border border-line bg-sheet p-4 text-sm">
+                <p className="mb-2 font-medium text-ink">Personalised with your own material</p>
+                {contextChunks.length > 0 && (
+                  <p className="flex items-start gap-2 text-muted">
+                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-pen" aria-hidden />
+                    <span>
+                      From your notes:{" "}
+                      {[...new Map((contextChunks as RetrievedChunk[]).map((c) => [`${c.fileName}#${c.pageNumber}`, c])).values()]
+                        .slice(0, 4)
+                        .map((c) => `${c.fileName} p.${c.pageNumber}`)
+                        .join(" · ")}
+                    </span>
+                  </p>
+                )}
+                {memories.length > 0 && (
+                  <div className="mt-2 flex items-start gap-2 text-muted">
+                    <History className="mt-0.5 h-4 w-4 shrink-0 text-pen" aria-hidden />
+                    <ul className="space-y-1">
+                      {memories.map((m) => (
+                        <li key={`${m.at}-${m.kind}`}>
+                          You {m.kind === "doubt" ? "asked" : m.kind === "session" ? "had a teacher session on" : m.kind === "viva" ? "took a viva on" : "practised"}{" "}
+                          <span className="text-ink">&ldquo;{m.text.slice(0, 90)}{m.text.length > 90 ? "…" : ""}&rdquo;</span> on {new Date(m.at).toLocaleDateString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 

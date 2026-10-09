@@ -1,9 +1,12 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
+import { overviewCacheId, readCowork, writeCowork } from "@/lib/coworkCache";
 import os from "os";
 import path from "path";
 import { openRouterJSON, type OpenRouterContent } from "@/lib/aiProvider";
 import { getFolderPastPaperText } from "@/lib/embeddings";
+import { getVaultChunks } from "@/lib/firestore";
 import type { DocumentOverview, OverviewPageInput } from "@/types/cowork";
 
 // The cache is an optimisation only. Serverless hosts have a read-only app dir, so use the temp dir there.
@@ -30,7 +33,10 @@ Write all math with Unicode (∈, ∉, ⊆, ∪, ∩, ≠, ≤, ², √, Σ, →
 const cachePath = (vaultId: string) => path.join(CACHE_DIR, `overview-${vaultId}.json`);
 const validId = (id: unknown): id is string => typeof id === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(id);
 
+/** Saved study guide: Firestore (shared, survives redeploys), falling back to the local disk copy. */
 async function readCached(vaultId: string): Promise<DocumentOverview | null> {
+  const saved = await readCowork<DocumentOverview>(overviewCacheId(vaultId));
+  if (saved) return saved;
   try {
     return JSON.parse(await fs.readFile(cachePath(vaultId), "utf8"));
   } catch {
@@ -61,6 +67,26 @@ function normalize(raw: Partial<DocumentOverview>, hasPastPapers: boolean): Docu
       .filter((g) => g.questions.length > 0),
     hasPastPapers,
   };
+}
+
+/**
+ * Scanned pages arrive as pictures. Their text was already read (OCR) and indexed when the file was uploaded, so use that
+ * instead: a text model writes the guide in seconds, where a local vision model takes minutes for a dozen pictures.
+ */
+async function withIndexedText(vaultId: string, pages: OverviewPageInput[]): Promise<OverviewPageInput[]> {
+  if (!pages.some((p) => "image" in p)) return pages;
+  try {
+    const byPage = new Map<number, string>();
+    for (const c of (await getVaultChunks(vaultId)).sort((a, b) => (a.chunkIndex ?? 0) - (b.chunkIndex ?? 0))) {
+      byPage.set(c.pageNumber, `${byPage.get(c.pageNumber) ?? ""}\n${c.text}`);
+    }
+    return pages.map((p) => {
+      const text = "image" in p ? byPage.get(p.page)?.trim() : undefined;
+      return text && text.length >= 40 ? { page: p.page, text } : p;
+    });
+  } catch {
+    return pages;
+  }
 }
 
 async function buildOverview(pages: OverviewPageInput[], folderId: string | null): Promise<DocumentOverview> {
@@ -104,7 +130,7 @@ export async function GET(request: NextRequest) {
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { vaultId, folderId, pages, force } = await request.json();
     if (!validId(vaultId)) return NextResponse.json({ error: "Invalid vaultId" }, { status: 400 });
@@ -120,12 +146,13 @@ export async function POST(request: NextRequest) {
     // Collapse duplicate requests (e.g. two tabs, React strict mode) into one model call.
     let job = inFlight.get(vaultId);
     if (!job) {
-      job = buildOverview(pages as OverviewPageInput[], typeof folderId === "string" ? folderId : null);
+      job = withIndexedText(vaultId, pages as OverviewPageInput[]).then((p) => buildOverview(p, typeof folderId === "string" ? folderId : null));
       inFlight.set(vaultId, job);
       job.finally(() => inFlight.delete(vaultId)).catch(() => {});
     }
     const overview = await job;
 
+    await writeCowork(overviewCacheId(vaultId), overview);
     try {
       await fs.mkdir(CACHE_DIR, { recursive: true });
       await fs.writeFile(cachePath(vaultId), JSON.stringify(overview));
@@ -141,3 +168,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("cowork.study-guide", handlePost);

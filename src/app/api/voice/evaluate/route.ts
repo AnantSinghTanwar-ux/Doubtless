@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { voiceEvaluationSchema } from "@/lib/zod-schemas";
@@ -7,7 +8,7 @@ import type { VoiceEvaluation, VoiceMetrics, RetrievedChunk } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { topic, transcript, metrics, chunks } = (await request.json()) as {
       topic: string;
@@ -64,3 +65,6 @@ Evaluate the explanation. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("voice.feedback", handlePost);

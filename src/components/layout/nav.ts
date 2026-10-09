@@ -11,7 +11,7 @@ import {
   MessageSquare,
   Mic,
   PenTool,
-  ShieldCheck,
+  Receipt, ShieldCheck,
   Target,
   Users,
   type LucideIcon,
@@ -63,7 +63,7 @@ const teacherGroups: NavGroup[] = [
   },
 ];
 
-const adminGroup: NavGroup = { label: "Admin", links: [{ href: "/admin/teachers", label: "Review Teachers", icon: ShieldCheck }] };
+const adminGroup: NavGroup = { label: "Admin", links: [{ href: "/admin/teachers", label: "Review Teachers", icon: ShieldCheck }, { href: "/admin/usage", label: "AI Usage & Costs", icon: Receipt }] };
 
 /** Navigation for the signed-in role. Admins without a profile only get the review console. */
 export function useNavGroups(): { groups: NavGroup[]; isAdmin: boolean } {

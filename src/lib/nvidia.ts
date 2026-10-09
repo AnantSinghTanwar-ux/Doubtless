@@ -3,6 +3,8 @@
  * production concerns a shared hosted endpoint needs: a per-call timeout, one retry on a smaller fallback model when the
  * big one is overloaded, and "thinking" switched off so replies come back fast and as clean text.
  */
+import { estimateTokens, recordAiCall } from "./usage";
+
 const BASE_URL = (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/$/, "");
 // Measured on a real account: the 120B model answers in ~2s; the 550B one is far slower and often "overloaded",
 // so it is the fallback rather than the default. The 11B vision model reads handwriting in ~7s; the 90B one timed out.
@@ -47,6 +49,7 @@ async function callOnce(model: string, system: string | undefined, user: NvidiaC
     throw err;
   }
   const data = await res.json();
+  recordAiCall({ provider: "nvidia", model, inTokens: data.usage?.prompt_tokens, outTokens: data.usage?.completion_tokens });
   const text: string | undefined = data.choices?.[0]?.message?.content;
   if (!text || !text.trim()) throw new Error(`NVIDIA (${model}) returned an empty reply`);
   return text;
@@ -137,6 +140,7 @@ export async function nvidiaEmbed(texts: string[], kind: "passage" | "query" = "
     });
     if (!res.ok) throw new Error(`NVIDIA embeddings ${res.status}: ${(await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 140)}`);
     const data = await res.json();
+    recordAiCall({ provider: "nvidia-embed", model, inTokens: data.usage?.prompt_tokens ?? texts.slice(i, i + 32).reduce((n, s) => n + estimateTokens(s), 0) });
     for (const d of data.data as { embedding: number[] }[]) out.push(d.embedding);
   }
   if (out.length !== texts.length) throw new Error("NVIDIA embeddings returned an unexpected number of vectors");

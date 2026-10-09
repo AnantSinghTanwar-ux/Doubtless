@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VaultProvider } from "@/contexts/VaultContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import AiCostBar from "@/components/ui/AiCostBar";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 // Self-hosted (latin, variable) so the app starts without reaching the Google Fonts CDN.
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ErrorBoundary>
           <ToastProvider>
             <AuthProvider>
-              <VaultProvider>{children}</VaultProvider>
+              <VaultProvider>
+                {children}
+                <AiCostBar />
+              </VaultProvider>
             </AuthProvider>
           </ToastProvider>
         </ErrorBoundary>

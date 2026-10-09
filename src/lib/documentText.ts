@@ -15,16 +15,29 @@ export function docKind(file: File): DocKind | null {
   return null;
 }
 
-/** Text of every page of a PDF, read in the browser (so the file never has to pass through the server). */
-async function pdfPages(file: File): Promise<PageText[]> {
+/** Scanned pages are read with OCR, at a few seconds a page; past this many the rest are skipped to keep uploads bounded. */
+const MAX_OCR_PAGES = 150;
+
+/**
+ * Text of every page of a PDF, read in the browser (so the file never has to pass through the server). Pages with no
+ * text layer (scans, slides exported as pictures, phone photos of notes) are read with OCR, so they can be searched too.
+ */
+async function pdfPages(file: File, onProgress?: (msg: string) => void): Promise<{ pages: PageText[]; pageCount: number }> {
   const lib = await import("./pdfClient");
   const doc = await lib.loadPdfFromData(new Uint8Array(await file.arrayBuffer()));
   const out: PageText[] = [];
+  let ocrDone = 0;
   for (let n = 1; n <= doc.numPages; n++) {
-    const text = await lib.extractPageText(await doc.getPage(n));
-    if (text) out.push({ pageNumber: n, text });
+    const page = await doc.getPage(n);
+    let text = await lib.extractPageText(page);
+    if (text.trim().length < 40 && ocrDone < MAX_OCR_PAGES) {
+      onProgress?.(`Reading scanned page ${n} of ${doc.numPages}…`);
+      text = (await lib.ocrPage(page).catch(() => null))?.text ?? text;
+      ocrDone++;
+    }
+    if (text.trim()) out.push({ pageNumber: n, text });
   }
-  return out;
+  return { pages: out, pageCount: doc.numPages };
 }
 
 const decode = (s: string) =>
@@ -51,11 +64,10 @@ async function pptxPages(file: File): Promise<PageText[]> {
   return out;
 }
 
-export async function extractDocumentPages(file: File, kind: DocKind): Promise<{ pages: PageText[]; pageCount: number }> {
+export async function extractDocumentPages(file: File, kind: DocKind, onProgress?: (msg: string) => void): Promise<{ pages: PageText[]; pageCount: number }> {
   if (kind === "pptx") {
     const pages = await pptxPages(file);
     return { pages, pageCount: Math.max(pages.at(-1)?.pageNumber ?? 0, pages.length) };
   }
-  const pages = await pdfPages(file);
-  return { pages, pageCount: Math.max(pages.at(-1)?.pageNumber ?? 0, pages.length) };
+  return pdfPages(file, onProgress);
 }

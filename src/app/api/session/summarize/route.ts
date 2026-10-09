@@ -1,3 +1,5 @@
+import { withUsage } from "@/lib/usage";
+import { remember } from "@/lib/memory";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { sessionSummarySchema } from "@/lib/zod-schemas";
@@ -8,7 +10,7 @@ import type { SessionSummary } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { sessionId, chatHistory, doubtContext } = (await request.json()) as {
       sessionId: string;
@@ -79,6 +81,16 @@ Summarize this session. Return JSON only.`;
       createdAt: Date.now(),
     });
 
+    // The student's study memory: what they were stuck on and what finally worked.
+    if (!aiFailed) {
+      await remember(before.studentId, {
+        kind: "session",
+        topic: [before.doubtContext.topic, before.doubtContext.subtopic].filter(Boolean).join(" / "),
+        text: validated.doubt,
+        takeaway: `Stuck because: ${validated.root_cause}. What worked: ${validated.explanation_that_worked}`,
+      });
+    }
+
     return NextResponse.json({ ...validated, aiFailed });
   } catch (error) {
     console.error("Session summarize error:", error);
@@ -88,3 +100,6 @@ Summarize this session. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("session.summary", handlePost);

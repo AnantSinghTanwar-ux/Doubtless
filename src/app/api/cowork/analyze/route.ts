@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { openRouterJSON, type OpenRouterContent } from "@/lib/aiProvider";
 import { nvidiaConfigured, nvidiaDescribePage } from "@/lib/nvidia";
@@ -19,7 +20,7 @@ Return ONLY a JSON object:
 
 Highlights mark where on the page the student should look. Rules:
 - quote: copy 4-14 consecutive words EXACTLY as they appear in the text layer (same spelling and order, from a single line or sentence). Never invent, reword or merge text, and never quote anything that is not in the text layer.
-- If NO text layer is supplied (you only have an image), use "box": [ymin, xmin, ymax, xmax] instead of "quote": a tight box around one line of words, normalized 0-1000. Only give a box if you are certain where the words are; otherwise return no highlights.
+- If only OCR text or a reading of the page image is supplied, still quote the words exactly as they appear in that text. Never give coordinates.
 - 2-5 highlights for content pages, [] otherwise. Pick different parts of the page. Never highlight the logo, header bar or page number.
 - "important" = most likely to be asked in exams (use for at most 2), "definition" = a definition, "formula" = an equation or notation, "keyword" = a key term.
 - label: 1-4 words shown next to the highlight, e.g. "Exam favourite", "Definition", "Remember this", "Key formula".
@@ -65,33 +66,38 @@ function cleanHighlights(raw: unknown): PageHighlight[] {
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
-    const { image, text } = await request.json();
+    const { image, text: layerText, ocrText } = await request.json();
     if (typeof image !== "string" || !image.startsWith("data:image/")) {
       return NextResponse.json({ error: "A page image is required" }, { status: 400 });
     }
+    const layer = typeof layerText === "string" ? layerText : "";
+    // Scanned pages have no text layer; the browser OCRs them and sends that text, which we use for exact quotes.
+    const ocr = typeof ocrText === "string" ? ocrText.trim() : "";
 
     // Pages with a real text layer are analysed from that text: it is exact, cheap, and lets a strong text model do the
-    // reasoning. The picture is only for scanned or vector-drawn pages that have little or no text.
-    const hasText = typeof text === "string" && text.trim().length >= 120;
+    // reasoning. Scanned pages still send the picture (it reads formulas far better than OCR) plus the OCR text for quoting.
+    const hasText = layer.trim().length >= 120;
     const content: OpenRouterContent[] = hasText ? [] : [{ type: "image_url", image_url: { url: image } }];
-    if (typeof text === "string" && text.trim()) {
-      content.push({ type: "text", text: `Text layer of this page:\n${text.slice(0, 8000)}` });
+    if (layer.trim()) content.push({ type: "text", text: `Text layer of this page:\n${layer.slice(0, 8000)}` });
+    if (!hasText && ocr) {
+      content.push({ type: "text", text: `Text recognised on this page by OCR (may contain small errors; quote highlights from it word for word):\n${ocr.slice(0, 6000)}` });
     }
     content.push({ type: "text", text: "Analyze this page." });
 
     const analyse = (c: OpenRouterContent[]) => openRouterJSON<Partial<PageAnalysis>>({ system: systemPrompt, content: c, maxTokens: 3000 });
 
-    // Picture-only pages: small vision models can't follow a JSON schema reliably, so have one read the page into text and
-    // let the text model do the analysis. With no text layer there is nothing to anchor highlights to, so there are none.
+    // Picture-only pages on NVIDIA: a vision model reads the page into text first, then the text model analyses it.
+    // Highlights are quoted from the OCR text when there is one; the browser places them.
     const readThenAnalyse = async () => {
       const described = await nvidiaDescribePage(image);
       const analysis = await analyse([
-        { type: "text", text: `Text read from the page image (this page has no text layer, so return "highlights": []):\n${described.slice(0, 8000)}` },
-        { type: "text", text: "Analyze this page." },
+        { type: "text", text: `Text read from the page image:\n${described.slice(0, 8000)}` },
+        ...(ocr ? [{ type: "text" as const, text: `Text recognised on this page by OCR (quote highlights from it word for word):\n${ocr.slice(0, 6000)}` }] : []),
+        { type: "text", text: ocr ? "Analyze this page." : 'Analyze this page. Return "highlights": [].' },
       ]);
-      return { ...analysis, highlights: [] };
+      return ocr ? analysis : { ...analysis, highlights: [] };
     };
 
     let raw: Partial<PageAnalysis>;
@@ -141,3 +147,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("cowork.page", handlePost);

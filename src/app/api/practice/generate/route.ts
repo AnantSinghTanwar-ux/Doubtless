@@ -1,3 +1,4 @@
+import { withUsage } from "@/lib/usage";
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { practiceSetSchema, practiceEvalSchema } from "@/lib/zod-schemas";
@@ -7,7 +8,7 @@ import type { RetrievedChunk, LearnerProfile, PracticeQuestion } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { action, topic, subtopic, chunks, profile, question, answer } = (await request.json()) as {
       action: "generate" | "evaluate";
@@ -76,3 +77,6 @@ Evaluate the answer. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("practice", handlePost);

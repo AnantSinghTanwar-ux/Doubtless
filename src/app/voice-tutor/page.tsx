@@ -161,6 +161,8 @@ export default function VoiceTutorPage() {
         setStatus("idle");
         setAssistantSpeaking(false);
         setVolume(0);
+        // Report the call length so its cost shows up in usage (Vapi bills per minute).
+        if (secondsRef.current > 0) void fetch("/api/usage/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seconds: secondsRef.current }) }).catch(() => {});
         // Remember the session in the learner's history (only if a real conversation happened).
         const spoken = linesRef.current.filter((l) => l.role === "user").length;
         if (user && spoken > 0 && secondsRef.current >= 10) {

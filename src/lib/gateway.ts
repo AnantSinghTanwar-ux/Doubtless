@@ -4,6 +4,8 @@
  * AI_GATEWAY_LOCAL=1, so local work keeps using the local model and never spends gateway credit.
  * Any failure (empty wallet, bad key, outage) falls through to the next provider.
  */
+import { recordAiCall } from "./usage";
+
 const BASE_URL = (process.env.OPENAI_BASE_URL || "").replace(/\/$/, "");
 const TEXT_MODELS = [...new Set([process.env.OPENAI_MODEL, "gemini-2.5-flash"].filter(Boolean) as string[])];
 const VISION_MODELS = [...new Set([process.env.OPENAI_VISION_MODEL, "gemini-2.5-flash"].filter(Boolean) as string[])];
@@ -50,7 +52,9 @@ async function callOnce(model: string, system: string | undefined, user: Gateway
     } catch {}
     throw new GatewayError(`Gateway ${res.status} (${model}): ${message}`, res.status, code);
   }
-  const text: string | undefined = (await res.json()).choices?.[0]?.message?.content;
+  const data = await res.json();
+  recordAiCall({ provider: "gateway", model, inTokens: data.usage?.prompt_tokens, outTokens: data.usage?.completion_tokens });
+  const text: string | undefined = data.choices?.[0]?.message?.content;
   if (!text?.trim()) throw new Error(`Gateway (${model}) returned an empty reply`);
   return text;
 }

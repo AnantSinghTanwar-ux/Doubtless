@@ -112,6 +112,19 @@ function gradeFit(t: TeacherProfile, ctx: Context): { score: number; kind: Match
   return { score: Math.max(0, 1 - 0.35 * d), kind: d <= 2 ? "near" : "out", range: [range.from, range.to] };
 }
 
+/** Broad subjects a teacher covers, from their subjects and specialties ("Calculus" counts as Mathematics). */
+export function teacherSubjects(t: Pick<TeacherProfile, "subjects" | "specialties">): string[] {
+  const out = new Set<string>();
+  for (const s of [...(t.subjects ?? []), ...(t.specialties ?? [])]) out.add(canonicalSubject(s) ?? s.trim());
+  return [...out].filter(Boolean);
+}
+
+/** Whether a teacher says they teach this grade (in the given subject, or in any subject when none is given). */
+export function teachesGrade(t: TeacherProfile, grade: number, subject?: string): boolean {
+  const ranges = subject ? [rangeFor(t, subject)] : Object.values(t.subjectGrades ?? {});
+  return ranges.some((r) => !!r && grade >= r.from && grade <= r.to);
+}
+
 interface Context {
   /** Broad subject (Mathematics...), falling back to the topic as written. */
   subject: string;

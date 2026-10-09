@@ -114,3 +114,100 @@ export async function locateQuote(page: PDFPageProxy, quote: string): Promise<[n
     n(Math.max(ax, bx) + padX, viewport.width),
   ];
 }
+
+/* ------------------------------------------------------------------ */
+/* OCR for pages with no text layer (scanned PDFs, slides exported as   */
+/* pictures). Gives the words AND where they sit, so highlights can be  */
+/* placed exactly even when the PDF itself has no text.                */
+/* ------------------------------------------------------------------ */
+
+export interface OcrWord {
+  text: string;
+  /** [ymin, xmin, ymax, xmax] on a 0-1000 scale, same as text-layer boxes. */
+  box: [number, number, number, number];
+  line: number;
+}
+
+export interface OcrPage {
+  text: string;
+  words: OcrWord[];
+}
+
+type TesseractWorker = { recognize: (img: HTMLCanvasElement, opts?: object, out?: object) => Promise<{ data: { text: string; blocks: { paragraphs: { lines: { words: { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }[] }[] }[] }[] | null } }> };
+let ocrWorker: Promise<TesseractWorker> | null = null;
+
+/** One shared OCR worker, created on first use (it downloads its English model once, then the browser caches it). */
+function getOcrWorker(): Promise<TesseractWorker> {
+  if (!ocrWorker) {
+    ocrWorker = import("tesseract.js").then(({ createWorker }) => createWorker("eng") as unknown as Promise<TesseractWorker>);
+    ocrWorker.catch(() => (ocrWorker = null));
+  }
+  return ocrWorker;
+}
+
+/** Reads a page with OCR. Renders it at ~1600 px wide, which keeps small slide text legible. */
+export async function ocrPage(page: PDFPageProxy): Promise<OcrPage> {
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: 1600 / base.width });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  const worker = await getOcrWorker();
+  const { data } = await worker.recognize(canvas, {}, { text: true, blocks: true });
+  const W = canvas.width;
+  const H = canvas.height;
+  const words: OcrWord[] = [];
+  let line = 0;
+  for (const block of data.blocks ?? [])
+    for (const para of block.paragraphs)
+      for (const l of para.lines) {
+        for (const w of l.words) {
+          if (!w.text.trim()) continue;
+          const b = w.bbox;
+          words.push({ text: w.text, line, box: [Math.round((b.y0 / H) * 1000), Math.round((b.x0 / W) * 1000), Math.round((b.y1 / H) * 1000), Math.round((b.x1 / W) * 1000)] });
+        }
+        line++;
+      }
+  return { text: data.text.trim(), words };
+}
+
+/** Finds a quoted phrase among OCR words and returns the box around it (null if it is not on the page). */
+export function locateQuoteInWords(words: OcrWord[], quote: string): [number, number, number, number] | null {
+  const target = squash(quote);
+  if (target.length < 6 || words.length === 0) return null;
+  let all = "";
+  const runs = words.map((w) => {
+    const norm = squash(w.text);
+    const r = { w, start: all.length, norm };
+    all += norm;
+    return r;
+  });
+  let idx = -1;
+  let len = target.length;
+  for (const n of [target.length, 40, 24, 14]) {
+    if (n > target.length) continue;
+    idx = all.indexOf(target.slice(0, n));
+    if (idx >= 0) {
+      len = n;
+      break;
+    }
+  }
+  if (idx < 0) return null;
+  const hit = runs.filter((r) => r.norm && r.start < idx + len && r.start + r.norm.length > idx).map((r) => r.w);
+  if (!hit.length) return null;
+  // Keep the box to the line the quote starts on, so a phrase that wraps doesn't paint a big block.
+  const firstLine = hit[0].line;
+  const sameLine = hit.filter((w) => w.line === firstLine);
+  const pad = 4;
+  return [
+    Math.max(0, Math.min(...sameLine.map((w) => w.box[0])) - pad),
+    Math.max(0, Math.min(...sameLine.map((w) => w.box[1])) - pad),
+    Math.min(1000, Math.max(...sameLine.map((w) => w.box[2])) + pad),
+    Math.min(1000, Math.max(...sameLine.map((w) => w.box[3])) + pad),
+  ];
+}

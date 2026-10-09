@@ -19,10 +19,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firebase";
+import { pageCacheId, readCowork, writeCowork } from "@/lib/coworkCache";
 import { getVaultFolders, getVaultDocuments } from "@/lib/firestore";
 import type { VaultFolder, VaultDocument } from "@/types";
 import type { PDFDocumentProxy } from "@/lib/pdfClient";
-import type { DocumentOverview, OverviewPageInput, PageHighlight } from "@/types/cowork";
+import type { DocumentOverview, OverviewPageInput, PageAnalysis, PageHighlight } from "@/types/cowork";
 import PdfPageView from "@/components/cowork/PdfPageView";
 import StudyPage, { type AnalysisState } from "@/components/cowork/StudyPage";
 import OverviewPanel, { type OverviewState } from "@/components/cowork/OverviewPanel";
@@ -163,7 +164,7 @@ const area = (b: number[]) => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]
 const overlapArea = (a: number[], b: number[]) =>
   Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1])) * Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0]));
 
-const CACHE_PREFIX = "cowork:v4"; // bumped when highlights moved to exact text-layer positions
+const CACHE_PREFIX = "cowork:v5"; // v5: better local page reading and OCR highlights; older saved results are dropped
 const MAX_PARALLEL = 3;
 // Pages with at least this much text-layer text are sent to the overview as text; others as an image.
 const TEXT_PAGE_MIN_CHARS = 120;
@@ -384,17 +385,19 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
   }, [currentPage, goToPage]);
 
   /** Turns the model's quotes into exact on-page boxes (from the PDF's text layer) and drops anything unplaceable or overlapping. */
-  const resolveHighlights = async (lib: typeof import("@/lib/pdfClient"), pdfPage: Awaited<ReturnType<NonNullable<typeof pdf>["getPage"]>>, raw: unknown): Promise<PageHighlight[]> => {
+  const resolveHighlights = async (
+    lib: typeof import("@/lib/pdfClient"),
+    pdfPage: Awaited<ReturnType<NonNullable<typeof pdf>["getPage"]>>,
+    raw: unknown,
+    ocrWords?: import("@/lib/pdfClient").OcrWord[]
+  ): Promise<PageHighlight[]> => {
     if (!Array.isArray(raw)) return [];
     const out: PageHighlight[] = [];
     for (const h of raw as PageHighlight[]) {
-      let box = h.box;
-      if (h.quote) {
-        const found = await lib.locateQuote(pdfPage, h.quote).catch(() => null);
-        if (!found) continue; // the words aren't on this page, so don't mark anything rather than mark the wrong spot
-        box = found;
-      }
-      if (!box || box[2] - box[0] < 6 || box[3] - box[1] < 12) continue;
+      if (!h.quote) continue; // positions come only from the PDF text layer or OCR, never from a model's guess
+      // The PDF's own text layer first; for scanned pages, the words OCR found and where it found them.
+      const box = (await lib.locateQuote(pdfPage, h.quote).catch(() => null)) ?? (ocrWords?.length ? lib.locateQuoteInWords(ocrWords, h.quote) : null);
+      if (!box || box[2] - box[0] < 6 || box[3] - box[1] < 12) continue; // not on this page: mark nothing rather than the wrong spot
       if (out.some((o) => overlapArea(o.box, box) > 0.25 * Math.min(area(o.box), area(box)))) continue;
       out.push({ box, kind: h.kind, label: h.label });
       if (out.length >= 5) break;
@@ -429,18 +432,30 @@ function Reader({ vault, onExit }: { vault: VaultDocument; onExit: () => void })
       inFlight.current.add(page);
       setAnalyses((a) => ({ ...a, [page]: { status: "loading" } }));
       try {
+        // Analysed before (on any device)? Reuse it instead of asking the AI again.
+        if (!force) {
+          const saved = await readCowork<PageAnalysis>(pageCacheId(vault.id, page));
+          if (saved) {
+            writeCache(cacheKey, saved);
+            setAnalyses((a) => ({ ...a, [page]: { status: "done", data: saved } }));
+            return;
+          }
+        }
         // Send the rendered page: many slide decks draw text as vector shapes with no text layer.
         const pdfPage = await pdf.getPage(page);
         const [image, text] = await Promise.all([pdfLib.current!.renderPageImage(pdfPage, 1100, 0.82), getPageText(page)]);
+        // Scanned page (no text layer): OCR it here so highlights can land on the actual words.
+        const ocr = text.trim().length < 120 ? await pdfLib.current!.ocrPage(pdfPage).catch((e) => (console.warn("OCR failed:", e), null)) : null;
         const res = await fetch("/api/cowork/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image, text }),
+          body: JSON.stringify({ image, text, ...(ocr?.text ? { ocrText: ocr.text } : {}) }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-        data.highlights = await resolveHighlights(pdfLib.current!, pdfPage, data.highlights);
+        data.highlights = await resolveHighlights(pdfLib.current!, pdfPage, data.highlights, ocr?.words);
         writeCache(cacheKey, data);
+        void writeCowork(pageCacheId(vault.id, page), data);
         setAnalyses((a) => ({ ...a, [page]: { status: "done", data } }));
       } catch (err) {
         console.error(err);

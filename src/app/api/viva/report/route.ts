@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { currentUser, withUsage } from "@/lib/usage";
+import { remember } from "@/lib/memory";
+import { after, NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { vivaReportSchema } from "@/lib/zod-schemas";
 import type { VivaReport, VivaAnswer } from "@/types";
@@ -6,7 +8,7 @@ import type { VivaReport, VivaAnswer } from "@/types";
 /** AI calls can take a while; give them room on serverless hosts. */
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const { topic, answers } = (await request.json()) as {
       topic: string;
@@ -45,6 +47,18 @@ Generate the viva report. Return JSON only.`;
     const result = await generateJSON<VivaReport>(prompt, systemPrompt);
     const validated = vivaReportSchema.parse(result);
 
+    const { uid } = currentUser();
+    if (validated.weak_topics.length) {
+      after(() =>
+        remember(uid, {
+          kind: "viva",
+          topic,
+          text: `Viva on ${topic}, scored ${validated.overall_score}/10`,
+          takeaway: `Weak on: ${validated.weak_topics.slice(0, 4).join(", ")}`,
+        })
+      );
+    }
+
     return NextResponse.json(validated);
   } catch (error) {
     console.error("Viva report error:", error);
@@ -54,3 +68,6 @@ Generate the viva report. Return JSON only.`;
     );
   }
 }
+
+/** Tracks the AI cost of each request (see src/lib/usage.ts). */
+export const POST = withUsage("viva.report", handlePost);
