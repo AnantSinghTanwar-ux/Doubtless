@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAvailableTeachers } from "@/lib/firestore";
 import type { TeacherMatch, DoubtRouterResult } from "@/types";
 
+
+// Self-hosted models can be slow; give Vercel functions room to wait for them.
+export const maxDuration = 60;
 export async function POST(request: NextRequest) {
   try {
     const { routerResult } = (await request.json()) as {

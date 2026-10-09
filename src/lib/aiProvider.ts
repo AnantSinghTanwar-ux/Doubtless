@@ -16,11 +16,30 @@ export function getEmbedModel() {
 const useLocalProvider = process.env.AI_PROVIDER === "ollama";
 /** AI_PROVIDER=nvidia makes NVIDIA NIM the first choice (recommended on hosts with no local model). */
 const preferNvidia = process.env.AI_PROVIDER === "nvidia";
-const localProviderUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+// Comma-separated list: several machines can host the models and the first one that answers is used.
+const ollamaUrls = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").split(",").map((u) => u.trim().replace(/\/$/, "")).filter(Boolean);
 
 const ollamaModel = process.env.OLLAMA_MODEL || "llama3.2";
 const ollamaEmbedModel = process.env.OLLAMA_EMBED_MODEL || "nomic-embed-text";
 const ollamaVisionModel = process.env.OLLAMA_VISION_MODEL || "llava";
+
+/** POST to Ollama, trying each configured host in turn. OLLAMA_API_KEY is sent as a bearer token for hosts behind an auth proxy. */
+async function ollamaPost(path: string, body: unknown): Promise<Response> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (process.env.OLLAMA_API_KEY) headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
+  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || 120000;
+  const failures: string[] = [];
+  for (const base of ollamaUrls) {
+    try {
+      const res = await fetch(`${base}${path}`, { method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(timeout) });
+      if (res.ok) return res;
+      failures.push(`${base} -> ${res.status} ${(await res.text()).slice(0, 120)}`);
+    } catch (err) {
+      failures.push(`${base} -> ${err instanceof Error ? err.message : err}`);
+    }
+  }
+  throw new Error(`Ollama error: ${failures.join(" | ")}`);
+}
 
 export function parseJSON<T>(raw: string | undefined, source: string): T {
   // Models sometimes wrap JSON in ```json fences or add prose around it.
@@ -130,19 +149,15 @@ async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, use
   }
 
   if (useLocalProvider) {
-    console.log(`[aiProvider] Routing to local Ollama API (${ollamaModel}) at ${localProviderUrl}`);
-    const res = await fetch(`${localProviderUrl}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    console.log(`[aiProvider] Routing to local Ollama API (${ollamaModel}) at ${ollamaUrls.join(", ")}`);
+    const res = await ollamaPost("/api/generate", {
         model: ollamaModel,
         prompt,
         system: systemPrompt,
         format: "json",
         stream: false,
         options: { num_ctx: 16384 },
-      }),
-    });
+      });
     if (!res.ok) {
       const errorText = await res.text();
       throw new Error(`Ollama error ${res.status}: ${errorText}`);
@@ -191,17 +206,13 @@ export async function generateText(prompt: string, systemPrompt?: string): Promi
 
 async function generateTextPrimary(prompt: string, systemPrompt?: string): Promise<string> {
   if (useLocalProvider) {
-    const res = await fetch(`${localProviderUrl}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await ollamaPost("/api/generate", {
         model: ollamaModel,
         prompt,
         system: systemPrompt,
         stream: false,
         options: { num_ctx: 16384 },
-      }),
-    });
+      });
     if (!res.ok) throw new Error(`Ollama error: ${res.statusText}`);
     const data = await res.json();
     return data.response;
@@ -273,18 +284,14 @@ async function generateWithImagePrimary(
 ): Promise<string> {
   if (useLocalProvider) {
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-    const res = await fetch(`${localProviderUrl}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await ollamaPost("/api/generate", {
         model: ollamaVisionModel,
         prompt,
         system: systemPrompt,
         images: [base64Data],
         stream: false,
         format: "json",
-      }),
-    });
+      });
     if (!res.ok) throw new Error(`Ollama error: ${res.statusText}`);
     const data = await res.json();
     return data.response;
@@ -317,11 +324,7 @@ async function generateWithImagePrimary(
 
 async function embedTextPrimary(text: string): Promise<number[]> {
   if (useLocalProvider) {
-    const res = await fetch(`${localProviderUrl}/api/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: ollamaEmbedModel, prompt: text }),
-    });
+    const res = await ollamaPost("/api/embeddings", { model: ollamaEmbedModel, prompt: text });
     if (!res.ok) throw new Error(`Ollama embedding error: ${res.statusText}`);
     const data = await res.json();
     return data.embedding;
@@ -478,11 +481,7 @@ async function nvidiaMultimodalJSON<T>(opts: { system: string; content: OpenRout
 /** Last resort on a machine with a local model: text parts only, since the default model can't see images. */
 async function ollamaTextJSON<T>(opts: { system: string; content: OpenRouterContent[] }): Promise<T> {
   const prompt = opts.content.map((c) => (c.type === "text" ? c.text : "")).filter(Boolean).join("\n");
-  const res = await fetch(`${localProviderUrl}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384 } }),
-  });
+  const res = await ollamaPost("/api/generate", { model: ollamaModel, prompt, system: opts.system, format: "json", stream: false, options: { num_ctx: 16384 } });
   if (!res.ok) throw new Error(`Ollama error ${res.status}`);
   const data = await res.json();
   return parseJSON<T>(data.response, "Ollama");
