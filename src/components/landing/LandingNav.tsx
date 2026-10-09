@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, Sparkles, X } from "lucide-react";
 import Logo from "./Logo";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LINKS = [
   { id: "top", label: "Home" },
@@ -20,6 +21,7 @@ const clamp = (n: number) => Math.min(1, Math.max(0, n));
  * slightly narrower pill and blurs the page behind it.
  */
 export default function LandingNav() {
+  const { user } = useAuth();
   const [p, setP] = useState(0);
   const [active, setActive] = useState("top");
   const [open, setOpen] = useState(false);
@@ -87,15 +89,23 @@ export default function LandingNav() {
           </nav>
 
           <div className="lp-drop hidden items-center gap-2 md:flex" style={{ animationDelay: "0.5s" }}>
-            <Link href="/login" className="rounded-full px-4 py-2 text-[15px] text-zinc-300 transition-colors hover:text-white">
-              Log in
-            </Link>
-            <Link
-              href="/login"
-              className="btn-sheen flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_-8px_rgba(139,92,246,0.9)] transition-transform hover:scale-[1.04]"
-            >
-              <Sparkles className="h-4 w-4" /> Get started
-            </Link>
+            {user ? (
+              <Link href="/login" className="rounded-full px-4 py-2 text-[15px] text-zinc-300 transition-colors hover:text-white">
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="rounded-full px-4 py-2 text-[15px] text-zinc-300 transition-colors hover:text-white">
+                  Log in
+                </Link>
+                <Link
+                  href="/login"
+                  className="btn-sheen flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_-8px_rgba(139,92,246,0.9)] transition-transform hover:scale-[1.04]"
+                >
+                  <Sparkles className="h-4 w-4" /> Get started
+                </Link>
+              </>
+            )}
           </div>
 
           <button onClick={() => setOpen((o) => !o)} className="rounded-lg p-2 text-zinc-300 md:hidden" aria-label="Menu">
@@ -112,7 +122,7 @@ export default function LandingNav() {
                 </a>
               ))}
               <Link href="/login" className="mt-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-3 text-center font-semibold text-white">
-                Get started
+                {user ? "Dashboard" : "Get started"}
               </Link>
             </div>
           </div>
