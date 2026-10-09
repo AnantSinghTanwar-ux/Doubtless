@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Headphones, Mic, MicOff, PhoneOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { addRecentInteraction } from "@/lib/firestore";
 import Sidebar from "@/components/layout/Sidebar";
 import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
@@ -44,6 +45,18 @@ export default function VoiceTutorPage() {
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
+  // Mirrors of state for event handlers, which would otherwise see stale values.
+  const statusRef = useRef<CallStatus>("idle");
+  const linesRef = useRef<Line[]>([]);
+  const topicRef = useRef("");
+  const secondsRef = useRef(0);
+
+  useEffect(() => {
+    statusRef.current = status;
+    linesRef.current = lines;
+    topicRef.current = topic;
+    secondsRef.current = seconds;
+  });
 
   useEffect(() => {
     if (!loading && (!user || !profile)) router.replace("/login");
@@ -83,7 +96,7 @@ export default function VoiceTutorPage() {
   }, []);
 
   const start = async () => {
-    if (!PUBLIC_KEY || !ASSISTANT_ID) return;
+    if (!PUBLIC_KEY || !ASSISTANT_ID || statusRef.current !== "idle") return;
     setError("");
     setLines([]);
     setSeconds(0);
@@ -99,6 +112,16 @@ export default function VoiceTutorPage() {
         setStatus("idle");
         setAssistantSpeaking(false);
         setVolume(0);
+        // Remember the session in the learner's history (only if a real conversation happened).
+        const spoken = linesRef.current.filter((l) => l.role === "user").length;
+        if (user && spoken > 0 && secondsRef.current >= 10) {
+          void addRecentInteraction(user.uid, {
+            type: "doubt",
+            topic: topicRef.current.trim() || "Voice tutor session",
+            outcome: `voice tutor · ${Math.max(1, Math.round(secondsRef.current / 60))} min`,
+            timestamp: Date.now(),
+          }).catch(() => {});
+        }
       }) as () => void);
       client.on("speech-start", (() => setAssistantSpeaking(true)) as () => void);
       client.on("speech-end", (() => setAssistantSpeaking(false)) as () => void);
@@ -106,7 +129,10 @@ export default function VoiceTutorPage() {
       client.on("message", onMessage as (m: never) => void);
       client.on("error", ((e: { error?: { message?: string }; message?: string }) => {
         console.error("Vapi error:", e);
-        setError(e?.error?.message || e?.message || "The call couldn't be connected.");
+        // Vapi also reports "meeting ended" style errors as a call winds down; those aren't failures.
+        if (statusRef.current === "idle" || statusRef.current === "ending") return;
+        const raw = e?.error?.message || e?.message || "";
+        setError(/permission|denied|NotAllowed/i.test(raw) ? "Microphone access is blocked. Allow it in your browser's address bar, then try again." : raw || "The call couldn't be connected.");
         setStatus("idle");
       }) as (e: never) => void);
 
@@ -118,7 +144,8 @@ export default function VoiceTutorPage() {
       });
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : "Couldn't start the call. Check your microphone permission and try again.");
+      const raw = e instanceof Error ? e.message : "";
+      setError(/permission|denied|NotAllowed/i.test(raw) ? "Microphone access is blocked. Allow it in your browser's address bar, then try again." : "Couldn't start the call. Check your connection and microphone, then try again.");
       setStatus("idle");
     }
   };
