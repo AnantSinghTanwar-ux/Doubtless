@@ -9,6 +9,8 @@ import BottomNav from "@/components/layout/BottomNav";
 import TopBar from "@/components/layout/TopBar";
 import DoubtInput from "@/components/doubt/DoubtInput";
 import RouteCard from "@/components/doubt/RouteCard";
+import RecommendedTeachers from "@/components/doubt/RecommendedTeachers";
+import { needsExpert } from "@/lib/teacherRanking";
 import AiExplanation from "@/components/doubt/AiExplanation";
 import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
@@ -25,6 +27,7 @@ export default function AskPage() {
   const [routeResult, setRouteResult] = useState<DoubtRouterResult | null>(null);
   const [explanation, setExplanation] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [contextChunks, setContextChunks] = useState<unknown[]>([]);
 
   useEffect(() => {
     if (!authLoading && (!user || !profile)) {
@@ -77,6 +80,7 @@ export default function AskPage() {
         throw new Error(errData.error || "Routing failed");
       }
 
+      setContextChunks(chunks);
       const routerResult: DoubtRouterResult = await routeRes.json();
       setRouteResult(routerResult);
       setLoadingRoute(false);
@@ -111,12 +115,30 @@ export default function AskPage() {
     }
   };
 
+  /** For doubts routed to a teacher: get the AI explanation anyway (useful while nobody suitable is online). */
+  const handleAiInstead = async () => {
+    if (!routeResult) return;
+    setError(null);
+    setLoadingExplain(true);
+    try {
+      const res = await fetch("/api/doubt/explain", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, chunks: contextChunks, routerResult: routeResult }) });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Explanation failed");
+      setExplanation(await res.json());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoadingExplain(false);
+    }
+  };
+
   const handlePractice = () => {
     router.push(`/practice?topic=${encodeURIComponent(routeResult?.topic || "")}&subtopic=${encodeURIComponent(routeResult?.subtopic || "")}`);
   };
 
   const handleTeacher = () => {
-    router.push(`/teachers?topic=${encodeURIComponent(routeResult?.topic || "")}`);
+    const r = routeResult;
+    const params = new URLSearchParams({ topic: r?.topic || "", subtopic: r?.subtopic || "", difficulty: r?.difficulty || "", type: r?.doubt_type || "", confidence: String(r?.confidence ?? ""), q: question.slice(0, 300) });
+    router.push(`/teachers?${params}`);
   };
 
   if (authLoading) return null;
@@ -155,11 +177,11 @@ export default function AskPage() {
               </div>
             )}
 
-            {explanation && !loadingExplain && routeResult?.route === "ai_explain" && (
+            {explanation && !loadingExplain && (
               <div className="animate-in fade-in slide-up" style={{ animationDelay: "150ms" }}>
                 <AiExplanation explanation={explanation} />
                 
-                <div className="mt-8 flex justify-center">
+                <div className={routeResult?.route === "ai_explain" ? "mt-8 flex justify-center" : "hidden"}>
                   <Button onClick={handlePractice} variant="secondary" className="mr-4">
                     Try a quick practice set
                   </Button>
@@ -176,10 +198,14 @@ export default function AskPage() {
                </div>
             )}
 
-            {routeResult && routeResult.route === "teacher" && !loadingRoute && (
-               <div className="mt-8 flex justify-center animate-in fade-in slide-up">
-                 <Button onClick={handleTeacher} size="lg">Find a teacher</Button>
-               </div>
+            {routeResult && needsExpert(routeResult) && !loadingRoute && (
+              <div className="animate-in fade-in slide-up" style={{ animationDelay: "250ms" }}>
+                <RecommendedTeachers
+                  routerResult={routeResult}
+                  question={question}
+                  onTryAi={routeResult.route === "teacher" ? () => void handleAiInstead() : undefined}
+                />
+              </div>
             )}
           </div>
         </main>

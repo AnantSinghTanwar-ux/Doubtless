@@ -1,78 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAvailableTeachers } from "@/lib/firestore";
-import type { TeacherMatch, DoubtRouterResult } from "@/types";
+import { getTeachers } from "@/lib/firestore";
+import { rankTeachers } from "@/lib/teacherRanking";
+import type { DoubtRouterResult, MatchResponse } from "@/types";
 
+/** Reading every teacher and ranking them is cheap, but give slow database connections room. */
+export const maxDuration = 30;
 
-// Self-hosted models can be slow; give Vercel functions room to wait for them.
-export const maxDuration = 60;
+/**
+ * Recommends teachers for a doubt. With a routerResult, teachers are ranked on topic fit, what students say about their
+ * explaining and problem solving, and their track record, weighted by how hard the doubt is. Without one, it lists
+ * everyone who is online, best-reviewed first.
+ */
 export async function POST(request: NextRequest) {
   try {
-    const { routerResult } = (await request.json()) as {
-      routerResult: DoubtRouterResult;
+    const body = (await request.json().catch(() => ({}))) as { routerResult?: Partial<DoubtRouterResult> | null; question?: unknown; limit?: unknown };
+    const question = typeof body.question === "string" ? body.question.slice(0, 1500) : "";
+    const limit = Math.min(10, Math.max(1, Number(body.limit) || 3));
+
+    const rank = rankTeachers(await getTeachers(), { routerResult: body.routerResult ?? null, question });
+
+    const response: MatchResponse = {
+      matches: rank.online.slice(0, limit),
+      // Only worth showing when nobody suitable is online.
+      offlineExperts: rank.online.length === 0 ? rank.offline.slice(0, 2) : [],
+      needsExpert: rank.needsExpert,
+      complexity: rank.complexity,
     };
-
-    if (!routerResult) {
-      return NextResponse.json({ error: "routerResult is required" }, { status: 400 });
-    }
-
-    const teachers = await getAvailableTeachers(routerResult.topic);
-    const allTeachers = teachers.length === 0 ? await getAvailableTeachers() : teachers;
-
-    const matches: TeacherMatch[] = allTeachers.map((teacher) => {
-      let score = 0;
-      const reasons: string[] = [];
-
-      const subjectMatch = teacher.subjects.some(
-        (s) => s.toLowerCase() === routerResult.topic.toLowerCase()
-      );
-      if (subjectMatch) {
-        score += 40;
-        reasons.push(`Expert in ${routerResult.topic}`);
-      } else {
-        const partialMatch = teacher.subjects.some((s) =>
-          s.toLowerCase().includes(routerResult.topic.toLowerCase().split(" ")[0])
-        );
-        if (partialMatch) {
-          score += 20;
-          reasons.push(`Related subject knowledge`);
-        }
-      }
-
-      score += Math.min(teacher.rating * 8, 30);
-      reasons.push(`${teacher.rating.toFixed(1)}★ rating`);
-
-      if (teacher.availability) {
-        score += 15;
-        reasons.push("Available now");
-      }
-
-      // Identity-verified teachers rank above unverified ones with otherwise similar scores.
-      if (teacher.verified) {
-        score += 10;
-        reasons.push("Verified");
-      }
-
-      const successScore = Math.min(teacher.doubtsResolved / 10, 15);
-      score += successScore;
-      if (teacher.doubtsResolved > 0) {
-        reasons.push(`${teacher.doubtsResolved} doubts resolved`);
-      }
-
-      return {
-        teacher,
-        score: Math.round(score),
-        explanation: reasons.join(" · "),
-      };
-    });
-
-    matches.sort((a, b) => b.score - a.score);
-
-    return NextResponse.json({ matches: matches.slice(0, 3) });
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Teacher matching error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Matching failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Matching failed" }, { status: 500 });
   }
 }

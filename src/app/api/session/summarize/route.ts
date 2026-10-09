@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateJSON } from "@/lib/aiProvider";
 import { sessionSummarySchema } from "@/lib/zod-schemas";
-import { updateSession, saveKnowledgeBase, getSession, getSessionMessages, getTeacher, updateTeacher } from "@/lib/firestore";
+import { updateSession, saveKnowledgeBase, getSession, getSessionMessages } from "@/lib/firestore";
+import { recordSessionCompleted } from "@/lib/teacherStats";
 import type { SessionSummary } from "@/types";
 
 /** AI calls can take a while; give them room on serverless hosts. */
@@ -66,9 +67,8 @@ Summarize this session. Return JSON only.`;
       completedAt: Date.now(),
     });
 
-    // Credit the teacher once per completed session.
-    const teacher = await getTeacher(before.teacherId);
-    if (teacher) await updateTeacher(teacher.id, { doubtsResolved: (teacher.doubtsResolved || 0) + 1 });
+    // Credit the teacher once per completed session, and remember which topic it was on (used for recommendations).
+    await recordSessionCompleted(before.teacherId, before.doubtContext.topic).catch((e) => console.error("Could not record the session for the teacher:", e));
     await saveKnowledgeBase({
       sessionId,
       teacherId: before.teacherId,

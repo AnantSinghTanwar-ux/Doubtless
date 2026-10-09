@@ -31,6 +31,7 @@ import type {
   SessionRecord,
   SessionMessage,
   CallSignal,
+  TeacherReview,
   PracticeSet,
   KnowledgeBaseEntry,
   RecentInteraction,
@@ -376,4 +377,15 @@ export async function updateJob(jobId: string, data: Partial<JobRecord>): Promis
 export async function getJob(jobId: string): Promise<JobRecord | null> {
   const snap = await getDoc(doc(db, "jobs", jobId));
   return snap.exists() ? ({ id: snap.id, ...snap.data() } as JobRecord) : null;
+}
+
+export async function getSessionReview(sessionId: string): Promise<TeacherReview | null> {
+  const snap = await getDoc(doc(db, "reviews", sessionId));
+  return snap.exists() ? (snap.data() as TeacherReview) : null;
+}
+
+/** Newest first. Sorted here rather than in the query, which would need a composite index. */
+export async function getTeacherReviews(teacherId: string, max = 30): Promise<TeacherReview[]> {
+  const snap = await getDocs(query(collection(db, "reviews"), where("teacherId", "==", teacherId)));
+  return snap.docs.map((d) => d.data() as TeacherReview).sort((a, b) => b.createdAt - a.createdAt).slice(0, max);
 }

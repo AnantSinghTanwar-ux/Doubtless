@@ -182,7 +182,64 @@ export interface TeacherProfile {
   bio?: string;
   experienceYears?: number;
   institution?: string;
+  /** Number of student reviews behind `rating`. */
   ratingCount?: number;
+  /** Running totals of every review; averages are computed on read. */
+  reviewStats?: RatingSums;
+  /** Per-topic track record, keyed by topicKey(). Includes completed sessions even without reviews. */
+  topicStats?: Record<string, TopicStat>;
+  /** Heartbeat from the teacher dashboard; "online" also requires this to be recent. */
+  lastSeenAt?: number;
+}
+
+/** Sums rather than averages, so a new review is a plain increment inside a transaction. */
+export interface RatingSums {
+  n: number;
+  explain: number;
+  depth: number;
+  solving: number;
+  /** "yes" counts 1, "partly" 0.5, "no" 0. */
+  resolved: number;
+}
+
+export interface TopicStat extends RatingSums {
+  name: string;
+  /** Completed live sessions on this topic. */
+  sessions: number;
+}
+
+export type ReviewResolved = "yes" | "partly" | "no";
+
+/** A student's optional review after a live session; one per session. */
+export interface TeacherReview {
+  id: string;
+  sessionId: string;
+  teacherId: string;
+  studentId: string;
+  topic: string;
+  subtopic: string;
+  /** 1-5: how clearly they explain and how they talk. */
+  explain: number;
+  /** 1-5: how solid their grasp of the basics is. */
+  depth: number;
+  /** 1-5: how well they can actually solve the problem. */
+  solving: number;
+  resolved: ReviewResolved;
+  comment?: string;
+  createdAt: number;
+}
+
+/** Why a teacher was ranked where they were, for display. */
+export interface MatchEvidence {
+  subjectMatch: "exact" | "related" | "none";
+  matchedSpecialties: string[];
+  topicSessions: number;
+  topicReviews: number;
+  reviewCount: number;
+  explain: number | null;
+  depth: number | null;
+  solving: number | null;
+  resolvedRate: number | null;
 }
 
 /**
@@ -248,6 +305,21 @@ export interface TeacherMatch {
   teacher: TeacherProfile;
   score: number;
   explanation: string;
+  /** Short, human reasons, strongest first. */
+  reasons?: string[];
+  evidence?: MatchEvidence;
+  online?: boolean;
+}
+
+export interface MatchResponse {
+  /** Online teachers, best first. */
+  matches: TeacherMatch[];
+  /** Best-fitting teachers who are offline right now (shown when nobody suitable is online). */
+  offlineExperts: TeacherMatch[];
+  /** True when the doubt is hard enough that a real expert is worth recommending. */
+  needsExpert: boolean;
+  /** 0-1 estimate of how demanding the doubt is. */
+  complexity: number;
 }
 
 export interface SessionMessage {
