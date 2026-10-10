@@ -24,6 +24,9 @@ export const nvidiaConfigured = () => !!process.env.NVIDIA_API_KEY;
 
 const RETRYABLE = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+/** A long answer (the study guide asks for 8000 tokens) takes minutes of generation; a short one must still fail fast so the fallback can run. */
+const timeoutFor = (maxTokens: number) => (maxTokens > 3500 ? Math.min(120_000, Math.max(TIMEOUT_MS, maxTokens * 15)) : TIMEOUT_MS);
+
 async function callOnce(model: string, system: string | undefined, user: NvidiaContent, maxTokens: number, temperature: number): Promise<string> {
   const body: Record<string, unknown> = {
     model,
@@ -40,7 +43,7 @@ async function callOnce(model: string, system: string | undefined, user: NvidiaC
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutFor(maxTokens)),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");

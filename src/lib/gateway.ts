@@ -16,6 +16,9 @@ export type GatewayContent = string | Array<{ type: "text"; text: string } | { t
 /** After a billing or auth failure, stop trying for a while so every request doesn't pay for a doomed round trip. */
 let pausedUntil = 0;
 
+/** Models the gateway said it doesn't have: skipped for the rest of this server's life, so a wrong OPENAI_MODEL costs one failed call, not one per request. */
+const unavailable = new Set<string>();
+
 export function gatewayEnabled(): boolean {
   if (!process.env.OPENAI_API_KEY || !BASE_URL) return false;
   if (Date.now() < pausedUntil) return false;
@@ -62,7 +65,8 @@ async function callOnce(model: string, system: string | undefined, user: Gateway
 export async function gatewayChat(opts: { system?: string; user: GatewayContent; json?: boolean; vision?: boolean; maxTokens?: number; temperature?: number }): Promise<string> {
   if (!gatewayEnabled()) throw new Error("Gateway is not enabled");
   let lastError: unknown;
-  for (const model of opts.vision ? VISION_MODELS : TEXT_MODELS) {
+  const candidates = (opts.vision ? VISION_MODELS : TEXT_MODELS).filter((m) => !unavailable.has(m));
+  for (const model of candidates) {
     try {
       return await callOnce(model, opts.system, opts.user, { json: opts.json, maxTokens: opts.maxTokens ?? 2500, temperature: opts.temperature ?? 0.4 });
     } catch (err) {
@@ -75,7 +79,11 @@ export async function gatewayChat(opts: { system?: string; user: GatewayContent;
           break;
         }
         // An unknown/unavailable model name: try the next model in the list.
-        if (err.status === 404 || err.code === "not_found" || err.code === "model_not_found") continue;
+        if (err.status === 404 || err.code === "not_found" || err.code === "model_not_found") {
+          unavailable.add(model);
+          console.warn(`[gateway] model ${model} is not available; skipping it from now on. Set OPENAI_MODEL to one your gateway offers.`);
+          continue;
+        }
       }
       break;
     }

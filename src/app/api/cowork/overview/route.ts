@@ -94,7 +94,7 @@ async function withIndexedText(vaultId: string, pages: OverviewPageInput[]): Pro
  * Long documents don't fit in one prompt (a local model sees ~16k tokens), and a truncated prompt gives a guide that
  * covers only part of the document. Above this many characters the pages are condensed in parts first, then combined.
  */
-const BUDGET = Number(process.env.COWORK_OVERVIEW_BUDGET) || (process.env.VERCEL ? 100_000 : 24_000);
+const BUDGET = Number(process.env.COWORK_OVERVIEW_BUDGET) || (process.env.VERCEL ? 60_000 : 24_000);
 
 const condensePrompt = `You are condensing PART of a lecture document so a study guide can be written from it later.
 Return ONLY a JSON object: { "notes": string }

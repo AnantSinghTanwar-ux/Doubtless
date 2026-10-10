@@ -228,11 +228,10 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
         console.warn("[aiProvider] NVIDIA failed too:", err instanceof Error ? err.message : err);
       }
     }
-    const key = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+    const { key, baseUrl } = openRouterCreds();
     // useHighEnd already tried OpenRouter inside the primary path.
     if (!key || useHighEnd) throw primaryError;
-    const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
-    console.warn("[aiProvider] trying OpenRouter/OpenAI:", primaryError instanceof Error ? primaryError.message : primaryError);
+    console.warn("[aiProvider] trying OpenRouter:", primaryError instanceof Error ? primaryError.message : primaryError);
     const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -251,12 +250,11 @@ export async function generateJSON<T>(prompt: string, systemPrompt?: string, use
 }
 
 async function generateJSONPrimary<T>(prompt: string, systemPrompt?: string, useHighEnd?: boolean): Promise<T> {
-  const openRouterKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
-  const openRouterModel = process.env.OPENAI_MODEL || process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
-  const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
+  const { key: openRouterKey, baseUrl } = openRouterCreds();
+  const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-5.5";
 
   if (useHighEnd && openRouterKey) {
-    console.log(`[aiProvider] Routing to OpenRouter/OpenAI API (${openRouterModel}) for high-end task`);
+    console.log(`[aiProvider] Routing to OpenRouter (${openRouterModel}) for high-end task`);
     try {
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
@@ -637,16 +635,24 @@ async function geminiMultimodalJSON<T>(opts: { system: string; content: OpenRout
   return parseJSON<T>(response.text, "Gemini");
 }
 
+/**
+ * Credentials for the real OpenRouter. The OPENAI_* variables belong to the OpenAI-compatible gateway (gateway.ts, which has
+ * its own step in every chain); sending OpenRouter requests there too meant a second call to a gateway that had just failed.
+ */
+const openRouterCreds = () => ({
+  key: process.env.OPENROUTER_API_KEY,
+  baseUrl: (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, ""),
+});
+
 async function openRouterRequest<T>(opts: {
   model?: string;
   system: string;
   content: OpenRouterContent[];
   maxTokens: number;
 }): Promise<T> {
-  const key = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
-  if (!key) throw new Error("OPENROUTER_API_KEY or OPENAI_API_KEY is not set");
-  const model = opts.model || process.env.OPENAI_MODEL || process.env.COWORK_MODEL || "google/gemini-2.5-flash";
-  const baseUrl = process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1";
+  const { key, baseUrl } = openRouterCreds();
+  if (!key) throw new Error("OPENROUTER_API_KEY is not set");
+  const model = opts.model || process.env.COWORK_MODEL || "google/gemini-2.5-flash";
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
